@@ -163,6 +163,7 @@ if [ $flag5 -eq 1 ]; then
 	./configure --prefix=$HOME && make && make install
 	cd ..
 	rm -r parallel-20191222
+	rm parallel-20191222.tar.bz2
 fi
 
 echo "----------------------------------------------"
@@ -174,4 +175,4 @@ echo " "
 echo "----------------------------------------------------------------------"
 echo " Changing configuring parameters of the pipeline with local folders..."
 echo "----------------------------------------------------------------------"
-sed -i -old "s^YOUR_LOCAL_PATH_HERE^${PWD}^g" ${PWD}/FAMED/idl/famed_configuring_parameters.txt
+sed -i -old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/idl/famed_configuring_parameters.txt
