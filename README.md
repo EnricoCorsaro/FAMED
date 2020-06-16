@@ -2,6 +2,7 @@
 <p align="center">
 <a href="https://github.com/EnricoCorsaro/FAMED"><img src="https://img.shields.io/badge/GitHub-FAMED-yellow"/></a>
 <a href="https://github.com/EnricoCorsaro/FAMED/blob/master/LICENSE.txt"><img src="https://img.shields.io/badge/license-CC%20BY--SA-blue"/></a>
+<a href="https://arxiv.org/abs/2006.08245"><img src="https://img.shields.io/badge/arXiv-2006.08245-blueviolet"/></a>
 <a href='https://famed.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/famed/badge/?version=latest' alt='Documentation Status' /></a>
 <a href="https://github.com/EnricoCorsaro/FAMED/issues"><img src="https://img.shields.io/github/issues-closed/EnricoCorsaro/FAMED"/></a>
 <img width="500" src="./docs/figures/FAMED_LOGO_WHITE.jpg"/>
