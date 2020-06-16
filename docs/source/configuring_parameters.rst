@@ -11,12 +11,12 @@ The configuring parameters are divided into subgroups, each one related to a cla
 Global paths and filenames
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 * ``root_path`` 
-/YOUR_LOCAL_ROOT_PATH_HERE/
+YOUR_LOCAL_ROOT_PATH_HERE/
 
 This root path will be used to access and execute the DIAMONDS-based codes, as well as to set the paths for storing the output files. If you are not using the shell script installation, you will need to replace the name YOUR_LOCAL_ROOT_PATH_HERE with the actual path containing the DIAMONDS, Background, PeakBagging, and Asymptotic folders (see the Installation section for more details). Make sure to put a final slash. 
 
 * ``famed_path`` 
-/YOUR_LOCAL_ROOT_PATH_HERE/FAMED/idl
+YOUR_LOCAL_ROOT_PATH_HERE/FAMED/idl
 
 The path where you have stored the FAMED pipeline. If you are not using the shell script installation, you will need to replace the name YOUR_LOCAL_ROOT_PATH_HERE with the actual path containing the FAMED package. This path has to refer to the specific folder that contains either the IDL or Python code (in the example shown, we are using the idl folder). This path is used by FAMED to actually run the pipeline. This path is by default within the ``root_path`` parameter but the user may decide to use a different location.
 
@@ -60,7 +60,7 @@ The sub-folder label contaning the output results from the Background fit. This 
 An integer specifying the total number of CPU threads to parallelize the computation of the multi-modal chunk peak bagging, of the sliding pattern fit, and of the peak test and peak FWHM fits. This number should be set to the maximum allowed by the user depending on the available resources of the system. It has to be a number > 1. Each thread will automatically be used to spawn an individual computation with DIAMONDS where more independent ones are to be performed at the same time.
 
 * ``logo_filename`` 
-/YOUR_LOCAL_ROOT_PATH_HERE/FAMED/docs/figures/FAMED_LOGO_BLACK_small.jpeg
+YOUR_LOCAL_ROOT_PATH_HERE/FAMED/docs/figures/FAMED_LOGO_BLACK_small.jpeg
 
 The filename, including the full path, of the FAMED logo. By default when downloading the package it is placed inside FAMED/docs/figures, but the user may decide to place the file in any other place. Change the name YOUR_LOCAL_ROOT_PATH_HERE according to your system if you are not using the shell script installation.
 

@@ -38,6 +38,7 @@ Navigation
    file_system
    configuring_parameters
    overview
+   getting_started
    publications
    events
    logo
