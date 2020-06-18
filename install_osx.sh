@@ -8,7 +8,7 @@ flag4=0
 flag5=0
 
 if [ $# -eq 0 ]; then
-    echo "Usage: ./install.sh [--diamonds | -d] [--background | -b] [--peakbagging | -p] [--asymptotic | -a] [--parallel | -g]"
+    echo "Usage: ./install_osx.sh [--diamonds | -d] [--background | -b] [--peakbagging | -p] [--asymptotic | -a] [--parallel | -g]"
     exit 1
 fi
 
@@ -18,8 +18,14 @@ if ! [ -x "$(command -v git)" ]; then
 fi
 
 if ! [ -x "$(command -v cmake)" ]; then
-	echo "Error: cmake is not installed. Aborting..." >&2
-	exit 1
+	echo "Cmake is not installed. Trying to install it using Homebrew..." >&2
+	
+	if ! [ -x "$(command -v brew)" ]; then
+		echo "Error: Homebrew is not installed. Aborting..." >&2
+		exit 1
+	else
+		sudo brew install cmake	
+	fi
 fi
 
 while [ ! $# -eq 0 ]
@@ -57,6 +63,12 @@ if [ $flag1 -eq 1 ]; then
 	cd DIAMONDS/build/
 	cmake ..
 	make -j 4
+	echo "-----------------------------------"
+	echo " Compiling and running test demo..."
+	echo "-----------------------------------"
+	cd ../demos/
+	clang++ -o demoSingle2DGaussian demoSingle2DGaussian.cpp -L../build/ -I ../include/ -l diamonds -stdlib=libc++ -std=c++11 -Wno-deprecated-register
+	./demoSingle2DGaussian
 	cd ../../
 	echo " "
 	echo " "	
@@ -88,6 +100,7 @@ if [ $flag2 -eq 1 ]; then
 	mv Background/tutorials/KIC012008916/KIC012008916.txt Background/data/
 	mv Background/tutorials/KIC012008916 Background/results/
 	mkdir Background/results/KIC012008916/00
+	rm Background/results/KIC012008916/localPath.txt
 	echo " "
 	echo " "
 fi
@@ -119,6 +132,7 @@ if [ $flag3 -eq 1 ]; then
 	mv PeakBagging/tutorials/KIC012008916 PeakBagging/results/
 	mkdir PeakBagging/results/KIC012008916/pb/0
 	mkdir PeakBagging/results/KIC012008916/pb/0A
+	rm PeakBagging/results/KIC012008916/localPath.txt
 	echo " "
 	echo " "
 fi
@@ -136,9 +150,9 @@ if [ $flag4 -eq 1 ]; then
 	echo " "
 	echo " "
 	echo "----------------------------------------------------------------------------"
-	echo " Changing localPath.txt content with local path of the PeakBagging folder..."
+	echo " Changing localPath.txt content with local path of the Asymptotic folder..."
 	echo "----------------------------------------------------------------------------"
-	echo "${PWD}/Asymptotic/" > ${PWD}/PeakBagging/build/localPath.txt
+	echo "${PWD}/PeakBagging/" > ${PWD}/Asymptotic/build/localPath.txt
 fi
 
 if [ $flag5 -eq 1 ]; then
@@ -175,4 +189,4 @@ echo " "
 echo "----------------------------------------------------------------------"
 echo " Changing configuring parameters of the pipeline with local folders..."
 echo "----------------------------------------------------------------------"
-sed -i -old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/idl/famed_configuring_parameters.txt
+sed -i.old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/idl/famed_configuring_parameters.txt

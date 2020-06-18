@@ -15,33 +15,49 @@ Before continuiting we advise you to read the original code papers, namely the o
     .. warning:: 
         Make sure you install the CMake command line tool as well, since you need that to compile DIAMONDS via terminal. To do so, either open the CMake app and go to Tools/Install for Command Line Use if you have installed it already, or select the option during the installation phase. To avoid further compilation issues, we also recommend to update Xcode to its latest version if you are running under a Mac OSX.
 
+You also have the possibility to install cmake directly from the terminal. If you are running on a Mac OS X system, then execute the command
+
+.. code:: shell
+    
+    $ sudo brew install cmake
+
+If you are running on a Unix system such as Ubuntu, then use the command
+
+.. code:: shell
+
+    $ sudo apt-get install cmake
+
+Alternatively, CMake can be installed automatically with the pipeline by using the installing shell script, ``install_osx.sh`` for Mac OS X, or ``install_unix.sh`` for Unix OS, that is provided in the GitHub repository of FAMED.
+
 2a. Install git in your terminal system if this is not already installed. For this purpose you can visit `Git Download <https://git-scm.com/downloads>`_. This will allow you using the pre-configured installing shell script to run an automatic installation of all the required software as well as a setting up of the working paths to run the pipeline (see the section below). If you prefer to run a manual installation, then ignore this step and proceed with step 2b).
 
 2b. Retrieve the code package from the public GitHub repository. How to retrieve the package and a description of the content of the package are presented in the :ref:`package_content` section of this website. Then proceed with the manual installation (see the section below).
 
-Shell script Installation
-^^^^^^^^^^^^^^^^^^^^^^^^^
-If you decide to perform a shell script installation because you followed step 2a) then you need to execute the shell script ``install.sh``. The script is available in the GitHub repository of the pipeline, at `this link <https://github.com/EnricoCorsaro/FAMED/blob/master/install.sh>`_. Once you downloaded the script, place it under the main folder where you want all the software installed. Then we recommend to make it an executable by typing the terminal command
+3. In order to use the ``IDL`` version of the pipeline, you will need to have ``IDL`` installed in your OS. ``IDL`` is typically provided by your research institution under a license agreement. Alternatively, a ``Python`` version of the pipeline will be available soon.
+
+Shell script Installation (Mac OS X and Unix)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If you decide to perform a shell script installation because you followed step 2a) then you need to execute the shell script ``install_osx.sh`` for Mac OS X, or ``install_unix.sh`` for Unix OS. The script is available in the GitHub repository of the pipeline, for `Mac OS X <https://github.com/EnricoCorsaro/FAMED/blob/master/install_osx.sh>`_ and for `Unix OS <https://github.com/EnricoCorsaro/FAMED/blob/master/install_unix.sh>`_.. Once you downloaded the script, place it under the main folder where you want all the software installed. Then we recommend to make it an executable by typing the terminal command (e.g. for the Mac OS version)
 
 .. code:: shell
     
-    $ chmod +x install.sh
+    $ chmod +x install_osx.sh
 
 In order to start the installation from scratch, go to the directory where you want to place all the software and run the following command via terminal
 
 .. code:: shell
     
-    $ ./install.sh -d -b -p -a -g
+    $ ./install_osx.sh -d -b -p -a -g
 
 This will install the software DIAMONDS (-d), Background (-b), PeakBagging (-p), Asymptotic (-a), and the GNUparallel tool (-g) inside the folder where you ran the shell script. Additionally, the labels YOUR_LOCAL_ROOT_PATH_HERE inside the ``famed_configuring_parameters.txt`` file will be replaced with your local working path containing the DIAMONDS-related software.
 
-The script is assuming that either curl or wget are available in your system as shell scripts to download the GNUparallel tool. We note that the ``install.sh`` script can run using different options. If you happen to have any of the DIAMONDS, Background, and PeakBagging codes already installed, you can skip their installation by discarding the corresponding options when executing the installing shell script.
+The script is assuming that either curl or wget are available in your system as shell scripts to download the GNUparallel tool. We note that the ``install_osx.sh`` and ``install_unix.sh`` scripts can run using different options. If you happen to have any of the DIAMONDS, Background, and PeakBagging codes already installed, you can skip their installation by discarding the corresponding options when executing the installing shell script.
 
     .. warning:: 
         When installing FAMED without installing the DIAMONDS-related software, e.g. because already installed in your system, make sure that you have the latest versions of each software available in the corresponding GitHub repositories. If this is not the case, the FAMED pipeline will not be able to run.
 
-Manual Installation
-^^^^^^^^^^^^^^^^^^^
+Manual Installation (Mac OS X and Unix)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The manual installation requires a number of steps, which may take some time to be accomplished. We usually recommend using the shell script installation, but if you are already more familiar with the installing process of the DIAMONDS-related software, then this can also be accomplished quite easily.
 
 1. Once the package is downloaded because you followed step 2b), you will have to install the codes DIAMONDS, Background, PeakBagging and Asymptotic. The requirement is that their corresponding folders will have to be placed under a single common directory. For installing instructions of these codes please visit their GitHub repositories at
@@ -60,3 +76,8 @@ The manual installation requires a number of steps, which may take some time to 
 
 4. As a last step, you need to configure the working paths in your ``famed_configuring_parameters.txt`` file. For this purpose, open the file located under the ``FAMED/idl/`` directory of the FAMED package and replace the YOUR_LOCAL_ROOT_PATH_HERE labels with your actual local path containing the FAMED package. For more details please check the description of the configuring parameters presented in the :ref:`configuring_parameters` section of this website.
 
+Windows OS 10
+^^^^^^^^^^^^^
+For Windows OS 10 we recommend using the free application for creating an Ubuntu virtual machine. For details on how to set up this environment, visit `Install Ubuntu on Windows 10 <https://github.com/EnricoCorsaro/DIAMONDS/blob/master/install_unix.sh>`_. 
+
+Once the Ubuntu VM is installed and running in Windows OS, simply follow the guidlines presented in the Linux OS section of this page. You can even decide to use the shell script installation with the ``install_unix.sh`` script inside the Ubuntu VM, making sure to have the basic ubuntu packages installed, which include the GCC compiler suite.
