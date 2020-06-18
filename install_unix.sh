@@ -19,12 +19,12 @@ fi
 
 if ! [ -x "$(command -v cmake)" ]; then
 	echo "Cmake is not installed. Trying to install it using apt-get..." >&2
-	
+
 	if ! [ -x "$(command -v apt-get)" ]; then
 		echo "Error: apt-get is not installed. Aborting..." >&2
 		exit 1
 	else
-		sudo apt-get install cmake	
+		sudo apt-get install cmake
 	fi
 fi
 
