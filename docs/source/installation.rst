@@ -35,8 +35,8 @@ Alternatively, CMake can be installed automatically with the pipeline by using t
 
 3. In order to use the ``IDL`` version of the pipeline, you will need to have ``IDL`` installed in your OS. ``IDL`` is typically provided by your research institution under a license agreement. Alternatively, a ``Python`` version of the pipeline will be available soon.
 
-Shell script Installation (Mac OS X and Unix)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Shell script Installation (Mac OS X and Unix OS)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If you decide to perform a shell script installation because you followed step 2a) then you need to execute the shell script ``install_osx.sh`` for Mac OS X, or ``install_unix.sh`` for Unix OS. The script is available in the GitHub repository of the pipeline, for `Mac OS X <https://github.com/EnricoCorsaro/FAMED/blob/master/install_osx.sh>`_ and for `Unix OS <https://github.com/EnricoCorsaro/FAMED/blob/master/install_unix.sh>`_.. Once you downloaded the script, place it under the main folder where you want all the software installed. Then we recommend to make it an executable by typing the terminal command (e.g. for the Mac OS version)
 
 .. code:: shell
@@ -56,8 +56,8 @@ The script is assuming that either curl or wget are available in your system as 
     .. warning:: 
         When installing FAMED without installing the DIAMONDS-related software, e.g. because already installed in your system, make sure that you have the latest versions of each software available in the corresponding GitHub repositories. If this is not the case, the FAMED pipeline will not be able to run.
 
-Manual Installation (Mac OS X and Unix)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Manual Installation (Mac OS X and Unix OS)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The manual installation requires a number of steps, which may take some time to be accomplished. We usually recommend using the shell script installation, but if you are already more familiar with the installing process of the DIAMONDS-related software, then this can also be accomplished quite easily.
 
 1. Once the package is downloaded because you followed step 2b), you will have to install the codes DIAMONDS, Background, PeakBagging and Asymptotic. The requirement is that their corresponding folders will have to be placed under a single common directory. For installing instructions of these codes please visit their GitHub repositories at
