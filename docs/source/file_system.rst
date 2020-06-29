@@ -1,4 +1,5 @@
 .. _file_system:
+
 File System
 ===========
 The file system of the pipeline follows a specific structure that is based on the adoption of DIAMONDS-related codes for the computation. The file system has a series of input files in order to be able to run each computation depending on which code is required. In addition the pipeline produces different outputs that are stored in the system according to different categories. An overview of the outputs is provided in the section :ref:`overview`.
