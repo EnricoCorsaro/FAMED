@@ -7,12 +7,14 @@ FAMED - Detailed asteroseismic analysis pipeline
     :target: https://github.com/EnricoCorsaro/FAMED/blob/master/LICENSE.txt
 .. image:: https://img.shields.io/badge/arXiv-2006.08245-blueviolet
     :target: https://arxiv.org/abs/2006.08245
+.. image:: https://img.shields.io/badge/ASCL-2006.021-red
+    :target: https://ascl.net/2006.021
 .. image:: https://readthedocs.org/projects/famed/badge/?version=latest
     :target: https://famed.readthedocs.io/en/latest/?badge=latest
 .. image:: https://img.shields.io/github/issues-closed/EnricoCorsaro/FAMED
     :target: https://github.com/EnricoCorsaro/FAMED/issues
 .. image:: https://raw.githubusercontent.com/EnricoCorsaro/FAMED/master/docs/figures/FAMED_LOGO_WHITE.jpg
-    :width: 500 px
+    :width: 400 px
 
 Author
 ^^^^^^
