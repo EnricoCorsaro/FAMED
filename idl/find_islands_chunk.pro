@@ -574,6 +574,8 @@ endif else begin
     endif
 endelse
 
+flag_quadrupole_found = 0
+
 if n_radial_chunk ne 0 then begin
     ; -------------------------------------------------------------------------------------------------------------------
     ; CASE 1: One radial mode is found in the chunk from the global modality
