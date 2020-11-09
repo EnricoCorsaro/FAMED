@@ -411,6 +411,12 @@ Similar as for the parameter ``dipole_radial_fwhm_ratio_ms`` but used for SG sta
 * ``dipole_radial_fwhm_ratio_rg``
 Similar as for the parameter ``dipole_radial_fwhm_ratio_ms`` but used for RG stars. The default value is 5, significantly larger than that used for less evolved stars, to allow compensating the varying frequency position of the dipole modes in such stars.
 
+* ``upper_epsilon_rg_slope``
+The slope for the linear relation :math:`\epsilon_\mathrm{upper} = a \log \Delta\nu + b`, which provides the upper limit for :math:`\epsilon` in stars with :math:`\Delta\nu \leq \Delta\nu_\mathrm{thresh}`. This is used as a control check for the sliding pattern fit to avoid wrong inferences of the central radial mode position. The default value is set to 0.253694 as obtained from a linear fit to the sample presented by Kallinger et al. (2012).
+
+* ``upper_epsilon_rg_offset``
+The offset for the linear relation presented for the configuring parameter ``upper_epsilon_rg_slope``. The default value is set to 0.76. 
+
 Asymptotic code fitting
 ^^^^^^^^^^^^^^^^^^^^^^^
 * ``dnu_prior_lower_fraction_as``
