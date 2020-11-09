@@ -185,6 +185,8 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        dipole_radial_fwhm_ratio_ms:           (float(par_value(where(par_name eq 'dipole_radial_fwhm_ratio_ms'))))[0],           $
        dipole_radial_fwhm_ratio_sg:           (float(par_value(where(par_name eq 'dipole_radial_fwhm_ratio_sg'))))[0],           $
        dipole_radial_fwhm_ratio_rg:           (float(par_value(where(par_name eq 'dipole_radial_fwhm_ratio_rg'))))[0],           $
+       upper_epsilon_rg_slope:                (float(par_value(where(par_name eq 'upper_epsilon_rg_slope'))))[0],                $
+       upper_epsilon_rg_offset:               (float(par_value(where(par_name eq 'upper_epsilon_rg_offset'))))[0],               $
        ; Asymptotic fit
        dnu_prior_lower_fraction_as:           (float(par_value(where(par_name eq 'dnu_prior_lower_fraction_as'))))[0],           $
        dnu_prior_upper_fraction_as:           (float(par_value(where(par_name eq 'dnu_prior_upper_fraction_as'))))[0],           $

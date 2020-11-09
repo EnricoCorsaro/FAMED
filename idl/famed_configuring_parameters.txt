@@ -77,7 +77,7 @@ min_sigma_range 1
 max_skim_iterations_global 2
 alpha_radial_universal 0.008
 correct_radial_frequencies 1
-save_asymptotic_radial 1
+save_asymptotic_radial 0
 separations_dnu_tolerance_rg 0.25
 separations_dnu_tolerance_ms 0.20
 weight_freq_fraction 0.3
@@ -118,10 +118,12 @@ epsilon_threshold 0.59
 dnu_lower_threshold_epsilon 3.
 n_sliding_test 5
 input_radial_freq_reference 0.
-force_epsilon_dnu_value 1
+force_epsilon_dnu_value 0
 n_orders_side_prior_ms 1.5
 n_orders_side_prior_sg 1.5
 n_orders_side_prior_rg 1.5
+upper_epsilon_rg_slope 0.253694
+upper_epsilon_rg_offset 0.76
 dnu_prior_lower_fraction 0.96
 dnu_prior_upper_fraction 1.04
 d02_prior_lower_ms 1.5
@@ -165,7 +167,7 @@ save_test_files 0
 detection_probability_threshold 0.993
 rotation_probability_threshold 0.75
 duplicity_probability_threshold 0.75
-rotation_test_activated 0
+rotation_test_activated 1
 height_ratio_threshold 10.0
 bkg_prior_lower 0.95
 bkg_prior_upper 1.05

@@ -536,111 +536,134 @@ endif else begin
     endelse        
 endelse
     
-; Check if the run already exists
+flag_repeat_sliding_fit = 1
 
-if (file_test(star_dir + info.as_subdir + '/' + run_subdir + '0/peakbagging_parameter000.txt') eq 0 or keyword_set(force)) then begin
-    ; Make sure that the number of orders to compute the sliding pattern model is an odd number
-    ; This will make sure that the selected range is symmetric with respect to nuMax
+while (flag_repeat_sliding_fit eq 1) do begin
+    ; Check if the run already exists
 
-    print,' Total number of radial orders in the sliding model: ',strcompress(string(n_orders_model,format='(I)'),/remove_all)
+    if (file_test(star_dir + info.as_subdir + '/' + run_subdir + '0/peakbagging_parameter000.txt') eq 0 or keyword_set(force) or flag_repeat_sliding_fit eq 1) then begin
+        ; Make sure that the number of orders to compute the sliding pattern model is an odd number
+        ; This will make sure that the selected range is symmetric with respect to nuMax
 
-    asymp_param = [n_orders_model,dipole_radial_height_ratio, $
-        quadrupole_radial_height_ratio,cp.octupole_radial_height_ratio,dipole_radial_fwhm_ratio]
+        print,' Total number of radial orders in the sliding model: ',strcompress(string(n_orders_model,format='(I)'),/remove_all)
 
-    fwhm_asymp = get_linewidth(numax,teff,numax)
-    fwhm_asymp = temporary(fwhm_asymp[0])
-    asymp_filename = 'asymptoticParameters'
-    filename = star_dir + asymp_filename + '.txt'
-    
-    get_lun,lun1
-    openw,lun1,filename
-    printf,lun1,'# Asymptotic parameters to set up the asymptotic pattern model.',format='(A0)'
-    printf,lun1,'# Row 1: Norders (spanning orders range around nuMax for asymptotic pattern)',format='(A0)'
-    printf,lun1,'# Row 2: l=1/l=0 height',format='(A0)'
-    printf,lun1,'# Row 3: l=2/l=0 height',format='(A0)'
-    printf,lun1,'# Row 3: l=3/l=0 height',format='(A0)'
-    printf,lun1,'# Row 4: l=1/l=0 fwhm',format='(A0)'
-    printf,lun1,asymp_param, format = '(F0.3)'
-    free_lun,lun1
+        asymp_param = [n_orders_model,dipole_radial_height_ratio, $
+            quadrupole_radial_height_ratio,cp.octupole_radial_height_ratio,dipole_radial_fwhm_ratio]
 
-    height_prior = [max(spsd_central)*0.1, max(spsd_central)*1.4]
-    boundaries = [freq_prior, height_prior, dnu_prior, d02_prior, d01_prior, d13_prior, rot_split_prior, cosi_prior]
+        fwhm_asymp = get_linewidth(numax,teff,numax)
+        fwhm_asymp = temporary(fwhm_asymp[0])
+        asymp_filename = 'asymptoticParameters'
+        filename = star_dir + asymp_filename + '.txt'
+        
+        get_lun,lun1
+        openw,lun1,filename
+        printf,lun1,'# Asymptotic parameters to set up the asymptotic pattern model.',format='(A0)'
+        printf,lun1,'# Row 1: Norders (spanning orders range around nuMax for asymptotic pattern)',format='(A0)'
+        printf,lun1,'# Row 2: l=1/l=0 height',format='(A0)'
+        printf,lun1,'# Row 3: l=2/l=0 height',format='(A0)'
+        printf,lun1,'# Row 3: l=3/l=0 height',format='(A0)'
+        printf,lun1,'# Row 4: l=1/l=0 fwhm',format='(A0)'
+        printf,lun1,asymp_param, format = '(F0.3)'
+        free_lun,lun1
 
-    ; Prepare frequency range and prior filenames for each run
-    
-    prior_filenames = strarr(cp.n_sliding_test)
-    data_range_filenames = strarr(cp.n_sliding_test)
+        height_prior = [max(spsd_central)*0.1, max(spsd_central)*1.4]
+        boundaries = [freq_prior, height_prior, dnu_prior, d02_prior, d01_prior, d13_prior, rot_split_prior, cosi_prior]
+
+        ; Prepare frequency range and prior filenames for each run
+        
+        prior_filenames = strarr(cp.n_sliding_test)
+        data_range_filenames = strarr(cp.n_sliding_test)
+
+        for k=0, cp.n_sliding_test-1 do begin
+            data_range_filenames(k) = star_dir + info.as_subdir + '/frequencyRange_' + run_names(k) + '.txt'
+            prior_filenames(k) = star_dir + info.as_subdir + '/' + info.prior_filename + '_' + run_names(k) + '.txt'
+            write_diamonds_data_range,data_range_filenames(k),data_freq_boundaries
+            write_diamonds_prior,prior_filenames(k),boundaries
+        endfor
+        
+        if info.print_on_screen eq 1 then begin
+            print,''
+            print,' Performing sliding-pattern fit with DIAMONDS.'
+            print,''
+        endif
+     
+        peakbagging_parameters = { subdir:          info.as_subdir,     $
+                                   run:             run_names,          $
+                                   background:      background_name,    $
+                                   fwhm:            fwhm_asymp,         $
+                                   filename_run:    run_subdir          $    
+                                 }
+
+        flag_computation_completed = run_peakbagging(catalog_id,star_id,peakbagging_parameters,0,1,0)
+
+        if info.save_test_files ne 1 then begin
+            for k=0, cp.n_sliding_test-1 do begin
+                file_delete,data_range_filenames(k)
+                file_delete,prior_filenames(k)
+            endfor
+        endif
+    endif else begin
+        if info.print_on_screen eq 1 then begin
+            print,' Load information from sliding-pattern fit with DIAMONDS.'
+        endif
+    endelse
+
+    echelle_epsi_array = fltarr(cp.n_sliding_test)
+    radial_freq_reference_array = fltarr(cp.n_sliding_test)
+    d01_array = fltarr(cp.n_sliding_test)
 
     for k=0, cp.n_sliding_test-1 do begin
-        data_range_filenames(k) = star_dir + info.as_subdir + '/frequencyRange_' + run_names(k) + '.txt'
-        prior_filenames(k) = star_dir + info.as_subdir + '/' + info.prior_filename + '_' + run_names(k) + '.txt'
-        write_diamonds_data_range,data_range_filenames(k),data_freq_boundaries
-        write_diamonds_prior,prior_filenames(k),boundaries
+        ; Read sampled frequency from DIAMONDS multi-modal fit for nu0 central
+        
+        readcol,star_dir + info.as_subdir + '/' + run_names(k) + '/peakbagging_parameter000.txt',par_nu0,format='D',/silent
+
+        ; Read sampled posterior distribution from DIAMONDS multi-modal fit
+        
+        readcol,star_dir + info.as_subdir + '/' + run_names(k) + '/peakbagging_posteriorDistribution.txt',post,format='D',/silent
+       
+        post /= max(post) 
+        radial_freq_reference = total(par_nu0*post)/total(post)
+
+        if cp.input_radial_freq_reference gt 0 then begin
+            radial_freq_reference = cp.input_radial_freq_reference
+        endif
+
+        radial_freq_reference_array(k) = radial_freq_reference
+        modulo_reference = radial_freq_reference mod fit_dnu
+        echelle_epsi = modulo_reference/fit_dnu
+        
+        if echelle_epsi lt cp.epsilon_threshold and fit_dnu gt cp.dnu_lower_threshold_epsilon then echelle_epsi += 1
+        echelle_epsi_array(k) = echelle_epsi
+
+        ; If the star is flagged as a MS star, then retrieve also the value of the small spacing d01 from the sliding fit
+
+        if flag_evolved_star eq 0 then begin
+            readcol,star_dir + info.as_subdir + '/' + run_names(k) + '/peakbagging_parameter004.txt',par_d01,format='D',/silent
+            d01_array(k) = total(par_d01*post)/total(post)
+        endif
     endfor
-    
-    if info.print_on_screen eq 1 then begin
-        print,''
-        print,' Performing sliding-pattern fit with DIAMONDS.'
-        print,''
+
+    median_echelle_epsi = median(echelle_epsi_array)
+
+    if fit_dnu le cp.dnu_threshold then begin
+        epsilon_limit = cp.upper_epsilon_rg_slope * alog(fit_dnu) + cp.upper_epsilon_rg_offset
+        
+        ; The sliding pattern without including the l=1 mode peak has failed in providing a reliable epsilon.
+        ; Therefore repeat the fit by including a l=1 mode peak, having a position fixed to the p-mode frequency of the
+        ; asymptotic relation.
+
+        if median_echelle_epsi ge epsilon_limit then begin
+            if info.print_on_screen eq 1 then begin
+                print,' Repeating the sliding-pattern fit because epsilon exceeds the upper limit for RGs.'
+            endif
+
+            d01_prior = [ap.d01,ap.d01]
+        endif else begin
+            flag_repeat_sliding_fit = 0
+        endelse
     endif
- 
-    peakbagging_parameters = { subdir:          info.as_subdir,     $
-                               run:             run_names,          $
-                               background:      background_name,    $
-                               fwhm:            fwhm_asymp,         $
-                               filename_run:    run_subdir          $    
-                             }
+endwhile
 
-    flag_computation_completed = run_peakbagging(catalog_id,star_id,peakbagging_parameters,0,1,0)
-
-    if info.save_test_files ne 1 then begin
-        for k=0, cp.n_sliding_test-1 do begin
-            file_delete,data_range_filenames(k)
-            file_delete,prior_filenames(k)
-        endfor
-    endif
-endif else begin
-    if info.print_on_screen eq 1 then begin
-        print,' Load information from sliding-pattern fit with DIAMONDS.'
-    endif
-endelse
-
-echelle_epsi_array = fltarr(cp.n_sliding_test)
-radial_freq_reference_array = fltarr(cp.n_sliding_test)
-d01_array = fltarr(cp.n_sliding_test)
-
-for k=0, cp.n_sliding_test-1 do begin
-    ; Read sampled frequency from DIAMONDS multi-modal fit for nu0 central
-    
-    readcol,star_dir + info.as_subdir + '/' + run_names(k) + '/peakbagging_parameter000.txt',par_nu0,format='D',/silent
-
-    ; Read sampled posterior distribution from DIAMONDS multi-modal fit
-    
-    readcol,star_dir + info.as_subdir + '/' + run_names(k) + '/peakbagging_posteriorDistribution.txt',post,format='D',/silent
-   
-    post /= max(post) 
-    radial_freq_reference = total(par_nu0*post)/total(post)
-
-    if cp.input_radial_freq_reference gt 0 then begin
-        radial_freq_reference = cp.input_radial_freq_reference
-    endif
-
-    radial_freq_reference_array(k) = radial_freq_reference
-    modulo_reference = radial_freq_reference mod fit_dnu
-    echelle_epsi = modulo_reference/fit_dnu
-    
-    if echelle_epsi lt cp.epsilon_threshold and fit_dnu gt cp.dnu_lower_threshold_epsilon then echelle_epsi += 1
-    echelle_epsi_array(k) = echelle_epsi
-
-    ; If the star is flagged as a MS star, then retrieve also the value of the small spacing d01 from the sliding fit
-
-    if flag_evolved_star eq 0 then begin
-        readcol,star_dir + info.as_subdir + '/' + run_names(k) + '/peakbagging_parameter004.txt',par_d01,format='D',/silent
-        d01_array(k) = total(par_d01*post)/total(post)
-    endif
-endfor
-
-median_echelle_epsi = median(echelle_epsi_array)
 median_index = where(echelle_epsi_array eq median_echelle_epsi)
 radial_freq_reference = radial_freq_reference_array(median_index)
 radial_freq_reference = temporary(radial_freq_reference(0))
