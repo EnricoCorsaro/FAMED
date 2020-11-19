@@ -536,12 +536,13 @@ endif else begin
     endelse        
 endelse
     
-flag_repeat_sliding_fit = 0
+flag_repeat_sliding_fit = 1
+sliding_iteration = 0
 
-while (flag_repeat_sliding_fit eq 0) do begin
+while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
     ; Check if the run already exists
 
-    if (file_test(star_dir + info.as_subdir + '/' + run_subdir + '0/peakbagging_parameter000.txt') eq 0 or keyword_set(force) or flag_repeat_sliding_fit eq 1) then begin
+    if (file_test(star_dir + info.as_subdir + '/' + run_subdir + '0/peakbagging_parameter000.txt') eq 0 or keyword_set(force) or sliding_iteration gt 0) then begin
         ; Make sure that the number of orders to compute the sliding pattern model is an odd number
         ; This will make the selected range symmetric with respect to nuMax
 
@@ -654,16 +655,24 @@ while (flag_repeat_sliding_fit eq 0) do begin
 
         if median_echelle_epsi ge epsilon_limit then begin
             if info.print_on_screen eq 1 then begin
-                print,' Repeating the sliding-pattern fit because epsilon exceeds the upper limit for RGs.'
+                if sliding_iteration gt 0 then begin
+                    print,' Repeating the sliding-pattern-fit did not solve the issue. Epsilon is likely to be wrong for this star.'
+                endif else begin
+                    print,' Repeating the sliding-pattern fit because epsilon exceeds the upper limit for RGs.'
+                endelse
             endif
 
             d01_prior = [ap.d01,ap.d01]
-            flag_repeat_sliding_fit = 1
         endif else begin
             ; Epsilon from the sliding-pattern fit has been validated. Therefore exit the while loop.
             flag_repeat_sliding_fit = 0
         endelse
-    endif
+    endif else begin
+        ; There is no need to repeat the sliding-pattern fit because the star is not a red giant.
+        flag_repeat_sliding_fit = 0
+    endelse
+
+    sliding_iteration++
 endwhile
 
 median_index = where(echelle_epsi_array eq median_echelle_epsi)
