@@ -536,14 +536,14 @@ endif else begin
     endelse        
 endelse
     
-flag_repeat_sliding_fit = 1
+flag_repeat_sliding_fit = 0
 
-while (flag_repeat_sliding_fit eq 1) do begin
+while (flag_repeat_sliding_fit eq 0) do begin
     ; Check if the run already exists
 
     if (file_test(star_dir + info.as_subdir + '/' + run_subdir + '0/peakbagging_parameter000.txt') eq 0 or keyword_set(force) or flag_repeat_sliding_fit eq 1) then begin
         ; Make sure that the number of orders to compute the sliding pattern model is an odd number
-        ; This will make sure that the selected range is symmetric with respect to nuMax
+        ; This will make the selected range symmetric with respect to nuMax
 
         print,' Total number of radial orders in the sliding model: ',strcompress(string(n_orders_model,format='(I)'),/remove_all)
 
@@ -658,7 +658,9 @@ while (flag_repeat_sliding_fit eq 1) do begin
             endif
 
             d01_prior = [ap.d01,ap.d01]
+            flag_repeat_sliding_fit = 1
         endif else begin
+            ; Epsilon from the sliding-pattern fit has been validated. Therefore exit the while loop.
             flag_repeat_sliding_fit = 0
         endelse
     endif
