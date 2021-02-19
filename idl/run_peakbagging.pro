@@ -18,9 +18,9 @@ nsmc_filename = star_dir + parameters.subdir + '/NSMC_configuringParameters.txt'
 xmeans_filename = star_dir + parameters.subdir + '/Xmeans_configuringParameters.txt'
 fwhm_minimum = min(parameters.fwhm)
 
-; Uni-modal peak bagging
+; Uni-modal peak bagging or Peak testing for FWHM fit
 
-if fwhm_minimum lt 0 and flag_peaktest eq 0 then begin
+if (fwhm_minimum lt 0 and flag_peaktest eq 0) or (flag_peaktest eq 2) then begin
     nsmc_parameters = [dp.pb.n_live, dp.pb.n_live_end, dp.pb.max_draw_attempts, dp.pb.n_initial_it, dp.pb.n_it_same_clust,    $
                        dp.pb.enlarg_fraction, dp.pb.shrinking_rate, dp.pb.termination_factor, dp.pb.max_nested_it]
     xmeans_parameters = [dp.pb.min_ncluster, dp.pb.max_ncluster]
@@ -31,14 +31,6 @@ endif
 if flag_peaktest eq 1 then begin
     nsmc_parameters = [dp.pb.n_live_test, dp.pb.n_live_end_test, dp.pb.max_draw_attempts, dp.pb.n_initial_it, dp.pb.n_it_same_clust,    $
                        dp.pb.enlarg_fraction, dp.pb.shrinking_rate, dp.pb.termination_factor_test, dp.pb.max_nested_it]
-    xmeans_parameters = [dp.pb.min_ncluster, dp.pb.max_ncluster]
-endif
-
-; Peak testing for FHWM fit
-
-if flag_peaktest eq 2 then begin
-    nsmc_parameters = [dp.pb.n_live, dp.pb.n_live_end, dp.pb.max_draw_attempts, dp.pb.n_initial_it, dp.pb.n_it_same_clust,    $
-                       dp.pb.enlarg_fraction, dp.pb.shrinking_rate, dp.pb.termination_factor, dp.pb.max_nested_it]
     xmeans_parameters = [dp.pb.min_ncluster, dp.pb.max_ncluster]
 endif
 
@@ -167,7 +159,7 @@ if n_runs gt 1 then begin
             openw,lun1,parameters.filename_run + '.txt'
             printf,lun1,parameters.run(start_index:end_index),format='(A0)'
             free_lun,lun1
-             
+            
             output_err_filename = catalog_id + star_id + '_' + parameters.subdir + '_'+ parameters.filename_run + '_parallel.out'
             spawn,'parallel ./peakbagging ::: ' + catalog_id + ' ::: ' + star_id + ' ::: ' + parameters.subdir + $
                   ' :::: ' + parameters.filename_run + '.txt ::: ' + parameters.background + ' ::: ' + info.prior_filename +      $ 
