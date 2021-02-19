@@ -1,4 +1,4 @@
-function interpolate_epsilon,teff,dnu
+function interpolate_epsilon,teff,dnu,plot=plot
 ; -------------------------------------------------------------------------------------------------------
 ; Author:  Enrico Corsaro
 ; e-mail:  enrico.corsaro@inaf.it
@@ -10,7 +10,6 @@ function interpolate_epsilon,teff,dnu
 ; -------------------------------------------------------------------------------------------------------
 COMMON CONFIG,cp
 COMMON GRAPHIC,pp,lp,sp,ppe,lpe
-COMMON STAR,info
 
 if (dnu gt cp.dnu_threshold) then begin
     ; Values from Lund+17 LEGACY
@@ -38,7 +37,7 @@ if (dnu gt cp.dnu_threshold) then begin
        good_epsi = good_epsi(0)
     endif
     
-    if info.print_on_screen eq 1 then begin
+    if keyword_set(plot) then begin
         loadct,39,/silent
         plot,teff_array,epsi_array,yr=[1.7,0.7],xr=[7000.,4700.],/nodata,xtitle='!3T!Deff!n',ytitle=sp.epsi_str,    $
         charsize=pp.epsi.charsize,xcharsize=pp.epsi.xcharsize,ycharsize=pp.epsi.ycharsize,  $
@@ -76,7 +75,7 @@ endif else begin
     dnu_array = findgen(301)/300. * cp.dnu_threshold + 0.15
     epsi_array = cp.epsilon_offset + cp.epsilon_slope*alog10(dnu_array)
 
-    if info.print_on_screen eq 1 then begin
+    if keyword_set(plot) then begin
         loadct,39,/silent
         plot,epsi_array,dnu_array,xr=[0.4,1.6],yr=[0.,cp.dnu_threshold],/nodata,ytitle=sp.dnu_str + '(' + sp.freq_unit_str + ')',xtitle=sp.epsi_str,    $
         charsize=pp.epsi.charsize,xcharsize=pp.epsi.xcharsize,ycharsize=pp.epsi.ycharsize,  $
