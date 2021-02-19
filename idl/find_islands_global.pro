@@ -31,6 +31,7 @@ readcol,info.configuring_parameters_filename,par_name,par_value,format='A,A',com
 get_lun,lun1
 openw,lun1,info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
     + info.local_configuring_parameters_filename + 'global.txt'
+
 for i=0,n_elements(par_name)-1 do begin
     strnumber = strcompress(string(strlen(par_name(i))),/remove_all)
     printf,lun1,par_name(i),par_value(i),format='(A'+strnumber+',1X,A0)'
@@ -80,7 +81,7 @@ endif
 ; Set up plotting panels for either X term or EPS
 ; -------------------------------------------------------------------------------------------------------------------
 
-if info.print_on_screen eq 1 then begin
+if (info.save_eps ne 0) or (info.save_png ne 0) then begin
     !p.multi = pp.global.pmulti
     position_sampling = pp.global.position_sampling             ; Sampling
     position_asef = pp.global.position_asef                     ; ASEF
@@ -124,16 +125,15 @@ nest_iter = findgen(n_elements(par0))
 ; Plot the nested sampling evolution of the frequency parameter as obtained by Diamonds.
 ; -------------------------------------------------------------------------------------------------------------------
 
-if info.print_on_screen eq 1 then begin
+if (info.save_eps ne 0) or (info.save_png ne 0) then begin
     plot_sampling,par0,position_sampling
     arrow,n_elements(par0)-1,numax,n_elements(par0)*0.9,numax,/data,thick=4,/solid,hsize=pp.numax_arrow_hsize,color=pp.numax_chunk_arrow_color
 endif
 
 
 ; -------------------------------------------------------------------------------------------------------------------
-; Compute an Average Shifted Histogram (ASH) of the distribution of nested iterations
+; Compute an Average Shifted Envelope Function (ASEF) of the distribution of nested iterations
 ; -------------------------------------------------------------------------------------------------------------------
-
 ; Compute the ASEF with high resolution in order to determine DeltaNu with high accuracy
 
 n_bins_acf = round(n_elements(nest_iter)/cp.n_bins_acf_scaling)
@@ -141,10 +141,10 @@ ash = compute_asef(par0,nest_iter,n_bins_acf)
 par_hist = ash.x
 asef_hist = ash.y
 
-if info.print_on_screen eq 0 then begin
-    acf_dnu = compute_acf_dnu(scaling_dnu,par_hist,asef_hist)
-endif else begin
+if (info.save_eps ne 0) or (info.save_png ne 0) then begin
     acf_dnu = compute_acf_dnu(scaling_dnu,par_hist,asef_hist,/plot)
+endif else begin
+    acf_dnu = compute_acf_dnu(scaling_dnu,par_hist,asef_hist)
 endelse
 
 ; Compute the ASEF with input resolution for extracting the local maxima
@@ -158,7 +158,11 @@ asef_hist = ash.y
 ; Find an appropriate epsilon based on the input temperature.
 ; -------------------------------------------------------------------------------------------------------------------
 
-interp_epsi = interpolate_epsilon(teff,acf_dnu)
+if (info.save_eps ne 0) or (info.save_png ne 0) then begin
+    interp_epsi = interpolate_epsilon(teff,acf_dnu,/plot)
+endif else begin
+    interp_epsi = interpolate_epsilon(teff,acf_dnu)
+endelse
 
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -229,7 +233,7 @@ freq_sig1 = sampled_estimates.freq_sig1
 sampling_counts = sampled_estimates.sampling_counts
 spsd_maximum = sampled_estimates.spsd_maximum
 
-if info.print_on_screen eq 1 then begin 
+if (info.save_eps ne 0) or (info.save_png ne 0) then begin 
     plot_asef,par_hist,asef_hist,maximum,range_maximum,threshold,position_asef
 endif
 
@@ -414,7 +418,7 @@ endif else begin
             freq1_left_modulo(tmp) = fit_dnu - freq1_left_modulo(tmp)
         endif
 
-        tmp = where(freq1_right_modulo gt acf_dnu/2.)
+        tmp = where(freq1_right_modulo gt fit_dnu/2.)
         if tmp(0) ne -1 then begin
             freq1_right_modulo(tmp) = fit_dnu - freq1_right_modulo(tmp)
         endif
@@ -755,7 +759,6 @@ if info.print_on_screen eq 1 then begin
     print,''
 endif
 
-
 ; -------------------------------------------------------------------------------------------------------------------
 ; Find possible bad frequencies and remove them from the list. Then compute a large frequency separation.
 ; Finally obtain a simple mode identification (either l=0 or l=1) for the full set of frequencies.
@@ -976,7 +979,7 @@ endif else n_dipole = 0
 
 n_freq = n_elements(freq1_final)
 
-if info.print_on_screen eq 1 then begin 
+if (info.save_eps ne 0) or (info.save_png ne 0) then begin 
     for i=0, n_freq-1 do begin
         loadct,39,/silent
         xyouts,freq1_final(i)*0.997,max(asef_hist)*1.17,strcompress(string(angular_degree(i)),/remove_all), $
@@ -1043,7 +1046,7 @@ endelse
 ; Plot the original PSD and a smoothed version of it by the mean linewidth found.
 ; Overplot an inset of the PSD if a global approach is used, to show the detail of the mode identification.
 ; -------------------------------------------------------------------------------------------------------------------
-if info.print_on_screen eq 1 then begin
+if (info.save_eps ne 0) or (info.save_png ne 0) then begin
     parameters = { min_freq:             min(par_hist),          $
                    max_freq:             max(par_hist),          $
                    freq_list:            freq1_final,            $
@@ -1088,7 +1091,7 @@ if info.print_on_screen eq 1 then begin
     print,' '
 endif
 
-if info.print_on_screen eq 1 then begin
+if (info.save_eps ne 0) or (info.save_png ne 0) then begin
     parameters = { catalog_id:     catalog_id,             $
                    star_id:        star_id,                $
                    run:            info.global_subdir,     $
@@ -1113,7 +1116,7 @@ if info.print_on_screen eq 1 then begin
     plot_summary,parameters,1
 endif
 
-if info.print_on_screen eq 1 then begin
+if (info.save_eps ne 0) or (info.save_png ne 0) then begin
     if info.save_eps eq 0 then begin
         read_jpeg,info.logo_filename,image
         TV, image, 0.855,0.865,TRUE = 1,/normal
