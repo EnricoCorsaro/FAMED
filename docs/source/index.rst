@@ -5,8 +5,8 @@ FAMED - Detailed asteroseismic analysis pipeline
     :target: https://github.com/EnricoCorsaro/FAMED
 .. image:: https://img.shields.io/badge/license-MIT-blue
     :target: https://github.com/EnricoCorsaro/FAMED/blob/master/LICENSE.txt
-.. image:: https://img.shields.io/badge/arXiv-2006.08245-blueviolet
-    :target: https://arxiv.org/abs/2006.08245
+.. image:: https://img.shields.io/badge/DOI-10.1051%2F0004--6361%2F202037930-blueviolet
+    :target: https://www.aanda.org/articles/aa/abs/2020/08/aa37930-20/aa37930-20.html
 .. image:: https://img.shields.io/badge/ASCL-2006.021-red
     :target: https://ascl.net/2006.021
 .. image:: https://readthedocs.org/projects/famed/badge/?version=latest
