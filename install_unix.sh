@@ -6,8 +6,7 @@ flag2=0
 flag3=0
 flag4=0
 flag5=0
-flag6=0
-flag7=0
+
 
 if [ $# -eq 0 ]; then
     echo "Usage: ./install_unix.sh [--diamonds | -d] [--background | -b] [--peakbagging | -p] [--asymptotic | -a] [--parallel | -g]"
@@ -47,9 +46,6 @@ do
 			;;
 		--parallel | -g)
 			flag5=1
-			;;
-		--python | -y)
-			flag6=1
 			;;
 		*) 
 			echo "Flag $1 not recognized. Only flags -d, -b, -p, -a, -g -y are allowed. Aborting..."
@@ -203,7 +199,9 @@ sed -i.old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/python/famed/fame
 
 echo "----------------------------------------------------------------------"
 echo " To use the python version, please add:"
+echo " "
 echo ${PWD}/FAMED/python/famed 
-echo "to your $PYTHONPATH environment variable"
+echo " "
+echo "to your PYTHONPATH environment variable"
 
 echo "----------------------------------------------------------------------"
