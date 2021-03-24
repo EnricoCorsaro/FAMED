@@ -1,8 +1,8 @@
 # -----------------------------------------------------------------------------------------
 # global paths used in the computation
 # -----------------------------------------------------------------------------------------
-root_path /home/jeanm12/Research/diamonds/
-famed_path /home/jeanm12/Research/pythoncode/famed_devel_space/FAMED/python/famed/famed/
+root_path YOUR_LOCAL_ROOT_PATH_HERE/
+famed_path YOUR_LOCAL_ROOT_PATH_HERE/FAMED/python/famed/famed/
 isla_subdir isla
 pb_subdir pb
 as_subdir as
@@ -194,7 +194,7 @@ d02_mass_slope -0.014
 d02_offset 0.035
 d02_unique_offset 0.047
 d02_unique_slope 0.121
-dnu_threshold 29.
+dnu_threshold 30.
 numax_threshold 300.
 numax_coeff_high 0.22
 numax_exponent_high 0.797
