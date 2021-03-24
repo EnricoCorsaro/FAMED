@@ -1,0 +1,124 @@
+# First attempt at a FAMED config file using YAML format
+
+# FILE PATHS
+PATHS:
+    configuring_parameters_file: '/home/jeanm12/Research/pythoncode/famed_devel_space/FAMED/python/famed/famed/famed_configuring_parameters.txt'
+
+# PLOTTING CONFIGURATION
+PLOTTING:
+    # Choose which plotting mode to use 'light' or 'dark'
+    plot_mode: 'dark'
+    # Dark config
+    dark:
+        mplstyle: 'data/famed_dark.mplstyle'
+        logo_filename: 'data/FAMED_LOGO_BLACK_NEW.jpg'
+        text1: 'gold'
+        text2:  'lime'
+        text3: 'cyan'
+        text4: 'white'
+        epsi_line: 'gold'
+        epsi_dots: 'gold'
+        epsi_edge: 'white'
+        epsi_mark: 'lightgreen'
+        acf_line: 'red'
+        acf_pos1: 'lime'
+        acf_pos2: 'red'
+        numax_arrow: 'cornflowerblue'
+        nested_dots: 'red'
+        psd_psd: 'grey'
+        psd_spsd: 'cyan'
+        psd_spsd0: 'yellow'
+        psd_bg: 'deeppink'
+        psd_line: 'darkorange'
+        psd_chunk1: '#2B359A'
+        psd_chunk2: '#3658AB'
+        psd_chunkN: 'white'
+        psd_modeid: 'yellow'
+        inset_id: 'yellow'
+        inset_spsd: 'aquamarine'
+        asef_bar: 'dimgrey'
+        asef_edge: 'white'
+        asef_sep: 'black'
+        asef_degree: 'gold'
+        asef_line: 'red'
+        asef_mark: 'red'
+        asef_mec: 'darkgrey'
+        asef_err: 'darkgrey'
+    # Light config
+    light:
+        mplstyle: 'data/famed.mplstyle'
+        logo_filename: 'data/FAMED_LOGO_WHITE_NEW.jpg'
+        text1: 'darkorange'
+        text2:  'limegreen'
+        text3: 'cornflowerblue'
+        text4: 'black'
+        epsi_line: 'darkorange'
+        epsi_dots: 'darkorange'
+        epsi_edge: 'white'
+        epsi_mark: 'green'
+        acf_line: 'red'
+        acf_pos1: 'green'
+        acf_pos2: 'red'
+        numax_arrow: 'cornflowerblue'
+        nested_dots: 'red'
+        psd_psd: 'grey'
+        psd_spsd: 'lightskyblue'
+        psd_spsd0: 'khaki'
+        psd_bg: 'deeppink'
+        psd_line: 'darkorange'
+        psd_chunk1: 'paleturquoise'
+        psd_chunk2: 'lightcyan'
+        psd_chunkN: 'black'
+        psd_modeid: 'peru'
+        inset_id: 'dimgrey'
+        inset_spsd: 'aquamarine'
+        asef_bar: 'darkgrey'
+        asef_edge: 'dimgrey'
+        asef_sep: 'lightgrey'
+        asef_degree: 'goldenrod'
+        asef_line: 'darkorange'
+        asef_mark: 'red'
+        asef_mec: 'dimgrey'
+        asef_err: 'dimgrey'
+# DIAMONDS PARAMETERS
+DIAMONDS: 
+    isla:
+        n_live: 2000
+        n_live_end: 2000
+        max_draw_attempts: 50000
+        n_initial_it: 1000
+        n_it_same_clust: 50
+        enlarg_fraction: 2.00
+        shrinking_rate: 0.0
+        termination_factor: 1.0
+        max_nested_it: 8000
+        min_ncluster: 1
+        max_ncluster: 10
+        max_ncluster_duplet: 3
+    pb:
+        n_live: 500
+        n_live_end: 500
+        n_live_test: 1000
+        n_live_end_test: 1000
+        max_draw_attempts: 50000
+        n_initial_it: 1000
+        n_it_same_clust: 50
+        enlarg_fraction: 2.00
+        shrinking_rate: 0.0
+        termination_factor: 1.0
+        termination_factor_test: 0.1
+        max_nested_it: 0
+        min_ncluster: 1
+        max_ncluster: 4 
+    slid:
+        n_live: 2000
+        n_live_end: 2000
+        max_draw_attempts: 50000
+        n_initial_it: 1000
+        n_it_same_clust: 50
+        enlarg_fraction: 2.00
+        shrinking_rate: 0.0
+        termination_factor: 1.0
+        max_nested_it: 4000
+        min_ncluster: 1
+        max_ncluster: 3              
