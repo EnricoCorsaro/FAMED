@@ -200,7 +200,7 @@ sed -i.old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/python/famed/fame
 echo "----------------------------------------------------------------------"
 echo " To use the python version, please add:"
 echo " "
-echo ${PWD}/FAMED/python/famed 
+echo ${PWD}/FAMED/python/ 
 echo " "
 echo "to your PYTHONPATH environment variable"
 
