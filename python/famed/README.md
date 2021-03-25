@@ -1,1 +1,0 @@
-This is a python implementation of Enrico Corsaro's FAMED package for peakbagging asteroseismic oscillations.

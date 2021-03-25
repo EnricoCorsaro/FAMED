@@ -1,0 +1,23 @@
+# List of computation parameters used for this process.
+# Row #1: Ndimensions
+# Row #2: Initial(Maximum) NlivePoints
+# Row #3: Minimum NlivePoints
+# Row #4: NinitialIterationsWithoutClustering
+# Row #5: NiterationsWithSameClustering
+# Row #6: maxNdrawAttempts
+# Row #7: terminationFactor
+# Row #8: Niterations
+# Row #9: Maximum number of nested iterations (0 if not set)
+# Row #10: Optimal Niterations
+# Row #11: Final Nclusters
+# Row #12: Final NlivePoints
+# Row #13: Computational Time (seconds)
+# Row #14: Error: No better likelihood found (1 = yes / 0 = no)
+# Row #15: Error: Ellipsoid matrix decomposition failed (1 = yes / 0 = no)
+10
+500
+500
+1500
+50
+10000
+0.01

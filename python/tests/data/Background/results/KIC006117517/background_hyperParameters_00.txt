@@ -1,0 +1,14 @@
+# Hyper parameters used for setting up uniform priors.
+# Each line corresponds to a different free parameter (coordinate).
+# Column #1: Minima (lower boundaries)
+# Column #2: Maxima (upper boundaries)
+3 9
+60 110
+0.2 3
+200 240
+20 40
+180 220
+90 115
+520 670
+113 126
+9 18

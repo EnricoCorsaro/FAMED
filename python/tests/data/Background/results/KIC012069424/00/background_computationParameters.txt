@@ -1,0 +1,46 @@
+# List of computation parameters used for this process.
+# Row #1: Ndimensions
+# Row #2: Initial(Maximum) NlivePoints
+# Row #3: Minimum NlivePoints
+# Row #4: NinitialIterationsWithoutClustering
+# Row #5: NiterationsWithSameClustering
+# Row #6: maxNdrawAttempts
+# Row #7: terminationFactor
+# Row #8: Niterations
+# Row #9: Optimal Niterations
+# Row #10: Final Nclusters
+# Row #11: Final NlivePoints
+# Row #12: Computational Time (seconds)
+# Row #13: Error: No better likelihood found (1 = yes / 0 = no)
+# Row #14: Error: Ellipsoid matrix decomposition failed (1 = yes / 0 = no)
+12
+500
+500
+1000
+50
+50000
+1
+16463
+16631
+3
+500
+3501
+0
+0
+# List of configuring parameters used for the ellipsoidal sampler and X-means
+# Row #1: Minimum Nclusters
+# Row #2: Maximum Nclusters
+# Row #3: Initial Enlargement Fraction
+# Row #4: Shrinking Rate
+3
+6
+1.5363
+0
+# Local working path used: /Users/eco/asismology/github/Background/
+# KIC ID: 012069424
+# Run Number: 21
+/Users/eco/asismology/github/Background/
+KIC012069424
+00
+ThreeHarveyColor
+0
