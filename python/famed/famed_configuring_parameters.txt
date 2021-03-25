@@ -2,7 +2,7 @@
 # global paths used in the computation
 # -----------------------------------------------------------------------------------------
 root_path YOUR_LOCAL_ROOT_PATH_HERE/
-famed_path YOUR_LOCAL_ROOT_PATH_HERE/FAMED/python/famed/famed/
+famed_path YOUR_LOCAL_ROOT_PATH_HERE/FAMED/python/famed/
 isla_subdir isla
 pb_subdir pb
 as_subdir as
