@@ -194,8 +194,8 @@ echo " Changing configuring parameters of the pipeline with local folders..."
 echo "----------------------------------------------------------------------"
 sed -i.old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/idl/famed_configuring_parameters.txt
 
-sed -i.old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/python/famed/famed/famed_configuring_parameters.txt
-sed -i.old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/python/famed/famed/famed_config.yml
+sed -i.old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/python/famed/famed_configuring_parameters.txt
+sed -i.old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/python/famed/famed_config.yml
 
 echo "----------------------------------------------------------------------"
 echo " To use the python version, please add:"
