@@ -646,7 +646,7 @@ class Global(FamedStar):
             median_echelle_epsi = median_high(echelle_epsi_array)
 
             if fit_dnu <= self.cp.dnu_threshold:
-                epsilon_limit  = self.cp.upper_epsilon_rg_slope * np.log10(fit_dnu) + self.cp.upper_epsilon_rg_offset
+                epsilon_limit  = self.cp.upper_epsilon_rg_slope * np.log(fit_dnu) + self.cp.upper_epsilon_rg_offset
 
                 # The sliding pattern without including the l=1 mode peak has
                 # failed in providing a reliable epsilon. Therefore repeat the
