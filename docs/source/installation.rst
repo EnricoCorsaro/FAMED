@@ -10,10 +10,12 @@ The FAMED pipeline requires that other preliminary software is installed in your
 
 Before continuiting we advise you to read the original code papers, namely the one related to DIAMONDS, `E. Corsaro & J. De Ridder 2014 Astronomy & Astrophysics, 571, 71 <https://www.aanda.org/articles/aa/abs/2014/11/aa24181-14/aa24181-14.html>`_, and the new ones related to the multi-modal sampling, `E. Corsaro 2019, Front. Astron. Space Sci, 6, 21 <https://www.frontiersin.org/articles/10.3389/fspas.2019.00021/full>`_ and the FAMED pipeline `E. Corsaro, J. M. McKeever, J. S. Kuszlewicz 2020, Astronomy & Astrophysics <https://www.aanda.org/articles/aa/abs/2020/08/aa37930-20/aa37930-20.html>`_.
 
-1. Before installing the DIAMONDS-related codes you need to install the `CMake <http://www.cmake.org/>`_ compiler, a compiler suited for C, C++ source files that is able to recognize the most suited compiler installed in your machine, depending on the platform you have. For Mac OS X it is clang, while for Linux-based OS it is gcc. For our purposes, we recommend you to install CMake 2.8 or later. You can find the dmg file of the version 2.8.12.2 (suggested for Mavericks OS) `here <http://www.cmake.org/files/v2.8/cmake-2.8.12.2-Darwin64-universal.dmg>`_, while more recent versions are required for El Captain OS or more recent OS X (we recommend CMake version 3.5.1 or later in this case). 
+1.
+Before installing the DIAMONDS-related codes you need to install the `CMake <http://www.cmake.org/>`_ compiler, a compiler suited for C, C++ source files that is able to recognize the most suited compiler installed in your machine, depending on the platform you have. For Mac OS X it is clang, while for Linux-based OS it is gcc. For our purposes, we recommend you to install CMake 2.8 or later. You can find the dmg file of the version 2.8.12.2 (suggested for Mavericks OS) `here <http://www.cmake.org/files/v2.8/cmake-2.8.12.2-Darwin64-universal.dmg>`_, while more recent versions are required for El Captain OS or more recent OS X (we recommend CMake version 3.5.1 or later in this case). 
 
     .. warning:: 
         Make sure you install the CMake command line tool as well, since you need that to compile DIAMONDS via terminal. To do so, either open the CMake app and go to Tools/Install for Command Line Use if you have installed it already, or select the option during the installation phase. To avoid further compilation issues, we also recommend to update Xcode to its latest version if you are running under a Mac OSX.
+	
 
 You also have the possibility to install cmake directly from the terminal. If you are running on a Mac OS X system, then execute the command
 
@@ -29,11 +31,41 @@ If you are running on a Unix system such as Ubuntu, then use the command
 
 Alternatively, CMake can be installed automatically with the pipeline by using the installing shell script, ``install_osx.sh`` for Mac OS X, or ``install_unix.sh`` for Unix OS, that is provided in the GitHub repository of FAMED.
 
-2a. Install git in your terminal system if this is not already installed. For this purpose you can visit `Git Download <https://git-scm.com/downloads>`_. This will allow you using the pre-configured installing shell script to run an automatic installation of all the required software as well as a setting up of the working paths to run the pipeline (see the section below). If you prefer to run a manual installation, then ignore this step and proceed with step 2b).
 
-2b. Retrieve the code package from the public GitHub repository. How to retrieve the package and a description of the content of the package are presented in the :ref:`package_content` section of this website. Then proceed with the manual installation (see the section below).
 
-3. In order to use the ``IDL`` version of the pipeline, you will need to have ``IDL`` installed in your OS. ``IDL`` is typically provided by your research institution under a license agreement. Alternatively, a ``Python`` version of the pipeline will be available soon.
+2.
+a)
+Install git in your terminal system if this is not already installed. For this purpose you can visit `Git Download <https://git-scm.com/downloads>`_. This will allow you using the pre-configured installing shell script to run an automatic installation of all the required software as well as a setting up of the working paths to run the pipeline (see the section below). If you prefer to run a manual installation, then ignore this step and proceed with step 2b).
+
+2.
+b)
+Retrieve the code package from the public GitHub repository. How to retrieve the package and a description of the content of the package are presented in the :ref:`package_content` section of this website. Then proceed with the manual installation (see the section below).
+
+
+3.
+In order to use the ``IDL`` version of the pipeline, you will need to have ``IDL`` installed in your OS. ``IDL`` is typically provided by your research institution under a license agreement.
+
+   
+4.
+In oder to use the ``Python`` version of the pipeline, you will need to have a minimum working python distribution. The code has been built and tested on ``Python 3.8``. As an example, using ``conda``, you can create and use a working python environment with the commands
+
+ .. code:: shell
+
+    $ conda install -n famed_env scipy matplotlib pyaml
+    $ conda activate famed_env
+
+The directory ``FAMED/python/`` will need to be added to your ``$PYTHONPATH`` environment variable. You can type the following in your terminal or add to your shell config file, changing it to fit your local path:
+
+For BASH:
+ .. code:: shell
+
+    $ export PYTHONPATH="$PYTHONPATH:/YOUR_LOCAL_PATH/FAMED/python"	  
+
+For C-Shell:
+ .. code:: shell
+
+    $ setenv PYTHONPATH $PYTHONPATH':/YOUR_LOCAL_PATH/FAMED/python'
+   
 
 Shell script Installation (Mac OS X and Unix OS)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
