@@ -21,3 +21,31 @@
 50
 10000
 0.01
+6760
+0
+4212
+5
+500
+179
+0
+0
+# List of configuring parameters used for the ellipsoidal sampler and cluster algorithm
+# Row #1: Minimum Nclusters
+# Row #2: Maximum Nclusters
+# Row #3: Initial Enlargement Fraction
+# Row #4: Shrinking Rate
+1
+10
+1.38365
+0.03
+# Other information on the run
+# Row #1: Local working path used
+# Row #2: Catalog and Star ID
+# Row #3: Run Number
+# Row #4: Background model adopted
+# Row #5: PCA activated (1 = yes / 0 = no)
+/Users/eco/asismology/github/Background/
+KIC006117517
+00
+ThreeHarvey
+0
