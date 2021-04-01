@@ -22,7 +22,7 @@ Author
 
 Python version development
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-- `Jean McKeever <mailto:jean.mckeever@yale.edu>`_
+- `Jean McKeever <mailto:jm@mira.org>`_
 - `James Kuszlewicz <mailto:kuszlewicz@mps.mpg.de>`_
 
 Description
