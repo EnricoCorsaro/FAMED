@@ -652,7 +652,7 @@ class Global(FamedStar):
                 # failed in providing a reliable epsilon. Therefore repeat the
                 # fit by including the l=1 model peak, having the position fixed
                 # to the p-mode frequency of the asymptotic relation
-                if median_echelle_epsi > epsilon_limit:
+                if median_echelle_epsi >= epsilon_limit:
                     if self.cp.print_on_screen:
                         if sliding_iteration>0:
                             print('Repeating the sliding-pattern fit did not solve the issue. Epsilon is likely to be wrong for this star')

@@ -308,8 +308,7 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
     n_runs = len(parameters['run'])
     for i in range(0, n_runs):
         directory = star_dir/parameters['subdir']/str(parameters['run'][i])
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        os.makedirs(directory, exist_ok=True)
 
     cwd = os.getcwd()
     os.chdir(diamonds_path/'PeakBagging'/'build')
@@ -442,15 +441,13 @@ def run_asymptotic(catalog_id, star_id, parameters, numax, ell, dp, diamonds_pat
     nsmc_parameters = [dp.get(key) for key in nsmc_keys ]
     xmeans_parameters = [dp['min_ncluster'], dp['max_ncluster']]
 
-    if not os.path.isfile(nsmc_filename):
-        with open(nsmc_filename,'w') as f:
-            for par in nsmc_parameters:
-                f.write(str(par)+'/n')
+    with open(nsmc_filename,'w') as f:
+        for par in nsmc_parameters:
+            f.write(str(par)+'/n')
 
-    if not os.path.isfile(xmeans_filename):
-        with open(xmeans_filename,'w') as f:
-            for par in xmeans_parameters:
-                f.write(str(par)+'/n')
+    with open(xmeans_filename,'w') as f:
+        for par in xmeans_parameters:
+            f.write(str(par)+'/n')
 
     if not os.path.isdir(star_dir/parameters['subdir']/parameters['run']):
         subprocess.call(['mkdir',star_dir/parameters['subdir']/parameters['run']])
@@ -462,10 +459,8 @@ def run_asymptotic(catalog_id, star_id, parameters, numax, ell, dp, diamonds_pat
     os.chdir(asymptotic_path)
     output_err_filename = star_dir/parameters['subdir']/(catalog_id + star_id + '_' + parameters['subdir'] + '_' + parameters['run'] + '.out')
 
-
-
     subprocess.call(['./asymptotic', catalog_id, star_id, parameters['subdir'], 
-                     parameters['run'], prior_filename, str(numax), str(ell)],
+                    parameters['run'], prior_filename, str(numax), str(ell)],
                     stdout=open(output_err_filename,'w'), stderr=subprocess.STDOUT)
 
     #subprocess.call(['rm', output_err_filename])
