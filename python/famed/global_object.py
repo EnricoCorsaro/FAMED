@@ -563,9 +563,6 @@ class Global(FamedStar):
                 if (n_orders_model%2) == 0:
                     n_orders_model += 1
 
-
-
-
         flag_repeat_sliding_fit = True
         sliding_iteration = 0
         
