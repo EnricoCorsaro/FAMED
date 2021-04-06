@@ -53,11 +53,11 @@ To force ``find_islands`` to recompute the sliding pattern fit we can use the ``
 
 With this interactive method, you can change specific configuring parameters and recompute just the steps that you need to.
 
-If the configuring parameter flag ``save_progress_pickle`` is set, a pickle of the star object is saved in the results directory of each star after both the ``make_islands()`` and ``find_islands()`` functions have been run. The keywords ``islands_made`` or ``islands_found`` can be set to ``True`` when creating a ``Global`` object to load the pickled data. 
+If the configuring parameter flag ``save_progress_pickle`` is set, a pickle of the star object is saved in the results directory of each star after both the ``make_islands()`` and ``find_islands()`` functions have been run. The keyword ``load_islands`` can be set to ``True`` when creating a ``Global`` object to load the pickled data. 
 
  .. code :: python
 
-     >>> star = f.Global('KIC', '006117517', 4687, islands_made=True)
+     >>> star = f.Global('KIC', '006117517', 4687, load_islands=True)
 
 
 
