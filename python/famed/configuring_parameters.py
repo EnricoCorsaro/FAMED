@@ -27,16 +27,23 @@ class ConfiguringParameters(object):
 
         # Using config file to setup plotting and paths
         # PATH FOR CONFIG FILE IS FIXED! THIS IS BAD AND MUST CHANGE!
-        
-        with open(famed_path/'famed_config.yml', 'r') as f:
-            params = yaml.safe_load(f)
+
+        #Try to read local config file first, then default to famed_path.
+        self.local_config = False
+        try:
+            with open('famed_config.yml', 'r') as f:
+                params = yaml.safe_load(f)
+                self.local_config = True
+        except:
+            with open(famed_path/'famed_config.yml', 'r') as f:
+                params = yaml.safe_load(f)
 
         # Setup path to configuring parameters
         paths = params['PATHS']
 
         # Read in configuring parameters from a fixed filename
-        #print(Path.cwd())
-        with open(paths['configuring_parameters_file']) as f:
+        self.configuring_parameters_file = paths['configuring_parameters_file']
+        with open(self.configuring_parameters_file) as f:
             d = dict(x.rstrip().split(None,1) for x in f if not x.startswith('#'))
 
         # Set attributes from file
@@ -62,7 +69,7 @@ class ConfiguringParameters(object):
         self.famed_path = famed_path
         
         self.peakbagging_filename_label = '_peakbagging_'
-        self.peakbagging_filename_global_label = 'global.txt'
+        self.peakbagging_filename_global_label = self.global_subdir+'.txt'
         self.peakbagging_filename_chunk_label = 'chunk_'
         
         # Set DIAMONDS parameters for different modalities
@@ -79,3 +86,4 @@ class ConfiguringParameters(object):
             self.dp_slid[key] = diamonds['slid'][key]
 
             
+

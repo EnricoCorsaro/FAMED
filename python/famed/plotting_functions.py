@@ -95,7 +95,7 @@ def psd_plot(famed_obj,ax=None):
     ax.semilogy(famed_obj.freq,famed_obj.psd,'-',c=famed_obj.cp.psd_psd)
     ax.semilogy(famed_obj.freq,famed_obj.spsd,'-',c=famed_obj.cp.psd_spsd,lw=2)
     ax.semilogy(famed_obj.freq,famed_obj.bg_level,'--',c=famed_obj.cp.psd_bg,lw=2)
-    ax.set_xlim(min(famed_obj.separations),max(famed_obj.separations))
+    ax.set_xlim(min(famed_obj.freq),max(famed_obj.freq))
     ax.set_ylim(min(famed_obj.bg_level)*.85,max(famed_obj.spsd*100))
     
     # nu_max arrow
@@ -207,10 +207,10 @@ def acf_plot(famed_obj,ax=None):
         ax = plt.axes()
     ax.set_ylabel(r'ACF$^2$')
     ax.set_xlabel(r'$\Delta\nu$ ($\mu$Hz)')
-    ax.plot(famed_obj.interpolated_dnu,famed_obj.interpolated_acf,'-',color=famed_obj.cp.acf_line,zorder=1)
+    ax.plot(famed_obj.interpolated_dnu,famed_obj.interpolated_acf**2,'-',color=famed_obj.cp.acf_line,zorder=1)
     ax.axvline(famed_obj.scaling_dnu,ls=':',color=famed_obj.cp.acf_pos2,zorder=3)
     ax.axvline(famed_obj.acf_dnu,ls='--',color=famed_obj.cp.acf_pos1,zorder=2)
-    plt.ylim(min(famed_obj.interpolated_acf),max(famed_obj.interpolated_acf)*1.15)
+    plt.ylim(min(famed_obj.interpolated_acf),max(famed_obj.interpolated_acf**2)*1.15)
 
 def asef_histogram(famed_obj,ax=None):
     """
@@ -275,7 +275,7 @@ def text_panel(famed_obj,ax=None):
     ax.spines['left'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
-    ax.text(0.0,.05,r'$\mathbf{%s %s}$''\n Folder:%s\n Run:%s\n Modality:%s'%(famed_obj.catalog_id.replace('_', '\_'),famed_obj.star_id.replace('_', '\_'),famed_obj.cp.isla_subdir,'global','GLOBAL'),fontsize='small',color=famed_obj.cp.text1)
+    ax.text(0.0,.05,r'$\mathbf{%s %s}$''\n Folder:%s\n Run:%s\n Modality:%s'%(famed_obj.catalog_id.replace('_', '\_'),famed_obj.star_id.replace('_', '\_'),famed_obj.cp.isla_subdir,famed_obj.cp.global_subdir,'GLOBAL'),fontsize='small',color=famed_obj.cp.text1)
     if famed_obj.bad_epsi:
         ax.text(0.15,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{ACF}}$ = %.3f $\mu$Hz''\n'r' SNR = %.1f\, $\epsilon_{\mathrm{ech}}$ = %.3f'%(famed_obj.numax,famed_obj.dnu,famed_obj.acf_dnu,famed_obj.snr,famed_obj.epsilon),fontsize='small',color='red')
         ax.text(0.15,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{ACF}}$ = %.3f $\mu$Hz''\n'r' SNR = %.1f\,'%(famed_obj.numax,famed_obj.dnu,famed_obj.acf_dnu,famed_obj.snr),fontsize='small',color=famed_obj.cp.text2)
