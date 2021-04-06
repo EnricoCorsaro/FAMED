@@ -305,14 +305,18 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
 
 
     # Create subdirectories for each run, if not already present
-    n_runs = len(parameters['run'])
+    if isinstance(parameters['run'],str):
+        n_runs = 1
+    else:
+        n_runs = len(parameters['run'])    
+
     for i in range(0, n_runs):
         directory = star_dir/parameters['subdir']/str(parameters['run'][i])
         os.makedirs(directory, exist_ok=True)
 
     cwd = os.getcwd()
     os.chdir(diamonds_path/'PeakBagging'/'build')
-    
+
     if n_runs > 1:
         n_chunks = np.int(np.ceil(n_runs*1.0/n_threads))
         start_indices = np.zeros(n_chunks,dtype='int')
@@ -339,7 +343,7 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
         else:
             start_indices[0] = start_index
             end_indices[0] = n_runs - 1
-
+                    
         for j in range(0, n_chunks):
             start_index = start_indices[j]
             end_index = end_indices[j]
@@ -347,12 +351,12 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
             if merge:
                 filename_run =  star_dir/parameters['subdir']/(catalog_id + star_id + '_run_indices.txt')
                 with open(filename_run,'w') as f:
-                    for run in parameters['run'][start_index:end_index+1]:
+                    for run in parameters['run'][start_index:end_index]:
                         f.write('{}\n'.format(run))
 
                 filename_bg =  star_dir/parameters['subdir']/(catalog_id + star_id + '_bg_names.txt')
                 with open(filename_bg,'w') as f:
-                    for bg in parameters['background'][start_index:end_index+1]:
+                    for bg in parameters['background'][start_index:end_index]:
                         f.write('{}\n'.format(bg))
 
                 filename_prior = star_dir/parameters['subdir']/(catalog_id + star_id + '_prior_filenames.txt')
@@ -362,7 +366,7 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
 
                 filename_fwhm = star_dir/parameters['subdir']/(catalog_id + star_id + '_linewidths.txt')
                 with open(filename_fwhm,'w') as f:
-                    for fwhm in parameters['fwhm'][start_index:end_index+1]:
+                    for fwhm in parameters['fwhm'][start_index:end_index]:
                         f.write('{}\n'.format(fwhm))
 
                 output_err_filename = star_dir/parameters['subdir']/(catalog_id + star_id + '_' + parameters.subdir + '_parallel.out')
@@ -374,7 +378,7 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
                 os.remove(filename_fwhm)
             else:
                 with open(star_dir/parameters['subdir']/(parameters['filename_run']+'.txt'),'w') as f:
-                    for run in parameters['run'][start_index:end_index+1]:
+                    for run in parameters['run'][start_index:end_index]:
                         f.write('{}\n'.format(run))
 
                 output_err_filename =  star_dir/parameters['subdir']/(catalog_id + star_id + '_' + parameters['subdir'] + '_'+ parameters['filename_run'] + '_parallel.out')
@@ -382,9 +386,8 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
                 process = subprocess.run(command,shell=True,check=True,stdout=open(output_err_filename,'w'),stderr=subprocess.STDOUT)
 
     else:
-        output_err_filename = star_dir/parameters['subdir']/(catalog_id + star_id + '_' + parameters['subdir'] + '_' + str(parameters['run'][0]) + '.out')
-        command = './peakbagging {} {} {} {} {} {} {} {} {} {}'.format(catalog_id,star_id,parameters['subdir'],parameters['run'][0],parameters['background'],prior_filename,parameters['fwhm'],flag_peaktest,flag_asymptotic,flag_bglevel)
-        print(command)
+        output_err_filename = star_dir/parameters['subdir']/(catalog_id + star_id + '_' + parameters['subdir'] + '_' + str(parameters['run']) + '.out')
+        command = './peakbagging {} {} {} {} {} {} {} {} {} {}'.format(catalog_id,star_id,parameters['subdir'],parameters['run'],parameters['background'],prior_filename,parameters['fwhm'],flag_peaktest,flag_asymptotic,flag_bglevel)
         subprocess.run(command,shell=True,check=True,stdout=open(output_err_filename,'w'),stderr=subprocess.STDOUT)
         
     os.chdir(cwd)
@@ -441,13 +444,10 @@ def run_asymptotic(catalog_id, star_id, parameters, numax, ell, dp, diamonds_pat
     nsmc_parameters = [dp.get(key) for key in nsmc_keys ]
     xmeans_parameters = [dp['min_ncluster'], dp['max_ncluster']]
 
-    with open(nsmc_filename,'w') as f:
-        for par in nsmc_parameters:
-            f.write(str(par)+'/n')
-
-    with open(xmeans_filename,'w') as f:
-        for par in xmeans_parameters:
-            f.write(str(par)+'/n')
+    with open(nsmc_filename, 'w') as f:
+        f.write("\n".join(map(str,nsmc_parameters)))
+    with open(xmeans_filename, 'w') as f:
+        f.write("\n".join(map(str,xmeans_parameters)))
 
     if not os.path.isdir(star_dir/parameters['subdir']/parameters['run']):
         subprocess.call(['mkdir',star_dir/parameters['subdir']/parameters['run']])

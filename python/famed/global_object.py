@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import shutil
 import subprocess
 import glob
 import pickle
@@ -38,9 +39,19 @@ class Global(FamedStar):
             if self.cp.print_on_screen:
                 print('Loading saved information from a prior step')
             # Load any variables into attributes that should haven been
-            # loaded or created during make_islands
+            # loaded or created during make_islands. Will ignore new config
             temp = pickle.load(open(self.star_dir/(self.catalog_id+self.star_id+'.pickle'),'rb'))
             self.__dict__ = temp.__dict__.copy()
+
+        else:
+            # Copy the configuring parameters to the summary/ directory
+            target_dir = self.star_dir/self.cp.summary_subdir
+            if self.cp.local_config:
+                shutil.copy('famed_config.yml',target_dir/'famed_config_'+self.global_subdir+'yml')
+            else:
+                shutil.copy(self.cp.famed_path/'famed_config.yml',target_dir/('famed_config_'+self.cp.global_subdir+'.yml'))
+            shutil.copy(self.cp.configuring_parameters_file,target_dir/('famed_configuring_parameters_'+self.cp.global_subdir+'.txt'))
+
             
     def make_islands(self):
         """ 
@@ -76,13 +87,12 @@ class Global(FamedStar):
 
         # Run DIAMONDS in a global multi-modal fit in order to identify the
         # chunks and estimate global frequencies and the value of DeltaNu
-        run_subdir = 'global'
         avg_fwhm = np.mean(astero.get_linewidth(np.array([np.min(freq),np.max(freq)]), self.teff,numax, self.cp.numax_threshold))
         smth_bins = int(avg_fwhm/freqbin)
         spsd = smooth(psd, window_len=smth_bins, window='flat')
 
         # Write the prior file for the global multi-modal fit
-        with open(self.star_dir/self.cp.isla_subdir/(self.cp.prior_filename + '_' + run_subdir + '.txt'),'w') as f:
+        with open(self.star_dir/self.cp.isla_subdir/(self.cp.prior_filename + '_' + self.cp.global_subdir + '.txt'),'w') as f:
             f.write('{}    {}\n{}    {}\n'.format(np.min(freq),np.max(freq),0,np.mean(spsd)))
             
         # Evaluate linewidth at nuMax and use it for the global multi-modal fit
@@ -99,7 +109,7 @@ class Global(FamedStar):
         # Perform the multi-modal fit. When performing the global fit, also
         # save the background level as an output file
         peakbagging_parameters = {'subdir':     self.cp.isla_subdir,
-                                  'run':        [run_subdir],
+                                  'run':        self.cp.global_subdir,
                                   'background': self.bgp['name'], 
                                   'fwhm':       linewidth,
                                   'duplet':     False}
@@ -133,7 +143,7 @@ class Global(FamedStar):
 
         """
         
-        run = 'global'
+        run = self.cp.global_subdir
         peakbagging_filename_global = self.star_dir/self.cp.summary_subdir/(self.catalog_id + 
                                       self.star_id + self.cp.peakbagging_filename_label + 
                                       self.cp.peakbagging_filename_global_label)
@@ -982,7 +992,7 @@ class Global(FamedStar):
         # Save the value of dnu from ACF and the value of epsilon from diagram
         with open(peakbagging_filename_global, 'w') as f:
             f.write('# nuMax (microHz), DeltaNu_ACF (microHz), DeltaNu_fit (microHz), epsilon, alpha, Teff (K), N_chunks, Flag depressed dipole\n')
-            f.write('%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.1f\t%i\t%i\n'%(numax,acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole))
+            f.write('{:.4f}  {:.4f}  {:.4f}  {:.4f}  {:.4f}  {:.1f}  {:d}  {:d}\n'.format(numax,acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole))
 
             # Save the frequency positions of each chunk identified in GLOBAL.
             f.write('# Chunk index, start and end frequency values for each chunk (one per line), SNR\n')
@@ -991,14 +1001,14 @@ class Global(FamedStar):
                 spsd_chunk = spsd[tmp_chunk]
                 bg_level_chunk = bg_level_local[tmp_chunk]
                 snr_chunk = max(spsd_chunk)/np.mean(bg_level_chunk)
-                f.write('%i\t%.3f\t%.3f\t%.2f\n'%(i,separations[i],separations[i+1],snr_chunk))
+                f.write('{:<3d} {:>12.3f} {:>12.3f} {:>12.2f}\n'.format(i,separations[i],separations[i+1],snr_chunk))
 
             # Save the individual oscillation frequencies from the global fit,
             # their uncertainties, mode identification and associated FWHM from
             # Ball+18.
             f.write('# n, l, frequency (microHz), 1-sigma frequency (microHz), ASEF maximum (iterations), FWHM from predictions (microHz)\n')
             for i in range(0,n_freq):
-                f.write('%i\t%i\t%.5f\t%.5f\t%i\t%.5f\n'%(order_number[i],angular_degree[i],freq1_final[i],freq_sig1_final[i],asef_maximum_final[i],linewidth[i]))
+                f.write('{:<3d} {:>2d} {:>12.5f} {:>12.5f} {:>7d} {:>12.5f}\n'.format(order_number[i],angular_degree[i],freq1_final[i],freq_sig1_final[i],int(asef_maximum_final[i]),linewidth[i]))
 
         # Save some quantities as object attributes.
         self.separations = separations
@@ -1029,7 +1039,7 @@ class Global(FamedStar):
         famed_plots.global_plot(self)
 
         if self.cp.save_png:
-            plt.savefig(self.star_dir/self.cp.figs_subdir/(self.catalog_id+self.star_id+'_global_plot.png'))
+            plt.savefig(self.star_dir/self.cp.figs_subdir/(self.catalog_id+self.star_id+'_'+self.cp.isla_subdir+'_'+self.cp.global_subdir+'_GLOBAL.png'))
         if self.cp.save_eps:
-            plt.savefig(self.star_dir/self.cp.figs_subdir/(self.catalog_id+self.star_id+'_global_plot.eps'))
+            plt.savefig(self.star_dir/self.cp.figs_subdir/(self.catalog_id+self.star_id+'_'+self.cp.isla_subdir+'_'+self.cp.global_subdir+'_GLOBAL.eps'))
 
