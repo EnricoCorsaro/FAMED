@@ -16,7 +16,7 @@ def test_steps(silent_remove):
 
     # Run test
     star=f.Global(cat_id, star_id, teff)
-    star.make_islands()
+    star.make_islands(force=True)
     star.find_islands(force=True)
     star.make_global_plots()
 
