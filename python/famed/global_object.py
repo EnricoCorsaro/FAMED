@@ -28,12 +28,11 @@ class Global(FamedStar):
         ID of the star as a string (e.g. '0012008916' or '7037405').
     teff : float
         Effective temperature of the star in Kelvin.
-    islands_made : bool, default: False
-        Flag to read the pickled object if `make_islands` has already been ran. 
-    islands_found : bool, default: False
-        Flag to read the pickled object if `find_islands` has already been ran. 
+    load_islands : bool, default: False
+        Flag to read the pickled object if `make_islands` or `find_islands` has 
+        already been ran.
     """
-    def __init__(self, catalog_id, star_id, teff, islands_made=False, islands_found=False):
+    def __init__(self, catalog_id, star_id, teff, load_islands=False):
         FamedStar.__init__(self, catalog_id, star_id, teff)
 
         # Create output directories if not already present
@@ -50,9 +49,9 @@ class Global(FamedStar):
         if not os.path.isdir(self.star_dir/self.cp.as_subdir/'data'):
             os.makedirs(self.star_dir/self.cp.as_subdir/'data',exist_ok=True)
 
-        if (islands_made or islands_found) and self.cp.save_progress_pickle:
+        if load_islands and self.cp.save_progress_pickle:
             if self.cp.print_on_screen:
-                print('Loading saved information from a prior step')
+                print('Loading saved information from the pickled object.')
             # Load any variables into attributes that should haven been
             # loaded or created during make_islands. Will ignore new config
             temp = pickle.load(open(self.star_dir/(self.catalog_id+self.star_id+'.pickle'),'rb'))
@@ -62,10 +61,10 @@ class Global(FamedStar):
             # Copy the configuring parameters to the summary/ directory
             target_dir = self.star_dir/self.cp.summary_subdir
             if self.cp.local_config:
-                shutil.copy('famed_config.yml',target_dir/('famed_config_'+self.cp.global_subdir+'yml'))
+                shutil.copy('famed_config.yml',target_dir/('famed_config_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + self.cp.global_subdir+'_GLOBAL.yml'))
             else:
-                shutil.copy(self.cp.famed_path/'famed_config.yml',target_dir/('famed_config_'+self.cp.global_subdir+'.yml'))
-            shutil.copy(self.cp.configuring_parameters_file,target_dir/('famed_configuring_parameters_'+self.cp.global_subdir+'.txt'))
+                shutil.copy(self.cp.famed_path/'famed_config.yml',target_dir/('famed_config_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + self.cp.global_subdir+'_GLOBAL.yml'))
+            shutil.copy(self.cp.configuring_parameters_file,target_dir/('famed_configuring_parameters_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + self.cp.global_subdir+'_GLOBAL.txt'))
 
             
     def make_islands(self,force=False):
@@ -145,10 +144,7 @@ class Global(FamedStar):
         """
         
         run = self.cp.global_subdir
-        peakbagging_filename_global = self.star_dir/self.cp.summary_subdir/(self.catalog_id + 
-                                      self.star_id + self.cp.peakbagging_filename_label + 
-                                      self.cp.peakbagging_filename_global_label)
-
+        peakbagging_filename_global = self.star_dir/self.cp.summary_subdir/(self.catalog_id + self.star_id + self.cp.peakbagging_filename_label + self.cp.isla_subdir + '_' + self.cp.global_subdir + '_GLOBAL.txt')
 
         # Read sampled frequency from DIAMONDS multi-modal fit
         par0 = np.loadtxt(self.star_dir/self.cp.isla_subdir/run/'peakbagging_parameter000.txt')
@@ -706,7 +702,9 @@ class Global(FamedStar):
                     median_echelle_epsi = interp_epsi
                     interp_epsi_flag = True
                     self.bad_epsi = True
-
+                    if self.cp.print_on_screen:
+                        print('Sliding mode identification did not match epsilon-dnu relation.\n')
+                    
                     if modeid_epsi_dnu['degree'] == 1:
                         radial_freq_reference = closest(freq1,radial_freq_reference2+fit_dnu/2)
                         if self.cp.print_on_screen:
@@ -729,11 +727,13 @@ class Global(FamedStar):
                     median_echelle_epsi = interp_epsi
                     interp_epsi_flag = True
                     self.bad_epsi = True
+                    if self.cp.print_on_screen:
+                        print('Sliding mode identification did not match epsilon-Teff relation well.\n')
                     
                     if modeid_teff['degree'] == 1:
                         radial_freq_reference = closest(freq1,radial_freq_reference2+fit_dnu/2)
                         if self.cp.print_on_screen:
-                            print('Applying correction to epsilon from epsilon-Teff relation.\n')
+                            print('Applying correction to epsilon from epsilon-Teff relation well.\n')
                     else:
                         radial_freq_reference = radial_freq_reference2
 
@@ -904,13 +904,13 @@ class Global(FamedStar):
                     par = np.loadtxt(parameter_filenames[1])
                     best_epsi = epsi_prior[0]
                     best_alpha = np.sum(par*post)/np.sum(post)
-                    
+                        
                 if n_par == 3:
                     par = np.loadtxt(parameter_filenames[1])
                     best_epsi = np.sum(par*post)/np.sum(post)
                     par = np.loadtxt(parameter_filenames[2])
                     best_alpha = np.sum(par*post)/np.sum(post)
-
+                        
                 # Update local values for asymptotic parameters
                 fit_dnu = best_dnu
                 fit_epsi = best_epsi
@@ -923,7 +923,9 @@ class Global(FamedStar):
                 best_dnu = acf_dnu
                 best_epsi = fit_epsi
                 best_alpha = self.cp.alpha_radial_universal
-
+                if self.cp.print_on_screen:
+                    print(' Not enough radial mode frequencies to perform an asymptotic fit.\n')
+                    
         # Save asymptotic radial mode frequencies
         freq_radial_asymptotic = best_dnu*(best_epsi + order_radial + best_alpha/2.*(order_radial - numax/best_dnu)**2)
 

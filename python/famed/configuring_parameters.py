@@ -69,9 +69,7 @@ class ConfiguringParameters(object):
         self.famed_path = famed_path
         
         self.peakbagging_filename_label = '_peakbagging_'
-        self.peakbagging_filename_global_label = self.global_subdir+'.txt'
-        self.peakbagging_filename_chunk_label = 'chunk_'
-        
+          
         # Set DIAMONDS parameters for different modalities
         diamonds = params['DIAMONDS']
         
