@@ -38,17 +38,17 @@ class Global(FamedStar):
 
         # Create output directories if not already present
         if not os.path.isdir(self.star_dir/self.cp.isla_subdir):
-            os.mkdirs(self.star_dir/self.cp.isla_subdir,exist_ok=True)
+            os.makedirs(self.star_dir/self.cp.isla_subdir,exist_ok=True)
         if not os.path.isdir(self.star_dir/self.cp.pb_subdir):
-            os.mkdirs(self.star_dir/self.cp.pb_subdir,exist_ok=True)
+            os.makedirs(self.star_dir/self.cp.pb_subdir,exist_ok=True)
         if not os.path.isdir(self.star_dir/self.cp.as_subdir):
-            os.mkdirs(self.star_dir/self.cp.as_subdir,exist_ok=True)
+            os.makedirs(self.star_dir/self.cp.as_subdir,exist_ok=True)
         if not os.path.isdir(self.star_dir/self.cp.figs_subdir):
-            os.mkdirs(self.star_dir/self.cp.figs_subdir,exist_ok=True)
+            os.makedirs(self.star_dir/self.cp.figs_subdir,exist_ok=True)
         if not os.path.isdir(self.star_dir/self.cp.summary_subdir):
-            os.mkdirs(self.star_dir/self.cp.summary_subdir,exist_ok=True)
+            os.makedirs(self.star_dir/self.cp.summary_subdir,exist_ok=True)
         if not os.path.isdir(self.star_dir/self.cp.as_subdir/'data'):
-            os.mkdirs(self.star_dir/self.cp.as_subdir/'data',exist_ok=True)
+            os.makedirs(self.star_dir/self.cp.as_subdir/'data',exist_ok=True)
 
         if (islands_made or islands_found) and self.cp.save_progress_pickle:
             if self.cp.print_on_screen:
