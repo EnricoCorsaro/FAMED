@@ -323,7 +323,6 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
         start_indices = np.zeros(n_chunks,dtype='int')
         end_indices = np.zeros(n_chunks,dtype='int')
         start_index = 0
-
         
         if n_runs >= n_threads:
             # Estimate how many chunks to divide the total run set into
@@ -346,7 +345,6 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
             start_indices[0] = start_index
             end_indices[0] = n_runs
             
-        print('start/stop:',start_indices,end_indices)            
         for j in range(0, n_chunks):
             start_index = start_indices[j]
             end_index = end_indices[j]
