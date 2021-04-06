@@ -35,6 +35,21 @@ class Global(FamedStar):
     """
     def __init__(self, catalog_id, star_id, teff, islands_made=False, islands_found=False):
         FamedStar.__init__(self, catalog_id, star_id, teff)
+
+        # Create output directories if not already present
+        if not os.path.isdir(self.star_dir/self.cp.isla_subdir):
+            os.mkdir(self.star_dir/self.cp.isla_subdir)
+        if not os.path.isdir(self.star_dir/self.cp.pb_subdir):
+            os.mkdir(self.star_dir/self.cp.pb_subdir)
+        if not os.path.isdir(self.star_dir/self.cp.as_subdir):
+            os.mkdir(self.star_dir/self.cp.as_subdir)
+        if not os.path.isdir(self.star_dir/self.cp.figs_subdir):
+            os.mkdir(self.star_dir/self.cp.figs_subdir)
+        if not os.path.isdir(self.star_dir/self.cp.summary_subdir):
+            os.mkdir(self.star_dir/self.cp.summary_subdir)
+        if not os.path.isdir(self.star_dir/self.cp.as_subdir/'data'):
+            os.mkdir(self.star_dir/self.cp.as_subdir/'data')
+
         if (islands_made or islands_found) and self.cp.save_progress_pickle:
             if self.cp.print_on_screen:
                 print('Loading saved information from a prior step')
@@ -63,20 +78,6 @@ class Global(FamedStar):
         """
         diamonds.set_peakbagging(self.catalog_id, self.star_id, self.bgp, self.cp.diamonds_path, self.cp.dnu_cl, self.cp.dnu_tip, self.cp.n_dnu_envelope, self.cp.n_sigma_envelope, self.cp.n_sigma_envelope_cl, self.cp.n_sigma_envelope_tip, self.cp.numax_threshold, self.cp.numax_coeff_low, self.cp.numax_coeff_high, self.cp.numax_exponent_low, self.cp.numax_exponent_high)
         
-        # Create output directories if not already present
-        if not os.path.isdir(self.star_dir/self.cp.isla_subdir):
-            os.mkdir(self.star_dir/self.cp.isla_subdir)
-        if not os.path.isdir(self.star_dir/self.cp.pb_subdir):
-            os.mkdir(self.star_dir/self.cp.pb_subdir)
-        if not os.path.isdir(self.star_dir/self.cp.as_subdir):
-            os.mkdir(self.star_dir/self.cp.as_subdir)
-        if not os.path.isdir(self.star_dir/self.cp.figs_subdir):
-            os.mkdir(self.star_dir/self.cp.figs_subdir)
-        if not os.path.isdir(self.star_dir/self.cp.summary_subdir):
-            os.mkdir(self.star_dir/self.cp.summary_subdir)
-        if not os.path.isdir(self.star_dir/self.cp.as_subdir/'data'):
-            os.mkdir(self.star_dir/self.cp.as_subdir/'data')
-
         # Read input PSD and global asteroseismic parameters
         peakbagging_data_dir = self.cp.diamonds_path/'PeakBagging'/'data'
         freq, psd = np.loadtxt(peakbagging_data_dir/(self.catalog_id + self.star_id + '.txt'), unpack=True)
