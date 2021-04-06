@@ -307,12 +307,13 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
     # Create subdirectories for each run, if not already present
     if isinstance(parameters['run'],str):
         n_runs = 1
+        directory = star_dir/parameters['subdir']/str(parameters['run'])
+        os.makedirs(directory, exist_ok=True)
     else:
         n_runs = len(parameters['run'])    
-
-    for i in range(0, n_runs):
-        directory = star_dir/parameters['subdir']/str(parameters['run'][i])
-        os.makedirs(directory, exist_ok=True)
+        for i in range(0, n_runs):
+            directory = star_dir/parameters['subdir']/str(parameters['run'][i])
+            os.makedirs(directory, exist_ok=True)
 
     cwd = os.getcwd()
     os.chdir(diamonds_path/'PeakBagging'/'build')
