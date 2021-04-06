@@ -22,7 +22,7 @@ def run_GLOBAL(catalog_id, star_id, teff, force=True):
         Flag to force the computation of the sliding pattern fit.
     """
     famed_obj = Global(catalog_id,star_id,teff)
-    famed_obj.make_islands()
+    famed_obj.make_islands(force=force)
     famed_obj.find_islands(force=force)
     if famed_obj.cp.save_png or famed_obj.cp.save_eps:
         famed_obj.make_global_plots()

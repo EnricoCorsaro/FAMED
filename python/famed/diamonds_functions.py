@@ -99,7 +99,7 @@ def get_background(catalog_id, star_id, background_results_dir, background_run_n
     return bgp
 
 
-def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, dnu_cl=9, dnu_tip=3.2, n_dnu_envelope=4.5, n_sigma_envelope=4.5, n_sigma_envelope_cl=2.5, n_sigma_envelope_tip=1.2, numax_threshold=300, numax_coeff_low=0.267, numax_coeff_high=0.22, numax_exponent_low=0.76, numax_exponent_high=0.797):
+def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, dnu_cl=9, dnu_tip=3.2, n_dnu_envelope=4.5, n_sigma_envelope=4.5, n_sigma_envelope_cl=2.5, n_sigma_envelope_tip=1.2, numax_threshold=300, numax_coeff_low=0.267, numax_coeff_high=0.22, numax_exponent_low=0.76, numax_exponent_high=0.797, force=False):
     """
     Verify or create the proper folder structure for DIAMONDS PeakBagging.
 
@@ -158,7 +158,7 @@ def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, dnu_cl=9, dnu_tip=3
     background_data_dir  = diamonds_path/'Background'/'data'
     bg_par = bgp['parameters']
 
-    if not os.path.isfile(peakbagging_data_dir/(catalog_id + star_id + '.txt')):
+    if not os.path.isfile(peakbagging_data_dir/(catalog_id + star_id + '.txt')) or force:
         freq,psd = np.loadtxt(background_data_dir/(catalog_id + star_id + '.txt')).T
 
         # Trim the global PSD of the star, used for the background fit, to a
