@@ -15,10 +15,10 @@ def test_steps(silent_remove):
     move_test_data(cat_id, star_id)
 
     # Run test
-    b=f.Global(cat_id, star_id, teff)
-    b.make_islands()
-    b.find_islands(force=True)
-    b.make_global_plots()
+    star=f.Global(cat_id, star_id, teff)
+    star.make_islands()
+    star.find_islands(force=True)
+    star.make_global_plots()
 
 def test_run(silent_remove):
     # All at once
