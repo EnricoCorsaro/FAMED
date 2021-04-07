@@ -4,7 +4,9 @@ import sys
 import shutil
 from pathlib import Path
 
-def test_steps(silent_remove):
+__all__ = ['test_steps','test_run']
+
+def test_steps(silent_remove=False):
     # Step-by-step
     cat_id = 'KIC'
     star_id = '012069424'
@@ -20,7 +22,7 @@ def test_steps(silent_remove):
     star.find_islands(force=True)
     star.make_global_plots()
 
-def test_run(silent_remove):
+def test_run(silent_remove=False):
     # All at once
     cat_id = 'KIC'
     star_id = '006117517'
