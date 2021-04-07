@@ -1,17 +1,12 @@
 #!/bin/bash
 # First check whether the installation of DIAMONDS is required. Give it priority with respect to
 # the other software packages.
+# Usage: ./install_unix.sh [--diamonds | -d] [--background | -b] [--peakbagging | -p] [--asymptotic | -a] [--parallel | -g]
 flag1=0
 flag2=0
 flag3=0
 flag4=0
 flag5=0
-
-
-if [ $# -eq 0 ]; then
-    echo "Usage: ./install_unix.sh [--diamonds | -d] [--background | -b] [--peakbagging | -p] [--asymptotic | -a] [--parallel | -g]"
-    exit 1
-fi
 
 if ! [ -x "$(command -v git)" ]; then
 	echo "Error: git is not installed. Aborting..." >&2
@@ -193,15 +188,13 @@ echo "----------------------------------------------------------------------"
 echo " Changing configuring parameters of the pipeline with local folders..."
 echo "----------------------------------------------------------------------"
 sed -i.old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/idl/famed_configuring_parameters.txt
-
 sed -i.old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/python/famed/famed_configuring_parameters.txt
 sed -i.old "s^YOUR_LOCAL_ROOT_PATH_HERE^${PWD}^g" ${PWD}/FAMED/python/famed/famed_config.yml
 
 echo "----------------------------------------------------------------------"
-echo " To use the python version, please add:"
-echo " "
-echo ${PWD}/FAMED/python/ 
-echo " "
-echo "to your PYTHONPATH environment variable"
-
+echo " Adding FAMED to your local Python library path..."
 echo "----------------------------------------------------------------------"
+MY_LOCAL_DIR=${PWD}
+cd ~
+echo "" >> .bashrc
+echo "export PYTHONPATH="${MY_LOCAL_DIR}"/FAMED/python/" >> .bashrc
