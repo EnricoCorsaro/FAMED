@@ -21,9 +21,8 @@ bgp = get_background(catalog_id,star_id)
 set_peakbagging,catalog_id,star_id,bgp
 star_dir = info.peakbagging_results_dir + catalog_id + star_id + '/'
 peakbagging_filename_global = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
-                              + catalog_id + star_id + info.peakbagging_filename_label + info.peakbagging_filename_global_label
-peakbagging_filename_chunk = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/'  $
-                             + catalog_id + star_id + info.peakbagging_filename_label + info.peakbagging_filename_chunk_label
+                              + catalog_id + star_id + info.peakbagging_filename_label + $
+                                info.isla_subdir + '_' + info.global_subdir + '_' + 'GLOBAL.txt'
 
 ; Read input PSD and global asteroseismic parameters for the entire sample of LMLLRG
 

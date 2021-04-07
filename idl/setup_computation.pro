@@ -33,8 +33,6 @@ peakbagging_results_dir =  root_path + 'PeakBagging/results/'
 background_data_dir = root_path + 'Background/data/'
 background_results_dir = root_path + 'Background/results/'
 peakbagging_filename_label = '_peakbagging_'
-peakbagging_filename_global_label = global_string + '.txt'
-peakbagging_filename_chunk_label = 'chunk_'
 local_configuring_parameters_filename = 'famed_configuring_parameters_'
 
 info = {   root_path:                             root_path,                                                                       $
@@ -64,9 +62,7 @@ info = {   root_path:                             root_path,                    
            background_results_dir:                background_results_dir,                                                          $
            external_background_results_dir:       (par_value(where(par_name eq 'external_background_results_dir')))[0],            $
            external_background_filename_suffix:   (par_value(where(par_name eq 'external_background_filename_suffix')))[0],        $
-           peakbagging_filename_label:            peakbagging_filename_label,                                                      $
-           peakbagging_filename_global_label:     peakbagging_filename_global_label,                                               $
-           peakbagging_filename_chunk_label:      peakbagging_filename_chunk_label                                                 $
+           peakbagging_filename_label:            peakbagging_filename_label                                                       $
        }
 
 ; -------------------------------------------------------------------------------------------------------
@@ -169,7 +165,7 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        d02_prior_lower_sg:                    (float(par_value(where(par_name eq 'd02_prior_lower_sg'))))[0],                    $
        d02_prior_upper_sg:                    (float(par_value(where(par_name eq 'd02_prior_upper_sg'))))[0],                    $
        d01_prior_lower_ms:                    (float(par_value(where(par_name eq 'd01_prior_lower_ms'))))[0],                    $
-       d01_prior_upper_ms:                    (float(par_value(where(par_name eq 'd01_prior_lower_ms'))))[0],                    $
+       d01_prior_upper_ms:                    (float(par_value(where(par_name eq 'd01_prior_upper_ms'))))[0],                    $
        d13_prior_lower_ms:                    (float(par_value(where(par_name eq 'd13_prior_lower_ms'))))[0],                    $
        rot_split_prior_lower_ms:              (float(par_value(where(par_name eq 'rot_split_prior_lower_ms'))))[0],              $
        rot_split_prior_upper_ms:              (float(par_value(where(par_name eq 'rot_split_prior_upper_ms'))))[0],              $

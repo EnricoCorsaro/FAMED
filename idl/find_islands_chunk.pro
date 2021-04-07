@@ -19,21 +19,19 @@ setup_computation
 run = strcompress(string(run),/remove_all)
 star_dir = info.peakbagging_results_dir + catalog_id + star_id + '/'
 peakbagging_filename_global = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
-                              + catalog_id + star_id + info.peakbagging_filename_label + info.peakbagging_filename_global_label
+                              + catalog_id + star_id + info.peakbagging_filename_label + $
+                                info.isla_subdir + '_' + info.global_subdir + '_' + 'GLOBAL.txt'
+
 peakbagging_filename_chunk = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/'  $
-                             + catalog_id + star_id + info.peakbagging_filename_label + info.peakbagging_filename_chunk_label
+                             + catalog_id + star_id + info.peakbagging_filename_label + '_' + info.isla_subdir + '_'
 
-; Store FAMED configuring parameters used in this run
+; Copy FAMED configuring parameters used in this run
 
-readcol,info.configuring_parameters_filename,par_name,par_value,format='A,A',comment='#',/silent
-get_lun,lun1
-openw,lun1,info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
-    + info.local_configuring_parameters_filename + 'chunk_' + run + '.txt'
-for i=0,n_elements(par_name)-1 do begin
-    strnumber = strcompress(string(strlen(par_name(i))),/remove_all)
-    printf,lun1,par_name(i),par_value(i),format='(A'+strnumber+',1X,A0)'
-endfor
-free_lun,lun1
+famed_configuring_parameters_filename_copy = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
+    + info.local_configuring_parameters_filename + catalog_id + star_id + $
+                                '_' + info.isla_subdir + '_' + run + '_' + modality + '.txt'
+
+spawn,'cp ' + info.configuring_parameters_filename + ' ' + famed_configuring_parameters_filename_copy
 
 ; Read sampled frequency from DIAMONDS multi-modal fit
 
@@ -339,7 +337,7 @@ d02 = ap.d02
 d01 = ap.d01
 d03 = ap.d03
 
-spawn,'ls -1 ' + peakbagging_filename_chunk + '*.txt',filename_summary,/stderr
+spawn,'ls -1 ' + peakbagging_filename_chunk + '*' + modality + '.txt',filename_summary,/stderr
 str_length = strlen(filename_summary(0))
 
 ; If possible, update the d02 spacing from existing chunk outputs
@@ -392,8 +390,8 @@ reference_central_freq = (freq_left_chunk + freq_right_chunk)/2.
 
 if reference_central_freq ge numax then begin
     if previous_run_number ge 0 then begin
-        if file_test(peakbagging_filename_chunk + previous_run_number + '.txt') ne 0 then begin
-            readcol,peakbagging_filename_chunk + previous_run_number + '.txt',enn_previous_chunk,ell_previous_chunk,freq_previous_chunk,freq_sig_previous_chunk,   $
+        if file_test(peakbagging_filename_chunk + previous_run_number + '_' + modality + '.txt') ne 0 then begin
+            readcol,peakbagging_filename_chunk + previous_run_number + '_' + modality + '.txt',enn_previous_chunk,ell_previous_chunk,freq_previous_chunk,freq_sig_previous_chunk,   $
                format='I,I,x,D,D',comment='#',skipline=3,/silent
             tmp_previous_radial = where(ell_previous_chunk eq 0)
            
@@ -435,8 +433,8 @@ if reference_central_freq ge numax then begin
                 endif
             endif else begin
                 if previous_run_number2 ge 0 then begin
-                    if file_test(peakbagging_filename_chunk + previous_run_number2 + '.txt') ne 0 then begin
-                        readcol,peakbagging_filename_chunk + previous_run_number2 + '.txt',enn_previous_chunk,ell_previous_chunk,freq_previous_chunk,freq_sig_previous_chunk,   $
+                    if file_test(peakbagging_filename_chunk + previous_run_number2 + '_' + modality + '.txt') ne 0 then begin
+                        readcol,peakbagging_filename_chunk + previous_run_number2 + '_' + modality + '.txt',enn_previous_chunk,ell_previous_chunk,freq_previous_chunk,freq_sig_previous_chunk,   $
                            format='I,I,x,D,D',comment='#',skipline=3,/silent
                         tmp_previous_radial = where(ell_previous_chunk eq 0)
                         
@@ -482,8 +480,8 @@ if reference_central_freq ge numax then begin
     endif
 endif else begin
     if next_run_number le n_chunks-1 then begin
-        if file_test(peakbagging_filename_chunk + next_run_number + '.txt') ne 0 then begin
-            readcol,peakbagging_filename_chunk + next_run_number + '.txt',enn_next_chunk,ell_next_chunk,freq_next_chunk,freq_sig_next_chunk,   $
+        if file_test(peakbagging_filename_chunk + next_run_number + '_' + modality + '.txt') ne 0 then begin
+            readcol,peakbagging_filename_chunk + next_run_number + '_' + modality + '.txt',enn_next_chunk,ell_next_chunk,freq_next_chunk,freq_sig_next_chunk,   $
                format='I,I,x,D,D',comment='#',skipline=3,/silent
             tmp_next_radial = where(ell_next_chunk eq 0)
            
@@ -526,8 +524,8 @@ endif else begin
                 endif
             endif else begin
                 if next_run_number2 le n_chunks-1 then begin
-                    if file_test(peakbagging_filename_chunk + next_run_number2 + '.txt') ne 0 then begin
-                        readcol,peakbagging_filename_chunk + next_run_number2 + '.txt',enn_next_chunk,ell_next_chunk,freq_next_chunk,freq_sig_next_chunk,   $
+                    if file_test(peakbagging_filename_chunk + next_run_number2 + '_' + modality + '.txt') ne 0 then begin
+                        readcol,peakbagging_filename_chunk + next_run_number2 + '_' + modality + '.txt',enn_next_chunk,ell_next_chunk,freq_next_chunk,freq_sig_next_chunk,   $
                            format='I,I,x,D,D',comment='#',skipline=3,/silent
                         tmp_next_radial = where(ell_next_chunk eq 0)
                         
@@ -3380,7 +3378,7 @@ if info.save_complete_lists eq 1 then begin
     ; Save total list of frequencies, without selection of significant peaks.
     
     get_lun,lun1
-    openw,lun1,peakbagging_filename_chunk + run + '.all.txt'
+    openw,lun1,peakbagging_filename_chunk + run + '_' + modality + '.all.txt'
     printf,lun1,'# Col 1: n, Col 2: l, Col 3: Frequency (microHz), Col 4: 1-sigma Frequency (microHz), ',format='(A0)'
     printf,lun1,'# Col 5: Left frequency range (microHz), Col 6: Right frequency range (microHz), ',format='(A0)'
     printf,lun1,'# Col 7: Left frequency division (microHz), Col 8: Right frequency division (microHz), ',format='(A0)'
@@ -3401,7 +3399,7 @@ if n_freq_final ne 0 then begin
     ; Save local asymptotic parameters and the final list of frequencies with peak significance and rotation tests applied.
     
     get_lun,lun1
-    openw,lun1,peakbagging_filename_chunk + run + '.txt'
+    openw,lun1,peakbagging_filename_chunk + run + '_' + modality + '.txt'
     printf,lun1,'# Local epsilon, Local d02 (microHz), local DeltaP, FWHM radial mode (microHz), FWHM octupole mode (microHz), FWHM multi-modal fit (microHz)',format='(A0)'
     printf,lun1,local_epsi,local_d02,local_dp,fwhm_radial_fit,largest_octupole_fwhm,fit_linewidth,format='(F0.3,F10.3,F10.3,F10.4,F10.4,F10.4)'
 

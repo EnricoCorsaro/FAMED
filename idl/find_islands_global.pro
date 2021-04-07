@@ -23,20 +23,16 @@ modality = 'GLOBAL'
 setup_computation
 star_dir = info.peakbagging_results_dir + catalog_id + star_id + '/'
 peakbagging_filename_global = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
-                              + catalog_id + star_id + info.peakbagging_filename_label + info.peakbagging_filename_global_label
+                              + catalog_id + star_id + info.peakbagging_filename_label + $
+                                info.isla_subdir + '_' + info.global_subdir + '_' + modality + '.txt'
 
-; Store FAMED configuring parameters used in this run
+; Copy FAMED configuring parameters used in this run
 
-readcol,info.configuring_parameters_filename,par_name,par_value,format='A,A',comment='#',/silent
-get_lun,lun1
-openw,lun1,info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
-    + info.local_configuring_parameters_filename + 'global.txt'
+famed_configuring_parameters_filename_copy = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
+    + info.local_configuring_parameters_filename + catalog_id + star_id + $
+                                '_' + info.isla_subdir + '_' + info.global_subdir + '_' + modality + '.txt'
 
-for i=0,n_elements(par_name)-1 do begin
-    strnumber = strcompress(string(strlen(par_name(i))),/remove_all)
-    printf,lun1,par_name(i),par_value(i),format='(A'+strnumber+',1X,A0)'
-endfor
-free_lun,lun1
+spawn,'cp ' + info.configuring_parameters_filename + ' ' + famed_configuring_parameters_filename_copy
 
 ; Read sampled frequency from DIAMONDS multi-modal fit
 
@@ -585,7 +581,7 @@ while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
             write_diamonds_data_range,data_range_filenames(k),data_freq_boundaries
             write_diamonds_prior,prior_filenames(k),boundaries
         endfor
-        
+
         if info.print_on_screen eq 1 then begin
             print,''
             print,' Performing sliding-pattern fit with DIAMONDS.'
