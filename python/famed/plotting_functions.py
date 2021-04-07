@@ -143,7 +143,7 @@ def psd_inset_plot(famed_obj,ax=None):
     for mode,degree in zip(famed_obj.freqs,famed_obj.degrees):
         if (mode > min(famed_obj.freq[mask])) and (mode < max(famed_obj.freq[mask])):
             ax.text(mode,.8,'%i'%degree,color=famed_obj.cp.inset_id,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes))
-    plt.ylim(min(famed_obj.spsd[mask]),max(famed_obj.psd[mask])*20)
+    plt.ylim(min(famed_obj.spsd[mask]),max(famed_obj.spsd[mask])*15)
     y_major = matplotlib.ticker.LogLocator(base = 10.0, numticks=10)
     ax.yaxis.set_major_locator(y_major)
     y_minor = matplotlib.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)

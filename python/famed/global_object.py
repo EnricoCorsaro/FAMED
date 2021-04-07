@@ -61,10 +61,10 @@ class Global(FamedStar):
             # Copy the configuring parameters to the summary/ directory
             target_dir = self.star_dir/self.cp.summary_subdir
             if self.cp.local_config:
-                shutil.copy('famed_config.yml',target_dir/('famed_config_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + self.cp.global_subdir+'_GLOBAL.yml'))
+                shutil.copy('famed_config.yml',target_dir/('famed_config_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + '_' + self.cp.global_subdir+'_GLOBAL.yml'))
             else:
-                shutil.copy(self.cp.famed_path/'famed_config.yml',target_dir/('famed_config_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + self.cp.global_subdir+'_GLOBAL.yml'))
-            shutil.copy(self.cp.configuring_parameters_file,target_dir/('famed_configuring_parameters_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + self.cp.global_subdir+'_GLOBAL.txt'))
+                shutil.copy(self.cp.famed_path/'famed_config.yml',target_dir/('famed_config_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + '_' + self.cp.global_subdir+'_GLOBAL.yml'))
+            shutil.copy(self.cp.configuring_parameters_file,target_dir/('famed_configuring_parameters_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + '_' + self.cp.global_subdir+'_GLOBAL.txt'))
 
             
     def make_islands(self,force=False):
