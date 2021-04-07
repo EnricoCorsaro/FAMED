@@ -11,9 +11,9 @@ peakbagging_filename_global = info.peakbagging_results_dir + catalog_id + star_i
 
 if keyword_set(global) then begin
     if info.print_on_screen eq 1 then begin
-        print,'----------------------------'
-        print,' Performing GLOBAL modality.'
-        print,'----------------------------'
+        print,'-------------------------------------------------'
+        print,' Performing GLOBAL modality for ' + catalog_id + star_id + '.'
+        print,'-------------------------------------------------'
     endif
    
     bgp = get_background(catalog_id,star_id)
@@ -60,9 +60,9 @@ endif
 
 if keyword_set(chunk) then begin
     if info.print_on_screen eq 1 then begin
-        print,'---------------------------'
-        print,' Performing CHUNK modality.'
-        print,'---------------------------'
+        print,'-------------------------------------------------'
+        print,' Performing CHUNK modality for ' + catalog_id + star_id + '.'
+        print,'-------------------------------------------------'
     endif
     
     if keyword_set(fit) then begin
@@ -113,20 +113,20 @@ endif
 ; Perform ECHELLE modality
 if keyword_set(echelle) then begin
     if info.print_on_screen eq 1 then begin
-        print,'-----------------------------'
-        print,' Performing ECHELLE modality.'
+        print,'-------------------------------------------------'
+        print,' Performing ECHELLE modality for ' + catalog_id + star_id + '.'
         print,' (Currently not available)'
-        print,'-----------------------------'
+        print,'-------------------------------------------------'
     endif
 endif
 
 ; Perform COMPLETE modality
 if keyword_set(complete) then begin
     if info.print_on_screen eq 1 then begin
-        print,'-------------------------------'
-        print,' Performing COMPLETE modality. '
+        print,'-------------------------------------------------'
+        print,' Performing COMPLETE modality for ' + catalog_id + star_id + '.'
         print,' (Currently not available). '
-        print,'-------------------------------'
+        print,'-------------------------------------------------'
     endif
 endif
 
