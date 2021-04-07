@@ -14,6 +14,7 @@ __all__ = ['global_plot',
            'asef_histogram',
            'text_panel']
 
+plt.ion()
 
 def global_plot(famed_obj):
     """
