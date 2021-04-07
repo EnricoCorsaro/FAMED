@@ -68,7 +68,7 @@ if (file_test(info.peakbagging_data_dir + catalog_id + star_id + '.txt') eq 0 or
     free_lun,lun1
 endif
 
-if file_test(info.peakbagging_results_dir + catalog_id + star_id + '/backgroundParameters.txt') eq 0 then begin
+if (file_test(info.peakbagging_results_dir + catalog_id + star_id + '/backgroundParameters.txt') eq 0 or keyword_set(force)) then begin
     get_lun,lun1
     openw,lun1,info.peakbagging_results_dir + catalog_id + star_id + '/backgroundParameters.txt'
     printf,lun1,'# Configuring parameters for background model of '+catalog_id+star_id,format='(A0)'
@@ -82,7 +82,7 @@ if file_test(info.peakbagging_results_dir + catalog_id + star_id + '/backgroundP
     free_lun,lun1
 endif
 
-if file_test(info.peakbagging_results_dir + catalog_id + star_id + '/gaussianEnvelopeParameters.txt') eq 0 then begin
+if (file_test(info.peakbagging_results_dir + catalog_id + star_id + '/gaussianEnvelopeParameters.txt') eq 0 or keyword_set(force)) then begin
     get_lun,lun1
     openw,lun1,info.peakbagging_results_dir + catalog_id + star_id + '/gaussianEnvelopeParameters.txt'
     printf,lun1,'# Parameters of the Gaussian envelope fit for background model of '+catalog_id+star_id,format='(A0)'
@@ -97,7 +97,7 @@ if file_test(info.peakbagging_results_dir + catalog_id + star_id + '/gaussianEnv
     free_lun,lun1
 endif
 
-if file_test(info.peakbagging_results_dir + catalog_id + star_id + '/NyquistFrequency.txt') eq 0 then begin
+if (file_test(info.peakbagging_results_dir + catalog_id + star_id + '/NyquistFrequency.txt') eq 0 or keyword_set(force)) then begin
     spawn,'cp ' + info.background_results_dir + catalog_id + star_id + '/NyquistFrequency.txt ' + info.peakbagging_results_dir + catalog_id + star_id + '/'
 endif
 end

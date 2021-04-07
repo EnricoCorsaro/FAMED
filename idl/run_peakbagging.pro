@@ -11,7 +11,7 @@ function run_peakbagging,catalog_id,star_id,parameters,flag_peaktest,flag_asympt
 COMMON STAR,info
 COMMON DIAMONDS,dp
 
-; Setup DIAMONDS configuring parameters
+; Set up DIAMONDS configuring parameters
 
 star_dir = info.peakbagging_results_dir + catalog_id + star_id + '/'
 nsmc_filename = star_dir + parameters.subdir + '/NSMC_configuringParameters.txt'
