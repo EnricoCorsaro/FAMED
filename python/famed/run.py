@@ -25,6 +25,7 @@ def run_GLOBAL(catalog_id, star_id, teff, force=True):
     famed_obj.make_islands(force=force)
     famed_obj.find_islands(force=force)
     famed_obj.make_global_plots()
+    return famed_obj
 
 def run_CHUNK():
     print('This function is not yet implemented')
