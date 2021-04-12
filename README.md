@@ -13,7 +13,7 @@
 - [Enrico Corsaro](mailto:enrico.corsaro@inaf.it)
 
 ### Python version development
-- [Jean McKeever](mailto:jean.mckeever@yale.edu)
+- [Jean McKeever](mailto:jm@mira.org)
 - [James Kuszlewicz](mailto:kuszlewicz@mps.mpg.de)
 
 
