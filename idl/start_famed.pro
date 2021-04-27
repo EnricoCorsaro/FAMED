@@ -4,8 +4,10 @@ COMMON STAR,info
 COMMON DIAMONDS,dp
 
 setup_computation
+modality = 'GLOBAL'
 peakbagging_filename_global = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
-                                + catalog_id + star_id + info.peakbagging_filename_label + info.peakbagging_filename_global_label
+                              + catalog_id + star_id + info.peakbagging_filename_label + $
+                                info.isla_subdir + '_' + info.global_subdir + '_' + modality + '.txt'
 
 ; Perform GLOBAL modality
 
