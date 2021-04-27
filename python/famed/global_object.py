@@ -35,6 +35,11 @@ class Global(FamedStar):
     def __init__(self, catalog_id, star_id, teff, load_islands=False):
         FamedStar.__init__(self, catalog_id, star_id, teff)
 
+        if self.cp.print_on_screen:
+            print('-------------------------------------------------')
+            print(' Performing GLOBAL modality for ' + catalog_id + star_id + '.')
+            print('-------------------------------------------------')
+
         # Create output directories if not already present
         if not os.path.isdir(self.star_dir/self.cp.isla_subdir):
             os.makedirs(self.star_dir/self.cp.isla_subdir,exist_ok=True)
