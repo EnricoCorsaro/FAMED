@@ -726,6 +726,7 @@ if n_radial_chunk ne 0 then begin
 
                 radial_index_new = closest(freq1(previous_radial_mode_index) + best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)),freq1)
                 if sampling_counts(radial_index_new) ge sampling_counts(radial_index) then begin
+                    radial_index = radial_index_new
                     freq_radial_chunk = freq1(radial_index)
                 endif
             endif
