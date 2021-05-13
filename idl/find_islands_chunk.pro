@@ -1235,8 +1235,8 @@ if n_radial_chunk ne 0 then begin
     run_names = run_subdir + strcompress(string(indgen(cp.n_fwhm_fit)),/remove_all) 
     
     if (file_test(star_dir + info.pb_subdir + '/' + run_subdir + '0/peakbagging_computationParameters.txt') eq 0 or keyword_set(force)) then begin
+        left_bound = min([range_maximum(0,radial_index),divisions_maximum(0,radial_index)])
         right_bound = max([range_maximum(1,radial_index),divisions_maximum(1,radial_index)])
-        left_bound = max([range_maximum(0,radial_index),divisions_maximum(0,radial_index)])
         
         tmp0 = where(freq ge left_bound and freq le right_bound)
         freq0 = freq(tmp0)
@@ -1378,8 +1378,8 @@ if n_radial_chunk ne 0 then begin
     ; Evaluate SNR using an estimate for the amplitude of the peak
     ; Clear previous peak detection probabilities if fit is forced
     
-    right_bound = range_maximum(1,radial_index)
     left_bound = range_maximum(0,quadrupole_index)
+    right_bound = range_maximum(1,radial_index)
     tmp_freq_peak = where(freq le right_bound and freq ge left_bound)
     bg_peak = mean(bg_level_local(tmp_freq_peak))
     response_peak = mean((sin(!pi/2. * freq(tmp_freq_peak)/nyq) / (!pi/2. * freq(tmp_freq_peak)/nyq))^2)
@@ -1407,9 +1407,9 @@ if n_radial_chunk ne 0 then begin
       
         ; For each peak consider the maximum data range between the range and the division 
         
-        left_bound_quadrupole = max([range_maximum(0,quadrupole_index),divisions_maximum(0,quadrupole_index)]) 
+        left_bound_quadrupole = min([range_maximum(0,quadrupole_index),divisions_maximum(0,quadrupole_index)]) 
         right_bound_quadrupole = max([range_maximum(1,quadrupole_index),divisions_maximum(1,quadrupole_index)]) 
-        left_bound_radial = max([range_maximum(0,radial_index),divisions_maximum(0,radial_index)]) 
+        left_bound_radial = min([range_maximum(0,radial_index),divisions_maximum(0,radial_index)]) 
         right_bound_radial = max([range_maximum(1,radial_index),divisions_maximum(1,radial_index)]) 
 
         range_quadrupole_radial = [[left_bound_quadrupole,right_bound_quadrupole],[left_bound_radial,right_bound_radial]]
@@ -1603,7 +1603,7 @@ if n_radial_chunk ne 0 then begin
                 ; Set up priors for the peak test profile
                 ; For each peak consider the maximum data range between the range and the division 
                 
-                left_bound_quadrupole = max([range_maximum(0,quadrupole_index),divisions_maximum(0,quadrupole_index)])
+                left_bound_quadrupole = min([range_maximum(0,quadrupole_index),divisions_maximum(0,quadrupole_index)])
                 right_bound_radial = max([range_maximum(1,radial_index),divisions_maximum(1,radial_index)]) 
                 data_freq_boundaries = [left_bound_quadrupole,right_bound_radial]
                 
@@ -1848,7 +1848,7 @@ if dipole_indices(0) ne -1 then begin
         ; For each peak consider the maximum data range between the range and the division  
         
         freq_index = dipole_indices(i)
-        left_bound = max([range_maximum(0,freq_index),divisions_maximum(0,freq_index)])
+        left_bound = min([range_maximum(0,freq_index),divisions_maximum(0,freq_index)])
         right_bound = max([range_maximum(1,freq_index),divisions_maximum(1,freq_index)])
 
         ; For RG and SG stars, adopt a narrower FWHM prior for those l=1 modes outside the l=3 region.
@@ -2137,7 +2137,7 @@ if dipole_indices(0) ne -1 then begin
                
                 ; For each peak consider the maximum data range between the range and the division  
 
-                left_bound = max([range_maximum(0,dipole_index),divisions_maximum(0,dipole_index)])
+                left_bound = min([range_maximum(0,dipole_index),divisions_maximum(0,dipole_index)])
                 right_bound = max([range_maximum(1,dipole_index),divisions_maximum(1,dipole_index)])
 
                 peak_number = strcompress(string(dipole_index),/remove_all)
@@ -2527,8 +2527,8 @@ if n_dipole_chunk ne 0 then begin
                 run_names = run_subdir + strcompress(string(indgen(cp.n_fwhm_fit)),/remove_all) + '_' + peak_number
            
                 if (file_test(star_dir + info.pb_subdir + '/' + run_names(j) + '/peakbagging_computationParameters.txt') eq 0 or keyword_set(force)) then begin
+                    left_bound = min([range_maximum(0,octupole_index),divisions_maximum(0,octupole_index)])
                     right_bound = max([range_maximum(1,octupole_index),divisions_maximum(1,octupole_index)])
-                    left_bound = max([range_maximum(0,octupole_index),divisions_maximum(0,octupole_index)])
                     
                     tmp0 = where(freq ge left_bound and freq le right_bound)
                     freq0 = freq(tmp0)
@@ -2893,8 +2893,8 @@ if detected_indices(0) ne -1 then begin
                         sampling_counts_left = total(nest_iter(tmp_range))
                         freq_sig_left = sqrt(total((par0_range-freq_duplet(0))^2*tmp_range^2)/total(tmp_range^2))
                     endif else begin
-                        right_bound_new = right_right_bound
                         left_bound_new = left_left_bound
+                        right_bound_new = right_right_bound
                         tmp_range = where(par0 lt right_bound_new and par0 ge left_bound_new)
                         par0_range = par0(tmp_range)
                         sampling_counts_left = total(nest_iter(tmp_range))/2.
@@ -2904,8 +2904,8 @@ if detected_indices(0) ne -1 then begin
                     if tmp_hist_range(0) ne -1 then begin
                         asef_maximum_left = max(asef_hist(tmp_hist_range))
                     endif else begin
-                        right_bound_new = right_right_bound
                         left_bound_new = left_left_bound
+                        right_bound_new = right_right_bound
                         tmp_hist_range = where(par_hist lt right_bound_new and par_hist ge left_bound_new)
                         asef_maximum_left = max(asef_hist(tmp_hist_range))
                     endelse
@@ -2925,8 +2925,8 @@ if detected_indices(0) ne -1 then begin
                         sampling_counts_right = total(nest_iter(tmp_range))
                         freq_sig_right = sqrt(total((par0_range-freq_duplet(1))^2*tmp_range^2)/total(tmp_range^2))
                     endif else begin
-                        right_bound_new = right_right_bound
                         left_bound_new = left_left_bound
+                        right_bound_new = right_right_bound
                         tmp_range = where(par0 lt right_bound_new and par0 ge left_bound_new)
                         par0_range = par0(tmp_range)
                         sampling_counts_right = total(nest_iter(tmp_range))/2.
@@ -3066,8 +3066,8 @@ if detected_indices(0) ne -1 then begin
                         sampling_counts_left = total(nest_iter(tmp_range))
                         freq_sig_left = sqrt(total((par0_range-freq_triplet(0))^2*tmp_range^2)/total(tmp_range^2))
                     endif else begin
-                        right_bound_new = right_right_bound
                         left_bound_new = left_left_bound
+                        right_bound_new = right_right_bound
                         tmp_range = where(par0 lt right_bound_new and par0 ge left_bound_new)
                         par0_range = par0(tmp_range)
                         sampling_counts_left = total(nest_iter(tmp_range))/3.
@@ -3077,8 +3077,8 @@ if detected_indices(0) ne -1 then begin
                     if tmp_hist_range(0) ne -1 then begin
                         asef_maximum_left = max(asef_hist(tmp_hist_range))
                     endif else begin
-                        right_bound_new = right_right_bound
                         left_bound_new = left_left_bound
+                        right_bound_new = right_right_bound
                         tmp_hist_range = where(par_hist lt right_bound_new and par_hist ge left_bound_new)
                         asef_maximum_left = max(asef_hist(tmp_hist_range))
                     endelse
@@ -3098,8 +3098,8 @@ if detected_indices(0) ne -1 then begin
                         sampling_counts_central = total(nest_iter(tmp_range))
                         freq_sig_central = sqrt(total((par0_range-freq_triplet(1))^2*tmp_range^2)/total(tmp_range^2))
                     endif else begin
-                        right_bound_new = right_right_bound
                         left_bound_new = left_left_bound
+                        right_bound_new = right_right_bound
                         tmp_range = where(par0 lt right_bound_new and par0 ge left_bound_new)
                         par0_range = par0(tmp_range)
                         sampling_counts_central = total(nest_iter(tmp_range))/3.
@@ -3109,8 +3109,8 @@ if detected_indices(0) ne -1 then begin
                     if tmp_hist_range(0) ne -1 then begin
                         asef_maximum_central = max(asef_hist(tmp_hist_range))
                     endif else begin
-                        right_bound_new = right_right_bound
                         left_bound_new = left_left_bound
+                        right_bound_new = right_right_bound
                         tmp_hist_range = where(par_hist lt right_bound_new and par_hist ge left_bound_new)
                         asef_maximum_central = max(asef_hist(tmp_hist_range))
                     endelse
@@ -3131,8 +3131,8 @@ if detected_indices(0) ne -1 then begin
                         sampling_counts_right = total(nest_iter(tmp_range))
                         freq_sig_right = sqrt(total((par0_range-freq_triplet(2))^2*tmp_range^2)/total(tmp_range^2))
                     endif else begin
-                        right_bound_new = right_right_bound
                         left_bound_new = left_left_bound
+                        right_bound_new = right_right_bound
                         tmp_range = where(par0 lt right_bound_new and par0 ge left_bound_new)
                         par0_range = par0(tmp_range)
                         sampling_counts_right = total(nest_iter(tmp_range))/3.
@@ -3142,8 +3142,8 @@ if detected_indices(0) ne -1 then begin
                     if tmp_hist_range(0) ne -1 then begin
                         asef_maximum_right = max(asef_hist(tmp_hist_range))
                     endif else begin
-                        right_bound_new = right_right_bound
                         left_bound_new = left_left_bound
+                        right_bound_new = right_right_bound
                         tmp_hist_range = where(par_hist lt right_bound_new and par_hist ge left_bound_new)
                         asef_maximum_right = max(asef_hist(tmp_hist_range))
                     endelse
