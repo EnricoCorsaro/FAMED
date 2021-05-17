@@ -144,7 +144,7 @@ if tmp_radial(0) ne -1 then begin
         fwhm_radial = fwhm_global(good_radial_index)
         fwhm_radial = fwhm_radial(0)
     endelse
-    n_radial_chunk = n_elements(freq_radial)
+    n_radial_chunk = 1
 endif else begin
     n_radial_chunk = 0
 endelse
@@ -185,7 +185,7 @@ if tmp_dipole(0) ne -1 then begin
         fwhm_dipole = fwhm_global(tmp_dipole)
         fwhm_dipole = fwhm_dipole(0)
     endelse
-    n_dipole_chunk = n_elements(freq_dipole)
+    n_dipole_chunk = 1
 endif else begin
     n_dipole_chunk = 0
 endelse
@@ -2577,7 +2577,7 @@ if n_dipole_chunk ne 0 then begin
                 fwhm_octupole_fit_array = fltarr(cp.n_fwhm_fit)
 
                 for k=0, cp.n_fwhm_fit-1 do begin
-                    spawn,'ls -1 ' + star_dir + info.pb_subdir + '/' + run_names(k) + '/peakbagging_parameter0*txt',filenames
+                    ; spawn,'ls -1 ' + star_dir + info.pb_subdir + '/' + run_names(k) + '/peakbagging_parameter0*txt',filenames
                     
                     fwhm_parameter = '002'
                     
