@@ -51,7 +51,7 @@ smth_bins = avg_fwhm/freqbin
 spsd = smooth(psd,smth_bins,/edge_truncate)
 
 get_lun,lun1
-openw,lun1,star_dir + info.isla_subdir + '/' + info.prior_filename + '_' + info.peakbagging_filename_global_label
+openw,lun1,star_dir + info.isla_subdir + '/' + info.prior_filename + '_' + info.global_subdir + '.txt'
 printf,lun1,'#',format='(A0)'
 printf,lun1,min(freq),max(freq),format='(F0.5,F15.5)'
 printf,lun1,0,mean(spsd),format='(F0.5,F15.5)'
