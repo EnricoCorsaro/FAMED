@@ -101,6 +101,9 @@ A threshold value of :math:`\Delta\nu`, set to 3.2 :math:`\mu\mbox{Hz}` accordin
 * ``dnu_cl``
 A threshold value of :math:`\Delta\nu`, set to 9.0 :math:`\mu\mbox{Hz}` according to the findings by Kallinger et al. (2012), which identifies stars settled into the primary and secondary red clump (:math:`\Delta\nu_\mathrm{tip} < \Delta\nu \leq \Delta\nu_\mathrm{CL}`).
 
+* ``dnu_cl2``
+A threshold value of :math:`\Delta\nu`, set to 5.0 :math:`\mu\mbox{Hz}` according to the findings by Kallinger et al. (2012), which separates the primary and secondary red clump phases.
+
 * ``dnu_rg``
 A threshold value of :math:`\Delta\nu`, set to 15.0 :math:`\mu\mbox{Hz}` (see Corsaro et al. 2020), which identifies stars evolving along the low-luminosity RGB (:math:`\Delta\nu_\mathrm{CL} < \Delta\nu \leq \Delta\nu_\mathrm{RG}`).
 
@@ -412,10 +415,17 @@ Similar as for the parameter ``dipole_radial_fwhm_ratio_ms`` but used for SG sta
 Similar as for the parameter ``dipole_radial_fwhm_ratio_ms`` but used for RG stars. The default value is 5, significantly larger than that used for less evolved stars, to allow compensating the varying frequency position of the dipole modes in such stars.
 
 * ``upper_epsilon_rg_slope``
-The slope for the linear relation :math:`\epsilon_\mathrm{upper} = a \log \Delta\nu + b`, which provides the upper limit for :math:`\epsilon` in stars with :math:`\Delta\nu \leq \Delta\nu_\mathrm{thresh}`. This is used as a control check for the sliding pattern fit to avoid wrong inferences of the central radial mode position. The default value is set to 0.253694 as obtained from a linear fit to the sample presented by Kallinger et al. (2012).
+The slope :math:`a` for the linear relation :math:`\epsilon_\mathrm{upper} = a \log \Delta\nu + b`, which provides the upper limit for :math:`\epsilon` in stars with :math:`\Delta\nu \leq \Delta\nu_\mathrm{thresh}`. This is used as a control check for the sliding pattern fit to avoid wrong inferences of the central radial mode position. The default value is set to 0.253694 as obtained from a linear fit to the sample presented by Kallinger et al. (2012).
 
 * ``upper_epsilon_rg_offset``
-The offset for the linear relation presented for the configuring parameter ``upper_epsilon_rg_slope``. The default value is set to 0.76. 
+The offset :math:`b` for the linear relation presented for the configuring parameter ``upper_epsilon_rg_slope``. The default value is set to 0.76. 
+
+* ``lower_epsilon_rg_slope``
+The slope :math:`c` for the linear relation :math:`\epsilon_\mathrm{lower} = c \log \Delta\nu + d`, which provides the lower limit for :math:`\epsilon` in stars with :math:`\Delta\nu_\mathrm{cl,2} \leq \Delta\nu \leq \Delta\nu_\mathrm{thresh}`, where :math:`\Delta\nu_\mathrm{cl,2}` is set by the configuring parameter ``dnu_cl2``. This is used as a control check for the sliding pattern fit to avoid wrong inferences of the central radial mode position. It is particularly useful for low resolution datasets of intermediate-mass red giant stars, where the unresolved dipole mode region can be confused with a radial mode. The default value is set to 0.468876 as obtained from a linear fit to the sample presented by Kallinger et al. (2012).
+
+* ``lower_epsilon_rg_offset``
+The offset :math:`d` for the linear relation presented for the configuring parameter ``lower_epsilon_rg_slope``. The default value is set to -0.104627. 
+
 
 Asymptotic code fitting
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -435,7 +445,7 @@ Similar as for the parameter ``alpha_prior_lower_as`` but now defining the unifo
 The fraction of the phase term of the asymptotic relation of p modes, :math:`\epsilon`, which is used to set up the uniform prior lower bound on the corresponding free parameter in the Asymptotic code extension of DIAMONDS during the analysis performed in the GLOBAL module. The default value is 0.9.
 
 * ``epsi_prior_upper_fraction_as``
-Similar as for the parameter ``epsi_prior_lower_fraction_as`` but now defining the uniform prior upper bound on the free parameter :math:`\epsilon`.
+Similar as for the parameter ``epsi_prior_lower_fraction_as`` but now defining the uniform prior upper bound on the free parameter :math:`\epsilon`. The default value is 1.1.
 
 Peak testing
 ^^^^^^^^^^^^
