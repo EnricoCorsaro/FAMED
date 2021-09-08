@@ -647,18 +647,23 @@ while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
     median_echelle_epsi = median(echelle_epsi_array)
 
     if fit_dnu le cp.dnu_threshold then begin
-        epsilon_limit = cp.upper_epsilon_rg_slope * alog(fit_dnu) + cp.upper_epsilon_rg_offset
+        epsilon_upper_limit = cp.upper_epsilon_rg_slope * alog(fit_dnu) + cp.upper_epsilon_rg_offset
+        epsilon_lower_limit = cp.lower_epsilon_rg_slope * alog(fit_dnu) + cp.lower_epsilon_rg_offset
         
-        ; The sliding pattern without including the l=1 mode peak has failed in providing a reliable epsilon.
-        ; Therefore repeat the fit by including a l=1 mode peak, having a position fixed to the p-mode frequency of the
+        ; The sliding pattern without including the l=1 mode peak may have failed in providing a reliable epsilon.
+        ; If this is the case repeat the fit by including a l=1 mode peak, having a position fixed to the p-mode frequency of the
         ; asymptotic relation.
 
-        if median_echelle_epsi ge epsilon_limit then begin
+        if (median_echelle_epsi ge epsilon_upper_limit) or ((median_echelle_epsi le epsilon_lower_limit) and (fit_dnu ge cp.dnu_cl2)) then begin
             if info.print_on_screen eq 1 then begin
                 if sliding_iteration gt 0 then begin
                     print,' Repeating the sliding-pattern-fit did not solve the issue. Epsilon is likely to be wrong for this star.'
                 endif else begin
-                    print,' Repeating the sliding-pattern fit because epsilon exceeds the upper limit for RGs.'
+                    if median_echelle_epsi ge epsilon_upper_limit then begin
+                        print,' Repeating the sliding-pattern fit because epsilon exceeds the upper limit for RGs.'
+                    endif else begin
+                        print,' Repeating the sliding-pattern fit because epsilon exceeds the lower limit for RGs.'
+                    endelse
                 endelse
             endif
 

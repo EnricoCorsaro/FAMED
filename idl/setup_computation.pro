@@ -78,6 +78,7 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        n_dnu_envelope:             (float(par_value(where(par_name eq 'n_dnu_envelope'))))[0],                     $
        dnu_tip:                    (float(par_value(where(par_name eq 'dnu_tip'))))[0],                            $
        dnu_cl:                     (float(par_value(where(par_name eq 'dnu_cl'))))[0],                             $
+       dnu_cl2:                    (float(par_value(where(par_name eq 'dnu_cl2'))))[0],                            $
        dnu_rg:                     (float(par_value(where(par_name eq 'dnu_rg'))))[0],                             $
        dnu_sg:                     (float(par_value(where(par_name eq 'dnu_sg'))))[0],                             $
        teff_sg:                    (float(par_value(where(par_name eq 'teff_sg'))))[0],                            $ 
@@ -183,6 +184,8 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        dipole_radial_fwhm_ratio_rg:           (float(par_value(where(par_name eq 'dipole_radial_fwhm_ratio_rg'))))[0],           $
        upper_epsilon_rg_slope:                (float(par_value(where(par_name eq 'upper_epsilon_rg_slope'))))[0],                $
        upper_epsilon_rg_offset:               (float(par_value(where(par_name eq 'upper_epsilon_rg_offset'))))[0],               $
+       lower_epsilon_rg_slope:                (float(par_value(where(par_name eq 'lower_epsilon_rg_slope'))))[0],                $
+       lower_epsilon_rg_offset:               (float(par_value(where(par_name eq 'lower_epsilon_rg_offset'))))[0],               $
        ; Asymptotic fit
        dnu_prior_lower_fraction_as:           (float(par_value(where(par_name eq 'dnu_prior_lower_fraction_as'))))[0],           $
        dnu_prior_upper_fraction_as:           (float(par_value(where(par_name eq 'dnu_prior_upper_fraction_as'))))[0],           $
