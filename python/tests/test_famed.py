@@ -39,14 +39,14 @@ def move_test_data(cat_id, star_id):
     # Copy background results and data to Background folder
     print('Copying test data over to running folders....')
 
-    origin = Path('data/Background/data')/(cat_id+star_id+'.txt')
+    origin = Path('../../tutorials/data/Background/data')/(cat_id+star_id+'.txt')
     target_dir = Path('../../../Background/data')
     target = target_dir/(cat_id+star_id+'.txt')
     if not os.path.exists(target_dir):
         os.makedirs(target_dir)
     shutil.copy(origin, target)
 
-    origin = Path('data/Background/results')/(cat_id+star_id)
+    origin = Path('../../tutorials/data/Background/results')/(cat_id+star_id)
     target_dir = Path('../../../Background/results')
     target = target_dir/(cat_id+star_id)
     if not os.path.exists(target_dir):
