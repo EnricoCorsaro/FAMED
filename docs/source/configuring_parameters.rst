@@ -13,7 +13,7 @@ Global paths and filenames
 * ``root_path`` 
 YOUR_LOCAL_ROOT_PATH_HERE/
 
-This root path will be used to access and execute the DIAMONDS-based codes, as well as to set the paths for storing the output files. If you are not using the shell script installation, you will need to replace the name YOUR_LOCAL_ROOT_PATH_HERE with the actual path containing the DIAMONDS, Background, PeakBagging, and Asymptotic folders (see the Installation section for more details). Make sure to put a final slash. 
+This root path will be used to access and execute the DIAMONDS-based codes, as well as to set the paths for storing the output files. If you are not using the shell script installation, you will need to replace the name YOUR_LOCAL_ROOT_PATH_HERE with the actual path containing the DIAMONDS, Background, PeakBagging, and Asymptotic folders (see the Installation section for more details). Make sure to put the final slash `/`. 
 
 * ``famed_path`` 
 YOUR_LOCAL_ROOT_PATH_HERE/FAMED/idl
@@ -65,10 +65,10 @@ YOUR_LOCAL_ROOT_PATH_HERE/FAMED/docs/figures/FAMED_LOGO_BLACK_small.jpeg
 The filename, including the full path, of the FAMED logo. By default when downloading the package it is placed inside FAMED/docs/figures, but the user may decide to place the file in any other place. Change the name YOUR_LOCAL_ROOT_PATH_HERE according to your system if you are not using the shell script installation.
 
 * ``external_background_results_dir``
-The full path of the folder containing the file of the parameters that configure the background model. This folder is used only if there is no result available from a background fit using the Background code extension of DIAMONDS. The default value is -99, but it has to be changed if the user wants to supply a result from a fitting code different than DIAMONDS-Background.
+The full path of the folder containing the file of the parameters that configure the background model. This folder is used only if there is no result available from a background fit using the Background code extension of DIAMONDS. The default value is -99, but it has to be changed if the user wants to supply a result from a fitting code different than DIAMONDS-Background. When specifying a directory path, make sure that this path ends with the slash symbol `/`.
 
 * ``external_background_filename_suffix``
-The suffix that is attached to Catalog_ID + Star_ID of the star being analyzed, for the file that contains the background parameters. This file is located inside ``external_background_results_dir``. The file has a 1-column ASCII format, where the first line contains the background model name, among those available in the PeakBagging code extension of DIAMONDS, and the remaining lines contain each one a parameter estimate for the background model that is adopted, with the same order as those defined in the PeakBagging code (see the source code of BackgroundModel.cpp in the `PeakBagging GitHub repository <https://github.com/EnricoCorsaro/PeakBagging>`_ for a list of allowed background model names and of their free parameters). This keyword is adopted only if the previous one is different than the default value.
+The suffix that is attached to Catalog_ID + Star_ID of the star being analyzed, for the file that contains the background parameters. This file is located inside ``external_background_results_dir``. The file has a 1-column ASCII format, where the first line contains the background model name, among those available in the PeakBagging code extension of DIAMONDS, and the remaining lines contain each one a parameter estimate for the background model that is adopted, with the same order as those defined in the Background model (see `this page <https://famed.readthedocs.io/en/latest/background_models.html>`_ for a list of the available background model names and of their free parameters). This keyword is adopted only if the previous one is different than its default value.
 
 Solar reference parameters for asteroseismic scaling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

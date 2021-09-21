@@ -38,6 +38,7 @@ Navigation
    package_content
    installation
    file_system
+   background_models
    configuring_parameters
    overview
    getting_started
