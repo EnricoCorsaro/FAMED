@@ -3,14 +3,22 @@ Background Models
 The current version of FAMED relies on a preliminary step that involves the fitting of a background model to the stellar power spectral density. In this section the models available are all introduced in terms of their analytical expressions and of the list and order of free parameters estimates that are required as input by FAMED. 
 
 The names of the background models that can be used within FAMED are:
-1. `Flat`
-2. `Original`
-3. `OneHarvey`
-4. `OneHarveyColor`
-5. `TwoHarvey`
-6. `TwoHarveyColor`
-7. `ThreeHarvey`
-8. `ThreeHarveyColor`
+
+1. ``Flat``
+
+2. ``Original``
+
+3. ``OneHarvey``
+
+4. ``OneHarveyColor``
+
+5. ``TwoHarvey``
+
+6. ``TwoHarveyColor``
+
+7. ``ThreeHarvey``
+
+8. ``ThreeHarveyColor``
 
 Except for the components related to the instrumental noise, each component appearing in the background model is re-modulated by the apodization signal (or response function) :math:`R(\nu)` of the given observations. This is expressed as
 
