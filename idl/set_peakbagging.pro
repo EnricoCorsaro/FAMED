@@ -23,8 +23,14 @@ if file_test(info.peakbagging_results_dir + catalog_id + star_id,/directory) eq 
 endif
 
 if (file_test(info.peakbagging_data_dir + catalog_id + star_id + '.txt') eq 0 or keyword_set(force)) then begin
-    readcol,info.background_data_dir + catalog_id + star_id + '.txt',freq,psd,format='D,D',/silent 
     
+    ; Check whether the background fit has to be read from an external source
+    if info.external_background_results_dir eq '-99' then begin
+        readcol,info.background_data_dir + catalog_id + star_id + '.txt',freq,psd,format='D,D',/silent 
+    endif else begin
+        readcol,info.external_background_results_dir + catalog_id + star_id + '.txt',freq,psd,format='D,D',/silent 
+    endelse
+
     ; Trim the global PSD of the star, used for the background fit, to a narrower frequency region
     ; centered around nuMax
 
@@ -98,6 +104,11 @@ if (file_test(info.peakbagging_results_dir + catalog_id + star_id + '/gaussianEn
 endif
 
 if (file_test(info.peakbagging_results_dir + catalog_id + star_id + '/NyquistFrequency.txt') eq 0 or keyword_set(force)) then begin
-    spawn,'cp ' + info.background_results_dir + catalog_id + star_id + '/NyquistFrequency.txt ' + info.peakbagging_results_dir + catalog_id + star_id + '/'
+
+    if info.external_background_results_dir eq '-99' then begin
+        spawn,'cp ' + info.background_results_dir + catalog_id + star_id + '/NyquistFrequency.txt ' + info.peakbagging_results_dir + catalog_id + star_id + '/'
+    endif else begin
+        spawn,'cp ' + info.external_background_results_dir + catalog_id + star_id + '_NyquistFrequency.txt ' + info.peakbagging_results_dir + catalog_id + star_id + '/NyquistFrequency.txt'
+    endelse
 endif
 end
