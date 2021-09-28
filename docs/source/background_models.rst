@@ -82,7 +82,7 @@ where
 
 :math:`B(\nu) = \frac{2 \sqrt{2}}{\pi} \frac{a^2/b}{1 + (\nu/b)^4}`
 
-is the Harvey-like component that typically reproduces a granulation signal for stars with very low oscillation frequencies (e.g. below 10 :math:`\mu\mbox{Hz}`), defined by its rms amplitude :math:`a` (in ppm) and its characteristic frequency :math:`b` (in :math:`\mu\mbox{Hz}).
+is the Harvey-like component that typically reproduces a granulation signal for stars with very low oscillation frequencies (e.g. below 10 :math:`\mu\mbox{Hz}`), defined by its rms amplitude :math:`a` (in ppm) and its characteristic frequency :math:`b` (in :math:`\mu\mbox{Hz}`).
 There are 6 free parameters that can be fitted for this model. Their estimates must be supplied in the following order:
 
 1. :math:`W`
@@ -131,7 +131,7 @@ is a component that models the instrumental noise, now comprising both a white a
 
 Two Harvey
 ^^^^^^^^^^
-This model can be identified with the label ``TwoHarvey``. It comprises two Harvey-like components, typically used to model signal of medium quality for asteroseismology (e.g. TESS or K2 data). The two components are related to a low-frequency signal (e.g. activity, rotational modulation, super-granulation) and to a granulation activity (mostly referring to the meso-granulation signal). It is expressed by the equation:
+This model can be identified with the label ``TwoHarvey``. It comprises two Harvey-like components, typically used to model signal of medium quality for asteroseismology (e.g. TESS or K2 data). The two components are related to granulation-related signal (i.e. the meso granulation taking place at low frequency and the granulation located around the oscillation frequency region). It is expressed by the equation:
 
 :math:`P_\mathrm{bkg}(\nu) = W + R(\nu) \left[ B(\nu) + G(\nu) \right]`
 

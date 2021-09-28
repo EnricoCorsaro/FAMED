@@ -1,4 +1,5 @@
 # Tutorial to execute IDL-FAMED for the MS star KIC 12069424
+
 This tutorial shows how to run the IDL version of the FAMED pipeline using both the GLOBAL and CHUNK modules in order to extract the oscillation frequencies and mode identification of the MS star KIC 12069424 observed by NASA Kepler for more than four years. 
 
 Before running this tutorial make sure that the working paths have been setup properly according to your local directories. If you have installed the code using the install.sh script provided within the package this initial configuration is done automatically. Once these aspects are set you can run the tutorial using the steps listed below:
@@ -28,6 +29,7 @@ start_famed,'KIC','012069424',5825,/fit,/global,/chunk
 **NOTE**: you have the possibility to run this first tutorial without installing the DIAMONDS-Background code. If you plan to do so, we recommend to follow the guidelines described in the next tutorial.
 
 # Tutorial to adopt a background fit obtained by a code different than the DIAMONDS-Background code
+
 The file `famed_configuring_parameters.txt` contains two keywords that can be used to force FAMED to adopt a background fit solution that was not obtained using the DIAMONDS-based Background code available from [here](https://github.com/EnricoCorsaro/Background). When adopting a different software, the user has to readapt the output solution into a format that can be readable by FAMED. The main requirement in this case is that the adopted background model matches one of those implemented in the Background code. A list and description of the available background models can be found [here](https://famed.readthedocs.io/en/latest/background_models.html). Adopting a background solution from another software will not require that you install the DIAMONDS-Background code in your machine. FAMED can work properly independently of whether you have the DIAMONDS-Background code installed.
 
 For this purpose the user has to supply three different files for each star that needs to be analyzed:

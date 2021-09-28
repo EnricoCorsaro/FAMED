@@ -103,8 +103,7 @@ if (file_test(info.peakbagging_results_dir + catalog_id + star_id + '/gaussianEn
     free_lun,lun1
 endif
 
-if (file_test(info.peakbagging_results_dir + catalog_id + star_id + '/NyquistFrequency.txt') eq 0 or keyword_set(force)) then begin
-
+if (file_test(info.peakbagging_results_dir + catalog_id + star_id + '/NyquistFrequency.txt') eq 0 or keyword_set(force)) then begin 
     if info.external_background_results_dir eq '-99' then begin
         spawn,'cp ' + info.background_results_dir + catalog_id + star_id + '/NyquistFrequency.txt ' + info.peakbagging_results_dir + catalog_id + star_id + '/'
     endif else begin
