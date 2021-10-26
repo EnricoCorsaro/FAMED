@@ -2,7 +2,9 @@
 
 Installation
 ============
-The following installation guide is suited for Mac OS X users and may be subject to some variations for Linux-based OS, mostly concerning the compilation of the source files. If you encounter technical problems in installing the code, please send an `e-mail <mailto:enrico.corsaro@inaf.it>`_ specifying the error messages (possibly sending your compilation log file) and the commands you attempted to execute.
+The following installation guide is suited for both Mac OS X and Unix OS users. If you encounter technical problems in installing the code, please send an `e-mail <mailto:enrico.corsaro@inaf.it>`_ specifying the error messages (possibly sending your compilation log file) and the commands you attempted to execute. 
+
+More details on how to set up the pipeline to make it run on a test case can be found following the tutorials presented `here <https://github.com/EnricoCorsaro/FAMED/tree/master/tutorials>`_.
 
 Prerequisites
 ^^^^^^^^^^^^^
