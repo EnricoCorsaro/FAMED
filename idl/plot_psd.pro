@@ -20,7 +20,7 @@ endelse
 loadct,39,/silent
 plot,freq,psd,ytitle='!3PSD (' + sp.psd_unit_str + ')',xr=[parameters.min_freq,parameters.max_freq],yr=[min(bg_level)*0.8,parameters.max_psd*h_fac],/nodata,   $
 xcharsize=pp.xcharsize,ycharsize=pp.ycharsize,font=-1,thick=pp.thick,xthick=pp.xthick,ythick=pp.ythick,xticklen=0.04,yticklen=0.02,   $
-charsize=pp.charsize,charthick=pp.charthick,position=position_psd,xtickn=replicate(' ',30),/ylog
+charsize=pp.charsize,charthick=pp.charthick,position=position_psd,xtickn=replicate(' ',30),xstyle=1,ystyle=1,/ylog
 
 loadct,0,/silent
 
@@ -299,7 +299,8 @@ if flag_global eq 1 then begin
    
     plot,freq,psd,xr=freq_range_inset, yr=[min(bg_level)*0.8,upper_psd],   $
     xcharsize=pp.xcharsize/1.5,ycharsize=pp.ycharsize,font=-1,thick=pp.thick,xthick=pp.xthick,ythick=pp.ythick,xticklen=0.09,yticklen=0.04,   $
-    charsize=pp.charsize,charthick=pp.charthick+0.3,position=pp.global.position_inset,ytickn=replicate(' ',30),background=0,/nodata,color=255,/ylog
+    charsize=pp.charsize,charthick=pp.charthick+0.3,position=pp.global.position_inset,ytickn=replicate(' ',30),background=0,/nodata,color=255,/ylog, $
+    xstyle=1,ystyle=1
    
     loadct,3,/silent
     colorbar = 22

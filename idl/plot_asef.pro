@@ -18,7 +18,7 @@ plot,par_hist,asef_hist,xr=[min(par_hist),max(par_hist)],yr=[0,max(asef_hist)*1.
 xcharsize=pp.xcharsize,ycharsize=pp.ycharsize,font=-1,thick=pp.thick,                      $
 xthick=pp.xthick,ythick=pp.ythick,xticklen=0.03,yticklen=0.02,charsize=pp.charsize,        $
 charthick=pp.charthick,ytitle=y_title,/nodata,xtitle='!3Frequency (' + sp.freq_unit_str + ')',     $
-position=position_asef
+position=position_asef,xstyle=1,ystyle=1
 
 loadct,39,/silent
 
