@@ -4,8 +4,6 @@ Installation
 ============
 The following installation guide is suited for both Mac OS X and Unix OS users. If you encounter technical problems in installing the code, please send an `e-mail <mailto:enrico.corsaro@inaf.it>`_ specifying the error messages (possibly sending your compilation log file) and the commands you attempted to execute. 
 
-More details on how to set up the IDL version of the pipeline to make it run on a test case can be found following the tutorial #1 presented `here <https://github.com/EnricoCorsaro/FAMED/tree/master/tutorials>`_.
-
 Prerequisites
 ^^^^^^^^^^^^^
 The FAMED pipeline requires that other preliminary software is installed in your system. This software is mostly related to the `DIAMONDS Bayesian Inference code <https://github.com/EnricoCorsaro/DIAMONDS>_`, which FAMED is exploiting to perform all of its computations. Please follow the instructions below in order to get started with the installation.
