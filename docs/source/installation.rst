@@ -4,7 +4,7 @@ Installation
 ============
 The following installation guide is suited for both Mac OS X and Unix OS users. If you encounter technical problems in installing the code, please send an `e-mail <mailto:enrico.corsaro@inaf.it>`_ specifying the error messages (possibly sending your compilation log file) and the commands you attempted to execute. 
 
-More details on how to set up the pipeline to make it run on a test case can be found following the tutorials presented `here <https://github.com/EnricoCorsaro/FAMED/tree/master/tutorials>`_.
+More details on how to set up the IDL version of the pipeline to make it run on a test case can be found following the tutorial #1 presented `here <https://github.com/EnricoCorsaro/FAMED/tree/master/tutorials>`_.
 
 Prerequisites
 ^^^^^^^^^^^^^
@@ -102,7 +102,6 @@ The manual installation requires a number of steps, which may take some time to 
 
     .. warning:: 
         The FAMED package has to be placed inside the same main directory containing the codes DIAMONDS, Background, PeakBagging, and Asymptotic.
-
 
 2. After Asymptotic is installed, make sure that its ``localPath.txt`` file, inside the ``Asymptotic/build/`` directory, contains the same path used for ``localPath.txt`` of the PeakBagging code. This is because the output files produced by Asymptotic will go into the PeakBagging file system. 
 
