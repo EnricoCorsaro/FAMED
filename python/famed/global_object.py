@@ -655,20 +655,23 @@ class Global(FamedStar):
             median_echelle_epsi = median_high(echelle_epsi_array)
 
             if fit_dnu <= self.cp.dnu_threshold:
-                epsilon_limit  = self.cp.upper_epsilon_rg_slope * np.log(fit_dnu) + self.cp.upper_epsilon_rg_offset
+                epsilon_upper_limit  = self.cp.upper_epsilon_rg_slope * np.log(fit_dnu) + self.cp.upper_epsilon_rg_offset
+                epsilon_lower_limit  = self.cp.lower_epsilon_rg_slope * np.log(fit_dnu) + self.cp.lower_epsilon_rg_offset
 
                 # The sliding pattern without including the l=1 mode peak has
                 # failed in providing a reliable epsilon. Therefore repeat the
                 # fit by including the l=1 model peak, having the position fixed
                 # to the p-mode frequency of the asymptotic relation
-                if median_echelle_epsi >= epsilon_limit:
+                if (median_echelle_epsi >= epsilon_upper_limit) or ((median_echelle_epsi <= epsilon_lower_limit) & (fit_dnu >= self.cp.dnu_cl2)):
                     if self.cp.print_on_screen:
                         if sliding_iteration>0:
                             print('Repeating the sliding-pattern fit did not solve the issue. Epsilon is likely to be wrong for this star')
                             self.bad_epsi = True
                         else:
-                            print('Repeating the sliding-pattern fit because epsilon exceeds the upper limit for RGs')
-                       
+                            if median_echelle_epsi >= epsilon_upper_limit: 
+                                print('Repeating the sliding-pattern fit because epsilon exceeds the upper limit for RGs')
+                            else:
+                                print('Repeating the sliding-pattern fit because epsilon exceeds the lower limit for RGs')
                     d01_prior = [ap['d01'],ap['d01']]
                 else:
                     # Epsilon from the sliding-pattern fit has been validated.

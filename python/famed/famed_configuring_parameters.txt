@@ -37,6 +37,7 @@ n_sigma_envelope_tip 1.2
 n_dnu_envelope 4.5
 dnu_tip 3.2
 dnu_cl 9.
+dnu_cl2 5.
 dnu_rg 15.
 dnu_sg 90.
 teff_sg 6350.
@@ -125,6 +126,8 @@ n_orders_side_prior_sg 1.5
 n_orders_side_prior_rg 1.5
 upper_epsilon_rg_slope 0.253694
 upper_epsilon_rg_offset 0.76
+lower_epsilon_rg_slope 0.468876
+lower_epsilon_rg_offset -0.104627
 dnu_prior_lower_fraction 0.96
 dnu_prior_upper_fraction 1.04
 d02_prior_lower_ms 1.5
@@ -168,7 +171,7 @@ save_test_files 0
 detection_probability_threshold 0.993
 rotation_probability_threshold 0.75
 duplicity_probability_threshold 0.75
-rotation_test_activated 1
+rotation_test_activated 0
 height_ratio_threshold 10.0
 bkg_prior_lower 0.95
 bkg_prior_upper 1.05
