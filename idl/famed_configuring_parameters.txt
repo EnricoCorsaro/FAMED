@@ -1,8 +1,8 @@
 # -----------------------------------------------------------------------------------------
 # global paths used in the computation
 # -----------------------------------------------------------------------------------------
-root_path YOUR_LOCAL_ROOT_PATH_HERE/
-famed_path YOUR_LOCAL_ROOT_PATH_HERE/FAMED/idl
+root_path /Users/eco/asismology/github/
+famed_path /Users/eco/asismology/github/FAMED/idl
 isla_subdir isla
 pb_subdir pb
 as_subdir as
@@ -16,7 +16,7 @@ print_on_screen 1
 prior_filename prior_hyperParameters
 background_run_number 00
 n_threads 12
-logo_filename YOUR_LOCAL_ROOT_PATH_HERE/FAMED/docs/figures/FAMED_LOGO_BLACK_small.jpeg
+logo_filename /Users/eco/asismology/github/FAMED/docs/figures/FAMED_LOGO_BLACK_small.jpeg
 external_background_results_dir -99
 external_background_filename_suffix _backgroundParameters.txt
 #
