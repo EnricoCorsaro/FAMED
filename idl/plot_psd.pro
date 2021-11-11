@@ -31,7 +31,7 @@ endif else begin
 endelse
 
 colorbar = 24
-colorFile = Filepath(SUBDIRECTORY=['resource','colors'], 'fsc_brewer.tbl')
+colorFile = 'fsc_brewer.tbl'
 LoadCT,colorbar,FILE=colorFile,/silent
 
 for i=0,n_elements(parameters.separations)-2 do begin

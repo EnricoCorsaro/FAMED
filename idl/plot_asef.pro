@@ -54,7 +54,7 @@ for i=0, n_maxima-1 do begin
     par_hist_range = par_hist(lower_index:upper_index)
     asef_hist_range = asef_hist(lower_index:upper_index)
  
-    colorFile = Filepath(SUBDIRECTORY=['resource','colors'], 'fsc_brewer.tbl')
+    colorFile = 'fsc_brewer.tbl'
 
     ; Plot histogram counts
     LoadCT,pp.brewer_colorbar_asef,FILE=colorFile,/silent

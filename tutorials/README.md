@@ -4,11 +4,10 @@ This tutorial shows how to run the IDL version of the FAMED pipeline using both 
 
 Before running this tutorial make sure that the working paths have been setup properly according to your local directories. If you have installed the code using the install.sh script provided within the package this initial configuration is done automatically. Once these aspects are set you can run the tutorial using the steps listed below:
 
-1. Place the file `FAMED/idl/fsc_brewer.tbl` inside your local idl source folder (e.g. `/idl/resource/colors/`). This will ensure you can use the proper color table to display the plots in a correct way.
-2. Copy the file `FAMED/tutorials/data/Background/data/KIC012069424.txt` inside the folder `../Background/data/`, i.e. the data folder of the Background code. If you don't have the Background code installed, make sure to create a folder named Background, to be placed at the same level as FAMED (not inside). You can even decide to install the Background code as a preliminary step. See [Background code](https://github.com/EnricoCorsaro/Background) for more information.
-3. Copy the folder `FAMED/tutorials/data/Background/results/KIC012069424` inside the folder `../Background/results/`, i.e. the results folder of the Background code.
-4. Go to the folder `FAMED/idl/` and open an IDL prompt from there.
-5. In order to execute the first part of the analyis using the GLOBAL module, type the following commands inside the IDL prompt:
+1. Copy the file `FAMED/tutorials/data/Background/data/KIC012069424.txt` inside the folder `../Background/data/`, i.e. the data folder of the Background code. If you don't have the Background code installed, make sure to create a folder named Background, to be placed at the same level as FAMED (not inside). You can even decide to install the Background code as a preliminary step. See [Background code](https://github.com/EnricoCorsaro/Background) for more information.
+2. Copy the folder `FAMED/tutorials/data/Background/results/KIC012069424` inside the folder `../Background/results/`, i.e. the results folder of the Background code.
+3. Go to the folder `FAMED/idl/` and open an IDL prompt from there.
+4. In order to execute the first part of the analyis using the GLOBAL module, type the following commands inside the IDL prompt:
 
 ```idl
 .rnew start_famed.pro
