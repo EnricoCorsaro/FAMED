@@ -37,6 +37,5 @@ Additionally, three files are also included inside the FAMED package. These file
 
 Tutorials
 ^^^^^^^^^
-Coming soon!
-
+Tutorials on how to run the pipeline can be found in the public GitHub repository `here <https://github.com/EnricoCorsaro/FAMED/tree/master/tutorials>`_.
 
