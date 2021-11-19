@@ -3347,7 +3347,6 @@ parameters = { catalog_id:     catalog_id,     $
                upper_height:   upper_height,   $
                threshold_asef: threshold_asef, $
                n_bins:         n_bins,         $
-               tolerance:      0,              $
                n_freq:         n_freq,         $
                n_chunks:       n_chunks,       $
                n_radial_chunk: n_radial_chunk  $

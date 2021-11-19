@@ -79,10 +79,18 @@ xyouts,lp.block4_1[0],lp.block4_1[1],'!3ASEF!Dthreshold!n = '+strcompress(string
 charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,/normal
 xyouts,lp.block4_2[0],lp.block4_2[1],'!3ASEF!Dbins!n = '+strcompress(string(parameters.n_bins),/remove_all),   $
 charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,/normal
-xyouts,lp.block4_3[0],lp.block4_3[1],'!3'+sp.dnu_str+'!Dtolerance!n = '+strcompress(string(parameters.tolerance*100.,format='(F0.2)'),/remove_all) + ' %', $
-charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,/normal
-xyouts,lp.block4_4[0],lp.block4_4[1],'!3N!Dfreq!n = '+strcompress(string(parameters.n_freq),/remove_all),  $
-charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,/normal
-xyouts,lp.block4_5[0],lp.block4_5[1],'!3N!Dorders!n = '+strcompress(string(parameters.n_chunks),/remove_all),  $
-charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,/normal
+
+if flag_global eq 1 then begin
+    xyouts,lp.block4_3[0],lp.block4_3[1],'!3'+sp.dnu_str+'!Dtolerance!n = '+strcompress(string(parameters.tolerance*100.,format='(F0.2)'),/remove_all) + ' %', $
+    charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,/normal
+    xyouts,lp.block4_4[0],lp.block4_4[1],'!3N!Dfreq!n = '+strcompress(string(parameters.n_freq),/remove_all),  $
+    charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,/normal
+    xyouts,lp.block4_5[0],lp.block4_5[1],'!3N!Dorders!n = '+strcompress(string(parameters.n_chunks),/remove_all),  $
+    charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,/normal
+endif else begin
+    xyouts,lp.block4_4[0],lp.block4_3[1],'!3N!Dfreq!n = '+strcompress(string(parameters.n_freq),/remove_all),  $
+    charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,/normal
+    xyouts,lp.block4_5[0],lp.block4_3[1],'!3N!Dorders!n = '+strcompress(string(parameters.n_chunks),/remove_all),  $
+    charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,/normal
+endelse
 end
