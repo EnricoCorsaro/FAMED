@@ -1,4 +1,4 @@
-pro find_islands_global,catalog_id,star_id,threshold_asef,tolerance,teff,force=force
+pro find_islands_global,catalog_id,star_id,threshold_asef,tolerance,teff,force=force,external=external
 ; -------------------------------------------------------------------------------------------------------------------
 ; Author:      Enrico Corsaro
 ; e-mail:      enrico.corsaro@inaf.it
@@ -20,7 +20,11 @@ COMMON GRAPHIC,pp,lp,sp,lpe
 COMMON DIAMONDS,dp
 
 modality = 'GLOBAL'
-setup_computation
+
+if ~keyword_set(external) then begin
+    setup_computation
+endif
+
 star_dir = info.peakbagging_results_dir + catalog_id + star_id + '/'
 peakbagging_filename_global = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
                               + catalog_id + star_id + info.peakbagging_filename_label + $

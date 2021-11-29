@@ -1,4 +1,4 @@
-pro find_islands_chunk,catalog_id,star_id,run,threshold_asef,teff,force=force
+pro find_islands_chunk,catalog_id,star_id,run,threshold_asef,teff,force=force,external=external
 ; -------------------------------------------------------------------------------------------------------------------
 ; Author:      Enrico Corsaro
 ; e-mail:      enrico.corsaro@inaf.it
@@ -15,7 +15,10 @@ COMMON DIAMONDS,dp
 
 modality = 'CHUNK'
 
-setup_computation
+if ~keyword_set(external) then begin
+    setup_computation
+endif
+
 run = strcompress(string(run),/remove_all)
 star_dir = info.peakbagging_results_dir + catalog_id + star_id + '/'
 peakbagging_filename_global = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $

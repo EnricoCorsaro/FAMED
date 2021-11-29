@@ -4,13 +4,11 @@ COMMON STAR,info
 COMMON DIAMONDS,dp
 
 setup_computation
-modality = 'GLOBAL'
 peakbagging_filename_global = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
                               + catalog_id + star_id + info.peakbagging_filename_label + $
-                                info.isla_subdir + '_' + info.global_subdir + '_' + modality + '.txt'
+                                info.isla_subdir + '_' + info.global_subdir + '_GLOBAL.txt'
 
 ; Perform GLOBAL modality
-
 if keyword_set(global) then begin
     if info.print_on_screen eq 1 then begin
         print,'-------------------------------------------------'
@@ -47,19 +45,18 @@ if keyword_set(global) then begin
    
     if keyword_set(fit) then begin
         ; Obtain the global modality fit
-        make_islands_global,catalog_id,star_id,teff
+        make_islands_global,catalog_id,star_id,teff,/external
     endif
 
     ; Find the actual frequencies
     if keyword_set(force) then begin
-        find_islands_global,catalog_id,star_id,threshold_asef,tolerance,teff,/force
+        find_islands_global,catalog_id,star_id,threshold_asef,tolerance,teff,/force,/external
     endif else begin
-        find_islands_global,catalog_id,star_id,threshold_asef,tolerance,teff
+        find_islands_global,catalog_id,star_id,threshold_asef,tolerance,teff,/external
     endelse
 endif
 
 ; Perform CHUNK modality
-
 if keyword_set(chunk) then begin
     if info.print_on_screen eq 1 then begin
         print,'-------------------------------------------------'
@@ -68,8 +65,8 @@ if keyword_set(chunk) then begin
     endif
     
     if keyword_set(fit) then begin
-        ; Obtain the chunk modality fits
-        make_islands_chunk,catalog_id,star_id,teff
+        ; Obtain the chunk modality fits (consider all the chunks)
+        make_islands_chunk,catalog_id,star_id,teff,-1,/external
     endif
 
     ; Load global parameters
@@ -98,16 +95,16 @@ if keyword_set(chunk) then begin
         run_index = strcompress(string(chunk_number),/remove_all)
         
         if info.print_on_screen eq 1 then begin
-            print,' Analyzing CHUNK '+run_index
+            print,' Analyzing CHUNK ' + run_index
             print,' ...'
             print,' ...'
             print,' '
         endif
     
         if keyword_set(force) then begin
-            find_islands_chunk,catalog_id,star_id,run_index,threshold_asef,teff,/force
+            find_islands_chunk,catalog_id,star_id,run_index,threshold_asef,teff,/force,/external
         endif else begin
-            find_islands_chunk,catalog_id,star_id,run_index,threshold_asef,teff
+            find_islands_chunk,catalog_id,star_id,run_index,threshold_asef,teff,/external
         endelse
     endfor
 endif

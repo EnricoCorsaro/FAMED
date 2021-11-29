@@ -1,4 +1,4 @@
-pro make_islands_global,catalog_id,star_id,teff
+pro make_islands_global,catalog_id,star_id,teff,external=external
 ; -------------------------------------------------------------------------------------------------------
 ; Auuthor:     Enrico Corsaro
 ; e-mail:      enrico.corsaro@inaf.it
@@ -18,9 +18,14 @@ COMMON CONFIG,cp
 COMMON STAR,info
 COMMON DIAMONDS,dp
 
-setup_computation
+; Set up the computation only if the routine has not been called from an external procedure
+
 bgp = get_background(catalog_id,star_id)
-set_peakbagging,catalog_id,star_id,bgp
+
+if ~keyword_set(external) then begin
+    setup_computation
+    set_peakbagging,catalog_id,star_id,bgp
+endif
 
 ; Create storing output directories if not already present
 

@@ -1,4 +1,4 @@
-pro make_islands_chunk,catalog_id,star_id,teff
+pro make_islands_chunk,catalog_id,star_id,teff,chunk_id,external=external
 ; -------------------------------------------------------------------------------------------------------
 ; Auuthor:     Enrico Corsaro
 ; e-mail:      enrico.corsaro@inaf.it
@@ -11,14 +11,23 @@ pro make_islands_chunk,catalog_id,star_id,teff
 ;              <star_id>: string specifying the ID number of the star. 
 ;              <teff>: a value for the effective temperature of the star. Based on Teff, and nuMax
 ;              a proper l=0 linewidth estimate will be computed in order to run the fit.
+;              <chunk_number>: an integer specifying the number of the chunk for which the sampling is
+;              required. If < 0 or > the total number of chunks, by default it will compute the sampling 
+;              for all the chunks identified in the GLOBAL module.
 ; -------------------------------------------------------------------------------------------------------
 COMMON CONFIG,cp
 COMMON STAR,info
 COMMON DIAMONDS,dp
 
-setup_computation
+; Set up the computation only if the routine has not been called from an external procedure
+
 bgp = get_background(catalog_id,star_id)
-set_peakbagging,catalog_id,star_id,bgp
+
+if ~keyword_set(external) then begin
+    setup_computation
+    set_peakbagging,catalog_id,star_id,bgp
+endif
+
 star_dir = info.peakbagging_results_dir + catalog_id + star_id + '/'
 peakbagging_filename_global = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
                               + catalog_id + star_id + info.peakbagging_filename_label + $
@@ -53,10 +62,21 @@ endif else begin
     ; Load the frequency positions for each chunk
 
     readcol,peakbagging_filename_global,chunk_number,freq_left,freq_right,snr,format='I,D,D,F',numline=n_chunks,skipline=3,comment='#',/silent
+    
     min_linewidths = fltarr(n_chunks)
     bg_names = strarr(n_chunks)
+
+    if ((chunk_id lt 0) or (chunk_id ge n_chunks)) then begin
+        first_it = 0
+        last_it = n_chunks-1
+        run_labels = indgen(n_chunks)
+    endif else begin
+        first_it = chunk_id
+        last_it = chunk_id
+        run_labels = [chunk_id]
+    endelse
     
-    for i=0,n_chunks-1 do begin
+    for i=first_it,last_it do begin
         run_subdir = strcompress(string(i),/remove_all)
    
         ; Evaluate maximum PSD in the given chunk
@@ -126,8 +146,16 @@ endif else begin
         free_lun,lun1
     endfor
 
+    ; When running a single chunk, select only information related to that chunk
+
+    if n_elements(run_labels) lt n_chunks then begin
+        active_chunk_index = where(bg_names ne '')
+        bg_names = bg_names(active_chunk_index)
+        min_linewidths = min_linewidths(active_chunk_index)
+    endif
+
     peakbagging_parameters = { subdir:     info.isla_subdir,     $
-                               run:        indgen(n_chunks),     $
+                               run:        run_labels,           $
                                background: bg_names,             $
                                fwhm:       min_linewidths,       $
                                duplet:     0                     $         
