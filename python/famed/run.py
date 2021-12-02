@@ -4,9 +4,9 @@ from .global_object import *
 from .utils import *
 
 
-__all__ = ['run_GLOBAL','run_CHUNK','run_ECHELLE','run_COMPLETE']
+__all__ = ['GLOBAL','CHUNK','ECHELLE','COMPLETE']
 
-def run_GLOBAL(catalog_id, star_id, teff, force=True):
+def GLOBAL(catalog_id, star_id, teff, force=True):
     """
     Helper function to run all steps, including plotting, of GLOBAL modality.
 
@@ -27,13 +27,13 @@ def run_GLOBAL(catalog_id, star_id, teff, force=True):
     famed_obj.make_global_plots()
     return famed_obj
 
-def run_CHUNK():
+def CHUNK():
     print('This function is not yet implemented')
 
-def run_ECHELLE():
+def ECHELLE():
     print('This function is not yet implemented')
 
-def run_COMPLETE():
+def COMPLETE():
     print('This function is not yet implemented')
 
 

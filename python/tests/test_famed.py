@@ -33,7 +33,7 @@ def test_run(silent_remove=False):
     move_test_data(cat_id, star_id)
     
     # Run test
-    star = f.run.run_GLOBAL('KIC', '006117517', 4687, force=True)
+    star = f.run.GLOBAL('KIC', '006117517', 4687, force=True)
 
 def move_test_data(cat_id, star_id):
     # Copy background results and data to Background folder
