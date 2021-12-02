@@ -43,7 +43,7 @@ def write_data_range(filename, boundaries):
     """
     np.savetxt(filename, [boundaries],fmt='%.5f')
 
-def get_background(catalog_id, star_id, background_results_dir, background_run_number='00'):
+def get_background(catalog_id, star_id, background_results_dir, background_run_number='00', external_background_results_dir='-99', external_background_filename_suffix='_backgroundParameters.txt'):
     """
     Retrieve the background model if previously fitted using DIAMONDS.
 
@@ -70,28 +70,41 @@ def get_background(catalog_id, star_id, background_results_dir, background_run_n
         *name* is the type the background model (e.g. 'TwoHarvey' or 
         'ThreeHarveyColor')
     """
-    # Read background model fitted parameters
-    bg_par = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_parameterSummary.txt',usecols=(0,))
-
-    # Read background model name
-    if os.path.isfile(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_computationParameters.txt'):
-        config = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_computationParameters.txt',dtype='str')
-    else:
-        config = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_configuringParameters.txt',dtype='str')
-    bg_name = config[-2]
-
-    # Apply the following in case the background name is not listed among the
-    # computation parameters of the Background fit (e.g. an older version of
-    # DIAMONDS was used for the Background fit).
     bg_name_list = np.array(['Flat','Original','OneHarvey','OneHarveyColor','TwoHarvey','TwoHarveyColor','ThreeHarvey','ThreeHarveyColor'])
-    bg_name_npar = np.array([1,3,3,5,5,7,7,9])
-    bg_name_flag = np.array([1,0,0,1,0,1,0,1])
+    
+    if external_background_results_dir == '-99':
+        # Read background model fitted parameters
+        bg_par = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_parameterSummary.txt',usecols=(0,))
 
-    tmp_match = np.where(bg_name_list == bg_name)[0]
-    if len(tmp_match) < 1:
-        n_bg_par = len(bg_par)-3
-        tmp_match2 = np.where((bg_name_npar == n_bg_par) & (bg_name_flag == 1))[0]
-        bg_name = bg_name_list[tmp_match2[0]]
+        # Read background model name
+        if os.path.isfile(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_computationParameters.txt'):
+            config = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_computationParameters.txt',dtype='str')
+        else:
+            config = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_configuringParameters.txt',dtype='str')
+        bg_name = config[-2]
+
+        # Apply the following in case the background name is not listed among the
+        # computation parameters of the Background fit (e.g. an older version of
+        # DIAMONDS was used for the Background fit).
+        bg_name_npar = np.array([1,3,3,5,5,7,7,9])
+        bg_name_flag = np.array([1,0,0,1,0,1,0,1])
+
+        tmp_match = np.where(bg_name_list == bg_name)[0]
+        if len(tmp_match) < 1:
+            n_bg_par = len(bg_par)-3
+            tmp_match2 = np.where((bg_name_npar == n_bg_par) & (bg_name_flag == 1))[0]
+            bg_name = bg_name_list[tmp_match2[0]]
+    else:
+        # In this case the user has required to adopt an external background, not fitted using the Background code extension of Diamonds.
+        # Read background model fitted parameters and background name
+        bg_variables = np.loadtxt(external_background_results_dir + catalog_id + star_id + external_background_filename_suffix,dtype='str')
+        bg_name = bg_variables[0]
+        tmp_match = np.where(bg_name_list == bg_name)[0]
+
+        if len(tmp_match) < 1:
+            raise NameError('There is no background model recognized by PeakBagging with the name ' + bg_name)
+        else:
+            bpg_par = float(bg_variables[1:])
 
     bgp = {'parameters':    bg_par,
            'name':          bg_name}
@@ -99,7 +112,7 @@ def get_background(catalog_id, star_id, background_results_dir, background_run_n
     return bgp
 
 
-def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, dnu_cl=9, dnu_tip=3.2, n_dnu_envelope=4.5, n_sigma_envelope=4.5, n_sigma_envelope_cl=2.5, n_sigma_envelope_tip=1.2, numax_threshold=300, numax_coeff_low=0.267, numax_coeff_high=0.22, numax_exponent_low=0.76, numax_exponent_high=0.797, force=False):
+def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, external_background_results_dir, dnu_cl=9, dnu_tip=3.2, n_dnu_envelope=4.5, n_sigma_envelope=4.5, n_sigma_envelope_cl=2.5, n_sigma_envelope_tip=1.2, numax_threshold=300, numax_coeff_low=0.267, numax_coeff_high=0.22, numax_exponent_low=0.76, numax_exponent_high=0.797, force=False):
     """
     Verify or create the proper folder structure for DIAMONDS PeakBagging.
 
@@ -159,7 +172,12 @@ def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, dnu_cl=9, dnu_tip=3
     bg_par = bgp['parameters']
 
     if not os.path.isfile(peakbagging_data_dir/(catalog_id + star_id + '.txt')) or force:
-        freq,psd = np.loadtxt(background_data_dir/(catalog_id + star_id + '.txt')).T
+       
+        # Check whether the background fit has to be read from an external source 
+        if external_background_results_dir == '-99':
+            freq,psd = np.loadtxt(background_data_dir/(catalog_id + star_id + '.txt')).T
+        else:
+            freq,psd = np.loadtxt(external_background_results_dir + catalog_id + star_id + '.txt').T
 
         # Trim the global PSD of the star, used for the background fit, to a
         # narrower frequency region centered around nuMax
@@ -218,8 +236,10 @@ def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, dnu_cl=9, dnu_tip=3
                 f.write('{}\n'.format(par))
 
     if not os.path.isfile(peakbagging_results_dir/(catalog_id + star_id)/'NyquistFrequency.txt'):
-        subprocess.call(('cp {} {}'.format(background_results_dir/(catalog_id + star_id)/'NyquistFrequency.txt',peakbagging_results_dir/(catalog_id + star_id))),shell=True)
-
+        if external_background_results_dir == '-99':
+            subprocess.call(('cp {} {}'.format(background_results_dir/(catalog_id + star_id)/'NyquistFrequency.txt',peakbagging_results_dir/(catalog_id + star_id))),shell=True)
+        else:
+            subprocess.call(('cp {} {}'.format(external_background_results_dir + catalog_id + star_id + '_NyquistFrequency.txt',peakbagging_results_dir/(catalog_id + star_id)/'NyquistFrequency.txt')),shell=True)
 
 def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asymptotic, flag_bglevel, dp, diamonds_path, n_threads=12, prior_filename='prior_hyperParameters', merge=False):
     """
