@@ -55,6 +55,8 @@ class ConfiguringParameters(object):
                     d[k] = float(v)
                 except:
                     pass
+            finally:
+                if d[k] == -99: d[k] = v
             setattr(self, k, d[k])
         
        
