@@ -41,7 +41,12 @@ class FamedStar(object):
 
         # Read in the fitted background parameters
         background_results_dir = self.cp.diamonds_path/'Background'/'results'
-        self.bgp = diamonds.get_background(self.catalog_id, self.star_id, background_results_dir, self.cp.background_run_number)
+
+        if self.cp.print_on_screen:
+            if self.cp.external_background_results_dir != '-99':
+                print(' Using an external background fit provided by the user')
+                
+        self.bgp = diamonds.get_background(self.catalog_id, self.star_id, background_results_dir, self.cp.background_run_number, self.cp.external_background_results_dir, self.cp.external_background_filename_suffix)
 
 
     ### Methods to be used by mupltiple modalities (e.g. GLOBAL and CHUNK)
