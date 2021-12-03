@@ -282,7 +282,7 @@ ap = get_asymptotic_parameters(numax,acf_dnu,teff)
 
 ; Start by verifying whether the star has depressed dipole modes
 
-asef_threshold = (dp.isla.max_nested_it + dp.isla.n_live) * cp.asef_threshold_fraction
+asef_depressed_modes_threshold = (dp.isla.max_nested_it + dp.isla.n_live) * cp.asef_threshold_fraction
 
 if fit_dnu le cp.dnu_threshold then begin
     central_indices = where(freq1 gt central_freq - fit_dnu*cp.n_central_orders_side/2. and freq1 lt central_freq + fit_dnu*cp.n_central_orders_side/2.)
@@ -290,7 +290,7 @@ endif else begin
     central_indices = where(freq1 gt central_freq - fit_dnu*cp.n_central_orders_side and freq1 lt central_freq + fit_dnu*cp.n_central_orders_side)
 endelse
 
-depressed_indices = where(asef_maximum(central_indices) lt asef_threshold)
+depressed_indices = where(asef_maximum(central_indices) lt asef_depressed_modes_threshold)
 n_central_freq = n_elements(central_indices)
 n_depressed_freq = n_elements(depressed_indices)
 
@@ -370,7 +370,7 @@ endif else begin
         ; are present and classify the star as a subgiant.
         
         central_indices = where(freq1 gt central_freq - fit_dnu*cp.n_central_orders_side and freq1 lt central_freq + fit_dnu*cp.n_central_orders_side and $
-                                asef_maximum ge asef_threshold)
+                                asef_maximum ge asef_depressed_modes_threshold)
         
         freq1_right = freq1(central_indices(1:*:2))     ; Odd frequencies
         freq1_left = freq1(central_indices(0:*:2))      ; Even frequencies
