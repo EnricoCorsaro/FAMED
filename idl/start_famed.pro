@@ -16,43 +16,16 @@ if keyword_set(global) then begin
         print,'-------------------------------------------------'
     endif
    
-    bgp = get_background(catalog_id,star_id)
-    if keyword_set(force) then begin
-        set_peakbagging,catalog_id,star_id,bgp,/force
-    endif else begin
-        set_peakbagging,catalog_id,star_id,bgp
-    endelse 
-
-    readcol,info.peakbagging_results_dir + catalog_id + star_id + '/gaussianEnvelopeParameters.txt',gauss_par,format='D',/silent 
-    numax = gauss_par(1)
-    dnu = compute_scaling_dnu(numax)
-    threshold_asef = cp.threshold_asef_global
-    run_subdir = info.global_subdir
-   
-    if dnu lt cp.dnu_rg or (dnu lt cp.dnu_sg and teff lt cp.teff_sg) then begin
-        if dnu gt cp.dnu_rg then begin
-            tolerance = cp.skim_frequency_tolerance_sg
-        endif else begin
-            if dnu le cp.dnu_tip then begin
-                tolerance = cp.skim_frequency_tolerance_tip
-            endif else begin
-                tolerance = cp.skim_frequency_tolerance_rg
-            endelse
-        endelse
-    endif else begin
-        tolerance = cp.skim_frequency_tolerance_ms
-    endelse
-   
     if keyword_set(fit) then begin
         ; Obtain the global modality fit
-        make_islands_global,catalog_id,star_id,teff,/external
+        make_islands_global,catalog_id,star_id,teff,/force,/external
     endif
 
     ; Find the actual frequencies
     if keyword_set(force) then begin
-        find_islands_global,catalog_id,star_id,threshold_asef,tolerance,teff,/force,/external
+        find_islands_global,catalog_id,star_id,teff,/force,/external
     endif else begin
-        find_islands_global,catalog_id,star_id,threshold_asef,tolerance,teff,/external
+        find_islands_global,catalog_id,star_id,teff,/external
     endelse
 endif
 
@@ -66,7 +39,7 @@ if keyword_set(chunk) then begin
     
     if keyword_set(fit) then begin
         ; Obtain the chunk modality fits (consider all the chunks)
-        make_islands_chunk,catalog_id,star_id,teff,-1,/external
+        make_islands_chunk,catalog_id,star_id,-1,teff,/external
     endif
 
     ; Load global parameters

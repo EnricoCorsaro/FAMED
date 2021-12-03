@@ -1,4 +1,4 @@
-pro make_islands_chunk,catalog_id,star_id,teff,chunk_id,external=external
+pro make_islands_chunk,catalog_id,star_id,chunk_id,teff,external=external
 ; -------------------------------------------------------------------------------------------------------
 ; Auuthor:     Enrico Corsaro
 ; e-mail:      enrico.corsaro@inaf.it
@@ -9,11 +9,11 @@ pro make_islands_chunk,catalog_id,star_id,teff,chunk_id,external=external
 ;              modality was not performed as a previous step.  
 ; Usage:       <catalog_id>: string specifying the Catalog name of the star (e.g. KIC, TIC, etc.).
 ;              <star_id>: string specifying the ID number of the star. 
-;              <teff>: a value for the effective temperature of the star. Based on Teff, and nuMax
-;              a proper l=0 linewidth estimate will be computed in order to run the fit.
-;              <chunk_number>: an integer specifying the number of the chunk for which the sampling is
+;              <chunk_id>: an integer specifying the number of the chunk for which the sampling is
 ;              required. If < 0 or > the total number of chunks, by default it will compute the sampling 
 ;              for all the chunks identified in the GLOBAL module.
+;              <teff>: a value for the effective temperature of the star. Based on Teff, and nuMax
+;              a proper l=0 linewidth estimate will be computed in order to run the fit.
 ; -------------------------------------------------------------------------------------------------------
 COMMON CONFIG,cp
 COMMON STAR,info
@@ -21,12 +21,11 @@ COMMON DIAMONDS,dp
 
 ; Set up the computation only if the routine has not been called from an external procedure
 
-bgp = get_background(catalog_id,star_id)
-
 if ~keyword_set(external) then begin
     setup_computation
-    set_peakbagging,catalog_id,star_id,bgp
 endif
+
+bgp = get_background(catalog_id,star_id)
 
 star_dir = info.peakbagging_results_dir + catalog_id + star_id + '/'
 peakbagging_filename_global = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
