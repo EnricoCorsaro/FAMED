@@ -11,6 +11,7 @@ function get_linewidth,freq,teff,numax
 ;          nuMax and Teff.
 ; -------------------------------------------------------------------------------------------------------
 COMMON CONFIG,cp
+teff = float(teff)
 
 ; !!!!!!! Need to improve the fit. Possibly replace with one common law, or improve the law for red giants. Corsaro et al. in prep.
 ; Does not work fine for Teff < 4400
