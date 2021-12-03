@@ -1,4 +1,4 @@
-pro find_islands_global,catalog_id,star_id,threshold_asef,tolerance,teff,force=force,external=external
+pro find_islands_global,catalog_id,star_id,teff,force=force,external=external
 ; -------------------------------------------------------------------------------------------------------------------
 ; Author:      Enrico Corsaro
 ; e-mail:      enrico.corsaro@inaf.it
@@ -171,8 +171,8 @@ endelse
 
 ; Give as input the minimum number of adjacent bins required to consider two local maxima separated
 
-threshold = threshold_asef*max(asef_hist)
-index_maximum = hill_climbing(par_hist,asef_hist,threshold,cp.min_bin_separation)
+threshold_asef = cp.threshold_asef_global*max(asef_hist)
+index_maximum = hill_climbing(par_hist,asef_hist,threshold_asef,cp.min_bin_separation)
 maximum = par_hist(index_maximum)
 asef_maximum = asef_hist(index_maximum)
 
@@ -234,7 +234,7 @@ sampling_counts = sampled_estimates.sampling_counts
 spsd_maximum = sampled_estimates.spsd_maximum
 
 if (info.save_eps ne 0) or (info.save_png ne 0) then begin 
-    plot_asef,par_hist,asef_hist,maximum,range_maximum,threshold,position_asef
+    plot_asef,par_hist,asef_hist,maximum,range_maximum,threshold_asef,position_asef
 endif
 
 ; Define some weights useful for identification of proper frequency peaks during mode identification
@@ -833,6 +833,20 @@ while (flag_dnu_fit eq 1) and (iterations lt cp.max_skim_iterations_global) do b
     ; Verify the position of each frequency by comparing it to the expected asymptotic value.
     ; Discard those frequencies that deviate from their asymptotic value by more than a given tolerance in DeltaNu.
     
+    if fit_dnu lt cp.dnu_rg or (fit_dnu lt cp.dnu_sg and teff lt cp.teff_sg) then begin
+        if fit_dnu gt cp.dnu_rg then begin
+            tolerance = cp.skim_frequency_tolerance_sg
+        endif else begin
+            if fit_dnu le cp.dnu_tip then begin
+                tolerance = cp.skim_frequency_tolerance_tip
+            endif else begin
+                tolerance = cp.skim_frequency_tolerance_rg
+            endelse
+        endelse
+    endif else begin
+        tolerance = cp.skim_frequency_tolerance_ms
+    endelse
+
     if n_radial ne 0 then begin
         ; Select only good l=0 frequencies
         
