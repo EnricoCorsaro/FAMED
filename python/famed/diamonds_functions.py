@@ -104,7 +104,7 @@ def get_background(catalog_id, star_id, background_results_dir, background_run_n
         if len(tmp_match) < 1:
             raise NameError('There is no background model recognized by PeakBagging with the name ' + bg_name)
         else:
-            bpg_par = float(bg_variables[1:])
+            bg_par = bg_variables[1:].astype(np.float)
 
     bgp = {'parameters':    bg_par,
            'name':          bg_name}
