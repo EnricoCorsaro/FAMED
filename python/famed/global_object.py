@@ -328,14 +328,14 @@ class Global(FamedStar):
         ap = astero.get_asymptotic_parameters(numax, acf_dnu, teff, self.cp.d01_mass_offset, self.cp.d01_mass_slope, self.cp.d01_offset, self.cp.d02_mass_offset, self.cp.d02_mass_slope, self.cp.d02_offset, self.cp.d03_slope,self.cp.d03_offset, self.cp.numax_sun, self.cp.dnu_sun, self.cp.teff_sun)
 
         # Start by veryfying whether the stars has depressed dipole modes
-        asef_threshold = (self.cp.dp_isla['max_nested_it']+self.cp.dp_isla['n_live'])*self.cp.asef_threshold_fraction
+        asef_depressed_modes_threshold = (self.cp.dp_isla['max_nested_it']+self.cp.dp_isla['n_live'])*self.cp.asef_threshold_fraction
 
         if fit_dnu <= self.cp.dnu_threshold:
             central_indicies = np.where((freq1 > central_freq - fit_dnu*self.cp.n_central_orders_side/2) & (freq1 < central_freq + fit_dnu*self.cp.n_central_orders_side/2))[0]
         else:
             central_indicies = np.where((freq1 > central_freq - fit_dnu*self.cp.n_central_orders_side) & (freq1 < central_freq + fit_dnu*self.cp.n_central_orders_side))[0]
 
-        depressed_indicies = np.where(asef_maximum[central_indicies]<asef_threshold)[0]
+        depressed_indicies = np.where(asef_maximum[central_indicies]<asef_depressed_modes_threshold)[0]
         n_central_freq = len(central_indicies)
         n_depressed_freq = len(depressed_indicies)
 
@@ -409,7 +409,7 @@ class Global(FamedStar):
                 # median value. If such deviation for any of the two ridges is
                 # larger than a given threshold, then consider that mixed modes
                 # are present and classify the star as a subgiant.
-                central_indices = np.where((freq1 > central_freq - fit_dnu*self.cp.n_central_orders_side) & (freq1 < central_freq + fit_dnu*self.cp.n_central_orders_side) & (asef_maximum >= asef_threshold))[0]
+                central_indices = np.where((freq1 > central_freq - fit_dnu*self.cp.n_central_orders_side) & (freq1 < central_freq + fit_dnu*self.cp.n_central_orders_side) & (asef_maximum >= asef_depressed_modes_threshold))[0]
                 freq1_right = freq1[central_indices[1::2]]     # Odd frequencies
                 freq1_left = freq1[central_indices[0::2]]      # Even frequencies
 
