@@ -4,7 +4,7 @@ import sys
 import shutil
 from pathlib import Path
 
-__all__ = ['test_steps','test_run']
+__all__ = ['test_steps','test_run','test_external_background']
 
 def test_steps(silent_remove=False):
     # Step-by-step
@@ -33,7 +33,27 @@ def test_run(silent_remove=False):
     move_test_data(cat_id, star_id)
     
     # Run test
-    star = f.run.GLOBAL('KIC', '006117517', 4687, force=True)
+    star = f.run.GLOBAL(cat_id, star_id, teff, force=True)
+
+def test_external_background():
+    # Test the adoption of an external background fit solution
+    cat_id = 'KIC'
+    star_id = '012008916'
+    teff = 5454
+
+    # Prepare clean test space
+    origin = '../../tutorials/data/Background/data/' + cat_id + star_id + '.txt'
+    target_dir = '../../../Background/data/'
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+
+    os.system(Path('cp ' + origin + ' ' + target_dir))
+    os.system('cp ../famed/famed_configuring_parameters.txt ../famed/famed_configuring_parameters.txt.local')
+    os.system(Path('sed -i.old s^-99^../../tutorials/data/Background/results/' + cat_id + star_id + '/^g ../famed/famed_configuring_parameters.txt'))
+    
+    # Run test
+    star = f.run.GLOBAL(cat_id, star_id, teff, force=True)
+    os.system('mv ../famed/famed_configuring_parameters.txt.local ../famed/famed_configuring_parameters.txt')
 
 def move_test_data(cat_id, star_id):
     # Copy background results and data to Background folder
@@ -92,8 +112,11 @@ if __name__ == '__main__':
     except:
         pass
     
-    print('Testing in step-by-step mode')
+    print('Testing in step-by-step mode.')
     test_steps(silent_remove)
 
     print('Testing in run all at once mode.')
     test_run(silent_remove)
+
+    print('Testing adoption of an external background.')
+    test_external_background()
