@@ -15,6 +15,7 @@ If you are using IDL in your system you can test that the pipeline is correctly 
 Once your IDL prompt is loaded, you can run the following commands:
 
 .. code :: idl
+
     IDL> .rnew test_famed
     IDL> test_famed
 
@@ -135,7 +136,7 @@ Using an external background fit solution
 -----------------------------------------
 An additional routine is provided in order to let you test the analysis of the RGB star KIC 12008916 by means of a background fit solution obtained by a code different than the DIAMONDS-Background. You can run this test in an interactive way following the steps below:
 
- .. code:: shell
+ .. code :: shell
 
     $ cd /YOUR_LOCAL_PATH/FAMED/python/test/
 
