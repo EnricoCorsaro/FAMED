@@ -30,8 +30,7 @@ def test_chunk_steps(silent_remove=False):
     # Run test
     star = f.Chunk(cat_id, star_id)
     snr,chunks = star.make_islands(force=True)
-    star.find_islands(force=True)
-    
+        
     # Test each chunk in order of S/N
     chunks = chunks[np.argsort(snr)]
     snr = snr[np.argsort(snr)]
@@ -57,7 +56,7 @@ def test_run(silent_remove=False):
     
     # Run test
     star = f.run.GLOBAL('KIC', '006117517', 4687, force=True)
-    star = f.run.CHUNK('KIC', '006117517',)
+    star = f.run.CHUNK('KIC', '006117517')
 
 def move_test_data(cat_id, star_id):
     # Copy background results and data to Background folder
