@@ -76,7 +76,7 @@ def assess_freq_asymptotic(freq_list, enn, ell, dnu, epsilon, alpha, d01, numax,
             tmp_match = np.where(enn == actual_enn)[0]
             if len(tmp_match) > 1:
                 asymp_freq = dnu*(actual_enn + epsilon + alpha/2.*(actual_enn - numax/dnu)**2)
-                closest_index = closest(freq_list,asymp_freq,index=True)
+                closest_index = closest(asymp_freq,freq_list,index=True)
                 duplicate_freq_index.append(tmp_match[tmp_match!=closest_index][0])
 
         if len(duplicate_freq_index) > 0:

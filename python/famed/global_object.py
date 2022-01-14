@@ -58,6 +58,7 @@ class Global(FamedStar):
             self.__dict__ = temp.__dict__.copy()
 
         else:
+            self.modality='GLOBAL'
             # Copy the configuring parameters to the summary/ directory
             target_dir = self.star_dir/self.cp.summary_subdir
             if self.cp.local_config:
@@ -153,8 +154,7 @@ class Global(FamedStar):
         self.run = run
         
         # Read prior height (upper limit)
-        priors_filename = self.star_dir/self.cp.isla_subdir/run/'peakbagging_hyperParametersUniform.txt'
-        prior_down, prior_up = np.loadtxt(priors_filename, unpack=True)
+        prior_down, prior_up = np.loadtxt(self.star_dir/self.cp.isla_subdir/run/'peakbagging_hyperParametersUniform.txt', unpack=True)
         left_bound = prior_down[0]
         right_bound = prior_up[0]
         upper_height = prior_up[1]
@@ -693,7 +693,7 @@ class Global(FamedStar):
             if (fit_dnu <= self.cp.dnu_threshold) & (fit_dnu >= self.cp.dnu_cl):
                 # If the star is an evolved subgiant/early RGB check that
                 # epsilon is in agreement with the epsilon-dnu relation
-                radial_freq_reference2 = closest(freq1,radial_freq_reference)
+                radial_freq_reference2 = closest(radial_freq_reference,freq1)
                 modeid_sliding = astero.get_modeid(radial_freq_reference,fit_dnu,median_echelle_epsi,0,numax,0)
                 modeid_epsi_dnu = astero.get_modeid(radial_freq_reference2,fit_dnu,interp_epsi,0,numax,0)
                 diff_radial = abs(radial_freq_reference2 - radial_freq_reference)
@@ -706,7 +706,7 @@ class Global(FamedStar):
                         print('Sliding mode identification did not match epsilon-dnu relation.\n')
                     
                     if modeid_epsi_dnu['degree'] == 1:
-                        radial_freq_reference = closest(freq1,radial_freq_reference2+fit_dnu/2)
+                        radial_freq_reference = closest(radial_freq_reference2+fit_dnu/2,freq1)
                         if self.cp.print_on_screen:
                             print('Applying correction to epsilon from epsilon-Dnu relation.\n')
                     else:
@@ -718,7 +718,7 @@ class Global(FamedStar):
             # for F-type stars, the sliding pattern fit may be unreliable.
             # In this case check the obtained mode identification against the
             # one using the epsilon-Teff relation 
-            radial_freq_reference2 = closest(freq1,radial_freq_reference)
+            radial_freq_reference2 = closest(radial_freq_reference,freq1)
             modeid_sliding = astero.get_modeid(radial_freq_reference,fit_dnu,median_echelle_epsi,fit_d01,numax,0)
             modeid_teff = astero.get_modeid(radial_freq_reference2,fit_dnu,interp_epsi,fit_d01,numax,0)
             diff_radial = abs(radial_freq_reference2 - radial_freq_reference)
@@ -731,7 +731,7 @@ class Global(FamedStar):
                         print('Sliding mode identification did not match epsilon-Teff relation well.\n')
                     
                     if modeid_teff['degree'] == 1:
-                        radial_freq_reference = closest(freq1,radial_freq_reference2+fit_dnu/2)
+                        radial_freq_reference = closest(radial_freq_reference2+fit_dnu/2,freq1)
                         if self.cp.print_on_screen:
                             print('Applying correction to epsilon from epsilon-Teff relation well.\n')
                     else:
@@ -797,7 +797,7 @@ class Global(FamedStar):
             # estimated from the ASEF. If the sliding-pattern fit was
             # unsuccesful, this difference will be 0.
             if self.cp.correct_radial_frequencies:
-                delta_nu0 = radial_freq_reference - closest(freq1_radial,radial_freq_reference)
+                delta_nu0 = radial_freq_reference - closest(radial_freq_reference,freq1_radial)
                 ap = astero.get_asymptotic_parameters(numax,fit_dnu,teff, self.cp.d01_mass_offset, self.cp.d01_mass_slope, self.cp.d01_offset, self.cp.d02_mass_offset, self.cp.d02_mass_slope, self.cp.d02_offset, self.cp.d03_slope,self.cp.d03_offset, self.cp.numax_sun, self.cp.dnu_sun, self.cp.teff_sun)
 
                 if delta_nu0 < ap['d02']: 

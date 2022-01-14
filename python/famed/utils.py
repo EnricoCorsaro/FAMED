@@ -75,7 +75,7 @@ def smooth(x, window_len=11, window='hanning'):
     
     return y[window_len//2:-window_len//2+1]
 
-def closest(arr,val,index=False):
+def closest(val,arr,index=False):
     """
     Find either the closest value or index of closest value in an array.
 

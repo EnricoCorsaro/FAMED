@@ -350,47 +350,50 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
             end_index = end_indices[j]
 
             if merge:
-                filename_run =  star_dir/parameters['subdir']/(catalog_id + star_id + '_run_indices.txt')
+                filename_run =  catalog_id + star_id + '_run_indices.txt'
                 with open(filename_run,'w') as f:
                     for run in parameters['run'][start_index:end_index]:
                         f.write('{}\n'.format(run))
 
-                filename_bg =  star_dir/parameters['subdir']/(catalog_id + star_id + '_bg_names.txt')
+                filename_bg =  catalog_id + star_id + '_bg_names.txt'
                 with open(filename_bg,'w') as f:
                     for bg in parameters['background'][start_index:end_index]:
                         f.write('{}\n'.format(bg))
 
-                filename_prior = star_dir/parameters['subdir']/(catalog_id + star_id + '_prior_filenames.txt')
+                filename_prior = catalog_id + star_id + '_prior_filenames.txt'
                 with open(filename_prior,'w') as f:
                     for i in range(0,end_index-start_index+1):
                         f.write('{}\n'.format(prior_filename))
 
-                filename_fwhm = star_dir/parameters['subdir']/(catalog_id + star_id + '_linewidths.txt')
+                filename_fwhm = catalog_id + star_id + '_linewidths.txt'
                 with open(filename_fwhm,'w') as f:
                     for fwhm in parameters['fwhm'][start_index:end_index]:
                         f.write('{}\n'.format(fwhm))
 
-                output_err_filename = star_dir/parameters['subdir']/(catalog_id + star_id + '_' + parameters.subdir + '_parallel.out')
-                command = 'parallel ./peakbagging ::: {} ::: {} ::: {} :::: {} ::::+ {} ::::+ {} ::::+ {} ::: {} ::: {} ::: {}'.format(catalog_id,star_id,parameters['subdir'],filename_run,filename_bg,filename_prior,filename_fwhm,flag_peaktest,flag_asymptotic,flag_bglevel,output_err_filename)
-                subprocess.run(command,shell=True,check=True,stdout=open(output_err_filename,'w'),stderr=subprocess.STDOUT)
+                output_err_filename = catalog_id + star_id + '_' + parameters['subdir'] + '_parallel.out'
+                command = 'parallel ./peakbagging ::: {} ::: {} ::: {} :::: {} ::::+ {} ::::+ {} ::::+ {} ::: {} ::: {} ::: {}'.format(catalog_id,star_id,parameters['subdir'],filename_run,filename_bg,filename_prior,filename_fwhm,flag_peaktest,flag_asymptotic,flag_bglevel)
+                process = subprocess.run(command,shell=True,stdout=open(output_err_filename,'w'),stderr=subprocess.STDOUT)
                 os.remove(filename_run)
                 os.remove(filename_bg)
                 os.remove(filename_prior)
                 os.remove(filename_fwhm)
             else:
-                with open(star_dir/parameters['subdir']/(parameters['filename_run']+'.txt'),'w') as f:
+                with open(parameters['filename_run']+'.txt','w') as f:
                     for run in parameters['run'][start_index:end_index]:
                         f.write('{}\n'.format(run))
 
-                output_err_filename =  star_dir/parameters['subdir']/(catalog_id + star_id + '_' + parameters['subdir'] + '_'+ parameters['filename_run'] + '_parallel.out')
-                command='parallel ./peakbagging ::: {} ::: {} ::: {} :::: {}.txt ::: {} ::: {} ::: {} ::: {} ::: {} ::: {}'.format(catalog_id,star_id,parameters['subdir'],star_dir/parameters['subdir']/parameters['filename_run'],parameters['background'],prior_filename,parameters['fwhm'],flag_peaktest,flag_asymptotic,flag_bglevel,output_err_filename)
-                process = subprocess.run(command,shell=True,check=True,stdout=open(output_err_filename,'w'),stderr=subprocess.STDOUT)
+                output_err_filename =  catalog_id + star_id + '_' + parameters['subdir'] + '_'+ parameters['filename_run'] + '_parallel.out'
+                command='parallel ./peakbagging ::: {} ::: {} ::: {} :::: {}.txt ::: {} ::: {} ::: {} ::: {} ::: {} ::: {}'.format(catalog_id,star_id,parameters['subdir'],parameters['filename_run'],parameters['background'],prior_filename,parameters['fwhm'],flag_peaktest,flag_asymptotic,flag_bglevel)
+                process = subprocess.run(command,shell=True,stdout=open(output_err_filename,'w'),stderr=subprocess.STDOUT)
+                os.remove(parameters['filename_run']+'.txt')
 
     else:
-        output_err_filename = star_dir/parameters['subdir']/(catalog_id + star_id + '_' + parameters['subdir'] + '_' + str(parameters['run']) + '.out')
+        output_err_filename = catalog_id + star_id + '_' + parameters['subdir'] + '_' + str(parameters['run']) + '.out'
         command = './peakbagging {} {} {} {} {} {} {} {} {} {}'.format(catalog_id,star_id,parameters['subdir'],parameters['run'],parameters['background'],prior_filename,parameters['fwhm'],flag_peaktest,flag_asymptotic,flag_bglevel)
-        subprocess.run(command,shell=True,check=True,stdout=open(output_err_filename,'w'),stderr=subprocess.STDOUT)
-        
+        process = subprocess.run(command,shell=True,stdout=open(output_err_filename,'w'),stderr=subprocess.STDOUT)
+
+    if process.returncode==0:
+        os.remove(output_err_filename)
     os.chdir(cwd)
     flag_computation_completed = np.zeros(len(parameters['run']),dtype='int')
 
@@ -458,13 +461,13 @@ def run_asymptotic(catalog_id, star_id, parameters, numax, ell, dp, diamonds_pat
     # Add in logger here to say path is changing and what it is changed to etc.
     cwd = os.getcwd()
     os.chdir(asymptotic_path)
-    output_err_filename = star_dir/parameters['subdir']/(catalog_id + star_id + '_' + parameters['subdir'] + '_' + parameters['run'] + '.out')
+    output_err_filename = catalog_id + star_id + '_' + parameters['subdir'] + '_' + parameters['run'] + '.out'
 
     subprocess.call(['./asymptotic', catalog_id, star_id, parameters['subdir'], 
                     parameters['run'], prior_filename, str(numax), str(ell)],
                     stdout=open(output_err_filename,'w'), stderr=subprocess.STDOUT)
 
-    #subprocess.call(['rm', output_err_filename])
+    os.remove(output_err_filename)
     os.chdir(cwd)
     
     flag_computation_completed = False

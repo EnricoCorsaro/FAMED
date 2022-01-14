@@ -6,7 +6,7 @@ from pathlib import Path
 
 __all__ = ['test_steps','test_run']
 
-def test_steps(silent_remove=False):
+def test_global_steps(silent_remove=False):
     # Step-by-step
     cat_id = 'KIC'
     star_id = '012069424'
@@ -17,10 +17,33 @@ def test_steps(silent_remove=False):
     move_test_data(cat_id, star_id)
 
     # Run test
-    star=f.Global(cat_id, star_id, teff)
+    star = f.Global(cat_id, star_id, teff)
     star.make_islands(force=True)
     star.find_islands(force=True)
     star.make_global_plots()
+
+def test_chunk_steps(silent_remove=False):
+    # Step-by-step
+    cat_id = 'KIC'
+    star_id = '012069424'
+    
+    # Run test
+    star = f.Chunk(cat_id, star_id, teff)
+    snr,chunks = star.make_islands(force=True)
+    star.find_islands(force=True)
+    
+    # Test each chunk in order of S/N
+    chunks = chunks[np.argsort(snr)]
+    snr = snr[np.argsort(snr)]
+
+    for i in range(0,len(snr))[::-1]:
+        pdf = PdfPages(famed_obj.star_dir/famed_obj.cp.figs_subdir/(famed_obj.catalog_id+famed_obj.star_id+'_'+famed_obj.cp.isla_subdir+'_all_CHUNK.pdf'))
+        for chunk in chunks[::-1]:
+            print('\n\n NOW DOING CHUNK: ',chunk,'\n\n')
+            famed_obj.find_islands(chunk,force=force)
+            famed_obj.make_chunk_plots(chunk)
+            pdf.savefig()
+        pdf.close()
 
 def test_run(silent_remove=False):
     # All at once
@@ -33,7 +56,8 @@ def test_run(silent_remove=False):
     move_test_data(cat_id, star_id)
     
     # Run test
-    star = f.run.run_GLOBAL('KIC', '006117517', 4687, force=True)
+    star = f.run.GLOBAL('KIC', '006117517', 4687, force=True)
+    star = f.run.CHUNK('KIC', '006117517',)
 
 def move_test_data(cat_id, star_id):
     # Copy background results and data to Background folder
@@ -93,7 +117,8 @@ if __name__ == '__main__':
         pass
     
     print('Testing in step-by-step mode')
-    test_steps(silent_remove)
+    test_global_steps(silent_remove)
+    test_chunk_steps()
 
     print('Testing in run all at once mode.')
     test_run(silent_remove)
