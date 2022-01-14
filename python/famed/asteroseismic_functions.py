@@ -114,7 +114,7 @@ def asymptotic_relation_radial(enn,numax,param):
     freq_asymp : float
         The radial asymptotic frequency of given radial order `enn`.
     """
-    freq_asymp = param[0]*(enn + param[1] + param[2]/2.*(enn - numax/param[0])^2)
+    freq_asymp = param[0]*(enn + param[1] + param[2]/2.*(enn - numax/param[0])**2)
     return freq_asymp
     
 

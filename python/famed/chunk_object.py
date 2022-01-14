@@ -343,15 +343,17 @@ class Chunk(FamedStar):
         
 
                 best_dipole_index = dipole_global_index + min(tmp_dipole)
-                freq_dipole = freq_global[best_dipole_index]
-                enn_dipole = enn_global[best_dipole_index]
-                freq_sig_dipole = freq_sig_global[best_dipole_index]
-                fwhm_dipole = fwhm_global[best_dipole_index]
+                freq_dipole = freq_global[best_dipole_index][0]
+                enn_dipole = enn_global[best_dipole_index][0]
+                freq_sig_dipole = freq_sig_global[best_dipole_index][0]
+                
+                fwhm_dipole = fwhm_global[best_dipole_index][0]
             else:
-                enn_dipole = enn_global[tmp_dipole]
-                freq_dipole = freq_global[tmp_dipole]
-                freq_sig_dipole = freq_sig_global[tmp_dipole]
-                fwhm_dipole = fwhm_global[tmp_dipole]
+                enn_dipole = enn_global[tmp_dipole][0]
+                freq_dipole = freq_global[tmp_dipole][0]
+                freq_sig_dipole = freq_sig_global[tmp_dipole][0]
+                
+                fwhm_dipole = fwhm_global[tmp_dipole][0]
             n_dipole_chunk = 1
         else:
             n_dipole_chunk = 0
@@ -463,7 +465,6 @@ class Chunk(FamedStar):
             median_d02 = d02
             max_d02 = d02
 
-
         # Radial mode and Quadrupole mode
 
         # Start by obtaining a more accurate position of the current radial mode by using the (possible) radial mode of the
@@ -555,7 +556,7 @@ class Chunk(FamedStar):
                                         if freq_radial <= max(par0):
                                             n_radial_chunk = 1
                                             freq_sig_radial = freq_sig_dipole
-                           
+                                            
                                     if n_dipole_chunk==0:
                                         freq_dipole = freq_radial - best_dnu/2. - d01
                                         freq_sig_dipole = freq_sig_radial
@@ -587,8 +588,6 @@ class Chunk(FamedStar):
                         freq_sig_next_radial = freq_sig_next_radial[0]
                         flag_next_radial_mode_found = 1
                
-                    
-
                         # Set new global radial mode frequency
                         freq_radial = freq_next_radial - best_dnu*(1.0 + best_alpha*(enn_next_radial - 0.5 - numax/best_dnu))
                         fwhm_radial = astero.get_linewidth(freq_radial,self.teff,numax)
@@ -597,7 +596,7 @@ class Chunk(FamedStar):
                             if freq_radial >= min(par0):
                                 n_radial_chunk = 1
                                 freq_sig_radial = freq_sig_dipole
-
+                                                                
                         if n_dipole_chunk==0:
                             freq_dipole = freq_radial - best_dnu/2. - d01
                             freq_sig_dipole = freq_sig_radial
@@ -636,13 +635,12 @@ class Chunk(FamedStar):
                                         if freq_radial >= min(par0):
                                             n_radial_chunk = 1
                                             freq_sig_radial = freq_sig_dipole
-                                
+                                                                                        
                                     if n_dipole_chunk==0:
                                         freq_dipole = freq_radial - best_dnu/2. - d01
                                         freq_sig_dipole = freq_sig_radial
                                         n_dipole_chunk = 1
                             
-
         flag_quadrupole_found = 0
 
         if n_radial_chunk != 0:
@@ -1119,6 +1117,7 @@ class Chunk(FamedStar):
             # Compute the estimated radial mode frequency from the asymptotic relation for radial modes.
             # Assume no quadrupole mode in this case.
             enn_radial = enn_dipole + 1
+            
             freq_radial_chunk = astero.asymptotic_relation_radial(enn_radial,numax,[best_dnu,best_epsi,best_alpha])
             fwhm_radial_fit = fwhm_dipole
             order_number = np.zeros(n_freq,dtype=int) + enn_dipole
@@ -1230,6 +1229,7 @@ class Chunk(FamedStar):
                     for k in range(0,self.cp.n_fwhm_fit):
                         data_range_filenames[k] = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + run_names[k] + '.txt')
                         prior_filenames[k] = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + run_names[k] + '.txt')
+
                         diamonds.write_data_range(data_range_filenames[k],data_freq_boundaries)
                         diamonds.write_uniform_prior(prior_filenames[k],boundaries)
             
