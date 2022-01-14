@@ -28,7 +28,7 @@ def test_chunk_steps(silent_remove=False):
     star_id = '012069424'
     
     # Run test
-    star = f.Chunk(cat_id, star_id, teff)
+    star = f.Chunk(cat_id, star_id)
     snr,chunks = star.make_islands(force=True)
     star.find_islands(force=True)
     
