@@ -113,7 +113,7 @@ def psd_plot(famed_obj,ax=None,chunk=None):
         the plot is created on the full figure.
  """
     if chunk is not None:
-        freq, psd, spsd, bg_level = famed_obj.freq[chunk], famed_obj.psd[chunk], famed_obj.spsd[chunk], famed_obj.bg_level[chunk]
+        freq, psd, spsd, bg_level,low_cut = famed_obj.freq[chunk], famed_obj.psd[chunk], famed_obj.spsd[chunk], famed_obj.bg_level[chunk], famed_obj.low_cut_frequency[chunk]
         modes,orders,degrees,sigs = famed_obj.freqs[chunk], famed_obj.orders[chunk], famed_obj.degrees[chunk], famed_obj.freqs_sig[chunk]
     else:
         freq, psd, spsd, bg_level = famed_obj.freq, famed_obj.psd, famed_obj.spsd, famed_obj.bg_level
@@ -144,12 +144,16 @@ def psd_plot(famed_obj,ax=None,chunk=None):
                 ax.axvspan(famed_obj.separations[i],famed_obj.separations[i+1],color=famed_obj.cp.psd_chunk2,alpha=1,ec='None')
                 ax.text((famed_obj.separations[i]+famed_obj.separations[i+1])/2,.88,r'$%i$'%i,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),fontweight='heavy',fontsize='medium',color=famed_obj.cp.psd_chunkN,zorder=4,clip_on=True)
     else:
+        ## Lower cutoff for frequencies searched:
+        if low_cut is not None:
+            plt.axvline(low_cut,ls='--',color=famed_obj.cp.asef_bar)
         #### Fade-away shading of regions for l=0,1,2,3  at back
         colors = ['b','r','g','grey']
         intervals = np.linspace(.1,1,50)#**3
-        for mode,order,degree,sig in zip(modes,orders,degrees,sigs):
-            for i in range(0,len(intervals)):
-                plt.axvspan(mode-intervals[i]*3*sig,mode+intervals[i]*3*sig,facecolor=colors[degree],edgecolor=colors[degree],alpha=.01,zorder=1)
+        if modes is not None:
+            for mode,order,degree,sig in zip(modes,orders,degrees,sigs):
+                for i in range(0,len(intervals)):
+                    plt.axvspan(mode-intervals[i]*3*sig,mode+intervals[i]*3*sig,facecolor=colors[degree],edgecolor=colors[degree],alpha=.01,zorder=1)
         
         ### v0-dnu/2 line  on very top
         plt.axvline(famed_obj.freqs_radial_chunk[chunk]-famed_obj.best_dnu/2,ls='--',color=famed_obj.cp.text2,zorder=5)
@@ -376,7 +380,7 @@ def text_panel(famed_obj,ax=None,chunk=None):
         if famed_obj.n_radial_chunk[chunk] == 1:
             ax.text(0.36,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{radial}$ = %.3f $\mu$Hz''\n'r' H$_{\mathrm{max,prior}}$ = %.1e ppm$^2/\mu$Hz''\n'r'  $\alpha$ = %.3f\, $T_{\mathrm{eff}}$ = %i K'%(famed_obj.fit_linewidth[chunk],famed_obj.fwhm_radial_fit[chunk],famed_obj.upper_height[chunk],famed_obj.best_alpha,famed_obj.teff),fontsize='small',color=famed_obj.cp.text3)
         else:
-            ax.text(0.36,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{radial}$ = %.3f $\mu$Hz''\n'r' H$_{\mathrm{max,prior}}$ = %.1e ppm$^2/\mu$Hz''\n'r'  $\alpha$ = %.3f\, $T_{\mathrm{eff}}$ = %i K'%(famed_obj.fit_linewidth[chunk],famed_obj.avg_fwhm[chunk],famed_obj.upper_height[chunk],famed_obj.alpha,famed_obj.teff),fontsize='small',color=famed_obj.cp.text3)
+            ax.text(0.36,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{radial}$ = %.3f $\mu$Hz''\n'r' H$_{\mathrm{max,prior}}$ = %.1e ppm$^2/\mu$Hz''\n'r'  $\alpha$ = %.3f\, $T_{\mathrm{eff}}$ = %i K'%(famed_obj.fit_linewidth[chunk],famed_obj.avg_fwhm[chunk],famed_obj.upper_height[chunk],famed_obj.best_alpha,famed_obj.teff),fontsize='small',color=famed_obj.cp.text3)
             
         # Text 4
         ax.text(0.61,.05,r' ASEF$_{\mathrm{threshold}}$ = %.2f \%%''\n'r' ASEF$_{\mathrm{bins}}$ = %i''\n'r' N$_{\mathrm{freq}}$ = %i \,\,\,  N$_{\mathrm{orders}}$ = %i'%(100*famed_obj.threshold_asef,famed_obj.asef_bins[chunk],famed_obj.n_freqs[chunk],famed_obj.n_chunks),fontsize='small',color=famed_obj.cp.text4)

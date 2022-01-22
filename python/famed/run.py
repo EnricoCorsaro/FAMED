@@ -43,23 +43,26 @@ def CHUNK(catalog_id, star_id, force=True):
         Effective temperature of the star in Kelvin.
     """
         famed_obj = Chunk(catalog_id,star_id)
-        snr,chunks = famed_obj.make_islands()
-        chunks = chunks[np.argsort(snr)]
-        snr = snr[np.argsort(snr)]
-        print('Sorted chunks:')
-        for i in range(0,len(snr))[::-1]:
-            print(chunks[i],snr[i])
-        pdf = PdfPages(famed_obj.star_dir/famed_obj.cp.figs_subdir/(famed_obj.catalog_id+famed_obj.star_id+'_'+famed_obj.cp.isla_subdir+'_all_CHUNK.pdf'))
-        for chunk in chunks[::-1]:
-            print('\n\n NOW DOING CHUNK: ',chunk,'\n\n')
+        result = famed_obj.make_islands()
+        if result:
+            snr,chunks=result
+            chunks = chunks[np.argsort(snr)]
+            snr = snr[np.argsort(snr)]
+            print('Sorted chunks:')
+            for i in range(0,len(snr))[::-1]:
+                print(chunks[i],snr[i])
+            pdf = PdfPages(famed_obj.star_dir/famed_obj.cp.figs_subdir/(famed_obj.catalog_id+famed_obj.star_id+'_'+famed_obj.cp.isla_subdir+'_all_CHUNK.pdf'))
+            for chunk in chunks[::-1]:
+                print('\n\n NOW DOING CHUNK: ',chunk,'\n\n')
 
-            famed_obj.find_islands(chunk,force=force)
-            famed_obj.make_chunk_plots(chunk)
-            pdf.savefig()
-
-            #except:
-            #    continue
-        pdf.close()
+                result = famed_obj.find_islands(chunk,force=force)
+                if result:
+                    famed_obj.make_chunk_plots(chunk)
+                    pdf.savefig()
+                else:
+                    print('CHUNK {} did not run.'.format(chunk))
+            pdf.close()
+        
         return famed_obj
 
 def ECHELLE():

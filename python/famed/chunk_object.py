@@ -70,7 +70,7 @@ class Chunk(FamedStar):
         # Run DIAMONDS to perform the multi-modal fit in the different chunks indicated by the global fit.
         if not os.path.isfile(peakbagging_filename_global):
             print('Cannot perform multi-modal fit for individual chunks. Missing global fit peakbagging summary file.')
-            return
+            return False
         else:
             # Load global parameters
             acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks = np.loadtxt(peakbagging_filename_global,max_rows=1,usecols=(1,2,3,4,5,6))
@@ -208,6 +208,7 @@ class Chunk(FamedStar):
         self.local_epsi = [None]*n_chunks
         self.local_d02 = [None]*n_chunks
         self.local_dp = [None]*n_chunks
+        self.low_cut_frequency = [None]*n_chunks
 
         self.n_radial_chunk = [None]*n_chunks
         self.fwhm_radial_fit = [None]*n_chunks
@@ -302,7 +303,7 @@ class Chunk(FamedStar):
             self.freqs_global[run_number] = freq_global
         else:
             print('This chunk is empty according to global fit. Skip chunk.')
-            return
+            return False
 
 
         # Select the radial mode. If the global modality was ran correctly, there should be only one radial mode, but there could be none as well.
@@ -317,12 +318,12 @@ class Chunk(FamedStar):
                 fwhm_radial = fwhm_global[tmp_radial][0]
             else:
                 freq_radial = freq_global[tmp_radial]
-                good_radial_index = closest(freq_radial,right_bound)
-                good_radial_index = good_radial_index[0] + min(tmp_radial)
-                enn_radial = enn_global[good_radial_index][0]
-                freq_radial = freq_global[good_radial_index][0]
-                freq_sig_radial = freq_sig_global[good_radial_index][0]
-                fwhm_radial = fwhm_global[good_radial_index][0]
+                good_radial_index = closest(right_bound,freq_radial,index=True)
+                good_radial_index = good_radial_index + min(tmp_radial)
+                enn_radial = enn_global[good_radial_index]
+                freq_radial = freq_global[good_radial_index]
+                freq_sig_radial = freq_sig_global[good_radial_index]
+                fwhm_radial = fwhm_global[good_radial_index]
             n_radial_chunk = 1
         else:
             n_radial_chunk = 0
@@ -343,11 +344,11 @@ class Chunk(FamedStar):
         
 
                 best_dipole_index = dipole_global_index + min(tmp_dipole)
-                freq_dipole = freq_global[best_dipole_index][0]
-                enn_dipole = enn_global[best_dipole_index][0]
-                freq_sig_dipole = freq_sig_global[best_dipole_index][0]
+                freq_dipole = freq_global[best_dipole_index]
+                enn_dipole = enn_global[best_dipole_index]
+                freq_sig_dipole = freq_sig_global[best_dipole_index]
                 
-                fwhm_dipole = fwhm_global[best_dipole_index][0]
+                fwhm_dipole = fwhm_global[best_dipole_index]
             else:
                 enn_dipole = enn_global[tmp_dipole][0]
                 freq_dipole = freq_global[tmp_dipole][0]
@@ -710,7 +711,7 @@ class Chunk(FamedStar):
             else:
                 print(' The l=0 mode could not be located based on the position from the global fit. ')
                 print(' This could be caused by the low SNR of the chunk.')
-                return    
+                return False   
     
             # Check if the selected peak is not the adjacent l=2 by assessing the total weight of the subsequent modes.
             if radial_index < n_freq-1:
@@ -972,7 +973,7 @@ class Chunk(FamedStar):
                 tmp_hist_range = np.where((par_hist < upper_bound_quadrupole) & (par_hist >= lower_bound_quadrupole))[0]
                 if len(tmp_range) == 0:
                     print(' Not enough sampling points in the specified frequency range for l=2. Quitting program.')
-                    return 
+                    return False
          
                 par0_range = par0[tmp_range]
                 spsd_range = spsd[tmp_freq_range]
@@ -987,7 +988,7 @@ class Chunk(FamedStar):
                 tmp_hist_range = np.where((par_hist < upper_bound_radial) & (par_hist >= lower_bound_radial))[0]
                 if len(tmp_range) == 0:
                     print(' Not enough sampling points in the specified frequency range for l=0. Quitting program.')
-                    return 
+                    return False
         
 
                 iteration = 0
@@ -995,12 +996,12 @@ class Chunk(FamedStar):
                     best_radial_index += 1
 
                     if best_radial_index <= len(freq1):
-                        upper_bound_radial = range_maximum(iteration%2,best_radial_index)
-                        upper_bound_radial = upper_bound_radial[0]
+                        upper_bound_radial = range_maximum[iteration%2,best_radial_index]
+                        #upper_bound_radial = upper_bound_radial[0]
                         tmp_hist_range = np.where((par_hist < upper_bound_radial) & (par_hist >= lower_bound_radial))[0]
                     else:
                         print('Not enough bins in the specified ASEF range for l=0. Quitting program.')
-                        return 
+                        return False
                     iteration +=1
 
                 par0_range = par0[tmp_range]
@@ -2543,7 +2544,8 @@ class Chunk(FamedStar):
                             # flag the other one as a l=1. The l=3 will be the one with the largest FWHM of the two.
 
                             if angular_degree_final[local_index]==3:
-                                max_duplet_fwhm = max([np.mean(left_fwhm),np.mean(right_fwhm)],octupole_index_local)
+                                max_duplet_fwhm = max([np.mean(left_fwhm),np.mean(right_fwhm)])
+                                octupole_index_local = [np.mean(left_fwhm),np.mean(right_fwhm)].index(max_duplet_fwhm)
                                 angular_degree_duplet = [1,1]
                                 order_number_duplet = [enn_radial-1,enn_radial-1]
                                 angular_degree_duplet[octupole_index_local] = 3
@@ -2794,9 +2796,9 @@ class Chunk(FamedStar):
                                 # Assign the duplet the same detection probability, but remove the duplicity and rotation test from it, in order to avoid
                                 # that the peak is split up again later on.
                                 
-                                detection_probability_final = np.zeros(3) + detection_probability_final(local_index)
-                                rotation_probability_final = np.zeros(3) + rotation_probability_final(local_index)
-                                duplicity_probability_final = np.zeros(3) + duplicity_probability_final(local_index)
+                                detection_probability_final = np.zeros(3) + detection_probability_final[local_index]
+                                rotation_probability_final = np.zeros(3) + rotation_probability_final[local_index]
+                                duplicity_probability_final = np.zeros(3) + duplicity_probability_final[local_index]
                                 blending_profile_flag_final = np.zeros(3,dtype=int)
                                 sinc_profile_flag_final = np.zeros(3,dtype=int)
                     
@@ -2894,6 +2896,7 @@ class Chunk(FamedStar):
         self.local_epsi[run_number] = local_epsi
         self.local_d02[run_number] = local_d02
         self.local_dp[run_number] = local_dp
+        self.low_cut_frequency[run_number] = low_cut_frequency
         
         self.n_radial_chunk[run_number] = n_radial_chunk
         self.fwhm_radial_fit[run_number] = fwhm_radial_fit 
@@ -2920,7 +2923,8 @@ class Chunk(FamedStar):
         if self.cp.save_progress_pickle:
             pickle.dump(self,open(self.star_dir/(self.catalog_id+self.star_id+'_chunk.pickle'),'wb'))
 
-
+        # Return True if we made it all the way through
+        return True
                     
 
     def make_chunk_plots(self,chunk_number=None):
@@ -2940,4 +2944,4 @@ class Chunk(FamedStar):
             plt.savefig(self.star_dir/self.cp.figs_subdir/(self.catalog_id+self.star_id+'_'+self.cp.isla_subdir+'_'+str(chunk_number)+'_CHUNK.png'))
         if self.cp.save_eps:
             plt.savefig(self.star_dir/self.cp.figs_subdir/(self.catalog_id+self.star_id+'_'+self.cp.isla_subdir+'_'+str(chunk_number)+'_CHUNK.eps'))
-        return
+        
