@@ -69,7 +69,7 @@ Once your IDL prompt is loaded, then run:
 
 .. code :: idl
 
-    IDL> .rnew test_famed.pro
+    IDL> .rnew test_famed
     IDL> test_external_background
 
 The pipeline will make use of the background fit solution for the RGB star KIC 12008916, which is contained in the folder ``/YOUR_LOCAL_PATH/FAMED/tutorials/data/Background/results/KIC012008916/`` already in a format readable by FAMED. For more information about how to set up the input files when using an external background fit solution see the tutorial #2 provided `here <https://github.com/EnricoCorsaro/FAMED/tree/master/tutorials>`_.
