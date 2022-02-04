@@ -2,11 +2,13 @@ import famed as f
 import os
 import sys
 import shutil
+import numpy as np
+from matplotlib.backends.backend_pdf import PdfPages
 from pathlib import Path
 
-__all__ = ['test_steps','test_run','test_external_background']
+__all__ = ['test_global_steps','test_chunk_steps','test_run','test_external_background']
 
-def test_steps(silent_remove=False):
+def test_global_steps(silent_remove=False):
     # Step-by-step
     cat_id = 'KIC'
     star_id = '012069424'
@@ -17,10 +19,35 @@ def test_steps(silent_remove=False):
     move_test_data(cat_id, star_id)
 
     # Run test
-    star=f.Global(cat_id, star_id, teff)
+    star = f.Global(cat_id, star_id, teff)
     star.make_islands(force=True)
     star.find_islands(force=True)
     star.make_global_plots()
+
+def test_chunk_steps(silent_remove=False):
+    # Step-by-step
+    cat_id = 'KIC'
+    star_id = '012069424'
+    
+    # Run test
+    star = f.Chunk(cat_id, star_id)
+    snr,chunks = star.make_islands(force=True)
+        
+    # Test each chunk in order of S/N
+    chunks = chunks[np.argsort(snr)]
+    snr = snr[np.argsort(snr)]
+
+    print(' Sorted chunks:')
+    for i in range(0,len(snr))[::-1]:
+        print(chunks[i],snr[i])
+
+    pdf = PdfPages(star.star_dir/star.cp.figs_subdir/(star.catalog_id+star.star_id+'_'+star.cp.isla_subdir+'_all_CHUNK.pdf'))
+    for chunk in chunks[::-1]:
+        print('\n\n NOW DOING CHUNK: ',chunk,'\n\n')
+        star.find_islands(chunk,force=True)
+        star.make_chunk_plots(chunk)
+        pdf.savefig()
+    pdf.close()
 
 def test_run(silent_remove=False):
     # All at once
@@ -33,7 +60,8 @@ def test_run(silent_remove=False):
     move_test_data(cat_id, star_id)
     
     # Run test
-    star = f.run.GLOBAL(cat_id, star_id, teff, force=True)
+    star = f.run.GLOBAL('KIC', '006117517', 4687, force=True)
+    star = f.run.CHUNK('KIC', '006117517')
 
 def test_external_background():
     # Test the adoption of an external background fit solution
@@ -112,11 +140,12 @@ if __name__ == '__main__':
     except:
         pass
     
-    print('Testing in step-by-step mode.')
-    test_steps(silent_remove)
+    print('Testing in step-by-step mode')
+    #test_global_steps(silent_remove)
+    #test_chunk_steps()
 
     print('Testing in run all at once mode.')
-    test_run(silent_remove)
+    #test_run(silent_remove)
 
     print('Testing adoption of an external background.')
     test_external_background()

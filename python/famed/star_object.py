@@ -30,10 +30,11 @@ class FamedStar(object):
 
     """
 
-    def __init__(self, catalog_id, star_id, teff):
+    def __init__(self, catalog_id, star_id, teff=None):
         self.catalog_id = catalog_id
         self.star_id = star_id
-        self.teff = teff
+        if teff:
+            self.teff = teff
 
         self.cp = ConfiguringParameters()
         peakbagging_results_dir = self.cp.diamonds_path/'PeakBagging'/'results'
@@ -449,7 +450,7 @@ class FamedStar(object):
 
                 if len(tmp_right_exceed)>0:
                     par_hist_exceed = par_hist[tmp_right_exceed]
-                    index_right_maximum = np.argmin(np.abs(range_maximum[1,i]-par_hist))
+                    index_right_maximum = closest(range_maximum[1,i],par_hist,index=True)
                     asef_right_maximum = asef_hist[index_right_maximum]
                     asef_hist_exceed = asef_hist[tmp_right_exceed]
 
@@ -467,7 +468,7 @@ class FamedStar(object):
                     tmp_right_exceed = np.where(par_hist > range_maximum[1,i])[0]
                     if len(tmp_right_exceed)>0:
                         par_hist_exceed = par_hist[tmp_right_exceed]
-                        index_right_maximum = np.argmin(np.abs(range_maximum[1,i]-par_hist))
+                        index_right_maximum = closest(range_maximum[1,i],par_hist,index=True)
                         asef_right_maximum = asef_hist[index_right_maximum]
                         asef_hist_exceed = asef_hist[tmp_right_exceed]
 
@@ -487,13 +488,13 @@ class FamedStar(object):
                         # local maximum and make the other boundary not exceed
                         # the maximum number of bins allowed starting from the
                         # selected bound.
-                        index_range_closest = np.argmin(np.abs(range_maximum[:,i]-maximum(i)))
+                        index_range_closest = closest(range_maximum[:,i],maximum[i],index=True)
                         if index_range_closest == 0:
-                            index_left_range = np.argmin(np.abs(range_maximum[0,i]-par_hist))
+                            index_left_range = closest(range_maximum[0,i],par_hist,index=True)
                             if index_left_range + n_bins_max <= len(par_hist)-1:
                                 range_maximum[1,i] = par_hist[index_left_range+n_bins_max]
                         else:
-                            index_right_range = np.argmin(np.abs(range_maximum[1,i]-par_hist))
+                            index_right_range = closest(range_maximum[1,i],par_hist,index=True)
                             if index_right_range - n_bins_max >= 0:
                                 range_maximum[0,i] = par_hist[index_right_range-n_bins_max]
 

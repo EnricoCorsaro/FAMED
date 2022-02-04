@@ -176,7 +176,7 @@ height_ratio_threshold 10.0
 bkg_prior_lower 0.95
 bkg_prior_upper 1.05
 rot_split_scaling 2.8
-fwhm_lower_bound 1.d-4
+fwhm_lower_bound 1.e-4
 fwhm_magnification_factor_radial 3.0
 fwhm_magnification_factor_dipole 1.5
 fwhm_magnification_factor_quadrupole 4.0
