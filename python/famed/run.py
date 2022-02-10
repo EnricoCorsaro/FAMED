@@ -30,7 +30,7 @@ def GLOBAL(catalog_id, star_id, teff, force=True):
     return famed_obj
 
 def CHUNK(catalog_id, star_id, force=True):
-        """
+    """
     Helper function to run all steps, including plotting, of CHUNK modality.
 
     Parameters
