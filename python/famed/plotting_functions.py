@@ -6,6 +6,7 @@ import matplotlib.transforms as transforms
 import matplotlib.ticker
 
 __all__ = ['global_plot',
+           'chunk_plot',
            'nested_iterations_plot',
            'psd_plot',
            'psd_inset_plot',
