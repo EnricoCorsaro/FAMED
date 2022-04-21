@@ -59,7 +59,7 @@ def get_background(catalog_id, star_id, background_results_dir, background_run_n
         ID of the star as a string (e.g. '0012008916' or '7037405').
     background_results_dir : str
         Full path to location of the DIAMONDS Background results for this star.
-    background_run_number : str, default: '00'
+    background_run_number : str or int, default: '00'
         Specific subdirectory of the background model to load. 
 
     Returns
@@ -74,6 +74,8 @@ def get_background(catalog_id, star_id, background_results_dir, background_run_n
     
     if external_background_results_dir == '-99':
         # Read background model fitted parameters
+        print(' Reading background fit result from subfolder', str(background_run_number).zfill(2))
+
         bg_par = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_parameterSummary.txt',usecols=(0,))
 
         # Read background model name
@@ -97,12 +99,14 @@ def get_background(catalog_id, star_id, background_results_dir, background_run_n
     else:
         # In this case the user has required to adopt an external background, not fitted using the Background code extension of Diamonds.
         # Read background model fitted parameters and background name
-        bg_variables = np.loadtxt(external_background_results_dir + catalog_id + star_id + external_background_filename_suffix,dtype='str')
+        print(' Using an external background fit provided by the user')
+        
+        bg_variables = np.loadtxt(external_background_results_dir/(catalog_id + star_id + external_background_filename_suffix),dtype='str')
         bg_name = bg_variables[0]
         tmp_match = np.where(bg_name_list == bg_name)[0]
 
         if len(tmp_match) < 1:
-            raise NameError('There is no background model recognized by PeakBagging with the name ' + bg_name)
+            raise NameError(' There is no background model recognized by PeakBagging with the name ' + bg_name)
         else:
             bg_par = bg_variables[1:].astype(np.float)
 
@@ -112,7 +116,7 @@ def get_background(catalog_id, star_id, background_results_dir, background_run_n
     return bgp
 
 
-def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, external_background_results_dir, dnu_cl=9, dnu_tip=3.2, n_dnu_envelope=4.5, n_sigma_envelope=4.5, n_sigma_envelope_cl=2.5, n_sigma_envelope_tip=1.2, numax_threshold=300, numax_coeff_low=0.267, numax_coeff_high=0.22, numax_exponent_low=0.76, numax_exponent_high=0.797, force=False):
+def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, background_data_dir, background_results_dir, external_background_results_dir, dnu_cl=9, dnu_tip=3.2, n_dnu_envelope=4.5, n_sigma_envelope=4.5, n_sigma_envelope_cl=2.5, n_sigma_envelope_tip=1.2, numax_threshold=300, numax_coeff_low=0.267, numax_coeff_high=0.22, numax_exponent_low=0.76, numax_exponent_high=0.797, force=False):
     """
     Verify or create the proper folder structure for DIAMONDS PeakBagging.
 
@@ -135,6 +139,15 @@ def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, external_background
     diamonds_path : str
         Path to the local DIAMONDS installation folder that contains the 
         PeakBagging and Background packages.    
+    background_data_dir : str
+        Path to the folder that contains the PSD dataset used for the
+        background fit.    
+    background_results_dir : str
+        Path to the folder that contains the results of the background fit as
+        obtained by the DIAMONDS+Background code.    
+    external_background_results_dir : str
+        Path to the folder that contains the dataset and results of the background fit as
+        obtained by a code different than the DIAMONDS+Background code.    
     dnu_cl : float, default: 9
         Threshold value of `dnu` that identifies that stars are in the clump.
     dnu_tip : float, default: 3.2
@@ -167,8 +180,6 @@ def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, external_background
     """
     peakbagging_results_dir = diamonds_path/'PeakBagging'/'results'
     peakbagging_data_dir  = diamonds_path/'PeakBagging'/'data'
-    background_results_dir  = diamonds_path/'Background'/'results'
-    background_data_dir  = diamonds_path/'Background'/'data'
     bg_par = bgp['parameters']
 
     if not os.path.isfile(peakbagging_data_dir/(catalog_id + star_id + '.txt')) or force:
@@ -177,7 +188,7 @@ def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, external_background
         if external_background_results_dir == '-99':
             freq,psd = np.loadtxt(background_data_dir/(catalog_id + star_id + '.txt')).T
         else:
-            freq,psd = np.loadtxt(external_background_results_dir + catalog_id + star_id + '.txt').T
+            freq,psd = np.loadtxt(external_background_results_dir/(catalog_id + star_id + '.txt')).T
 
         # Trim the global PSD of the star, used for the background fit, to a
         # narrower frequency region centered around nuMax
@@ -239,7 +250,7 @@ def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, external_background
         if external_background_results_dir == '-99':
             subprocess.call(('cp {} {}'.format(background_results_dir/(catalog_id + star_id)/'NyquistFrequency.txt',peakbagging_results_dir/(catalog_id + star_id))),shell=True)
         else:
-            subprocess.call(('cp {} {}'.format(external_background_results_dir + catalog_id + star_id + '_NyquistFrequency.txt',peakbagging_results_dir/(catalog_id + star_id)/'NyquistFrequency.txt')),shell=True)
+            subprocess.call(('cp {} {}'.format(external_background_results_dir/(catalog_id + star_id + '_NyquistFrequency.txt'),peakbagging_results_dir/(catalog_id + star_id)/'NyquistFrequency.txt')),shell=True)
 
 def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asymptotic, flag_bglevel, dp, diamonds_path, n_threads=12, prior_filename='prior_hyperParameters', merge=False):
     """

@@ -2,6 +2,7 @@ import numpy as np
 import subprocess
 from scipy.interpolate import interp1d
 from scipy.optimize import curve_fit
+from pathlib import Path
 import scipy.stats
 
 from .configuring_parameters import ConfiguringParameters
@@ -30,7 +31,7 @@ class FamedStar(object):
 
     """
 
-    def __init__(self, catalog_id, star_id, teff=None):
+    def __init__(self, catalog_id, star_id, teff=None, background_run_number=None):
         self.catalog_id = catalog_id
         self.star_id = star_id
         if teff:
@@ -40,14 +41,25 @@ class FamedStar(object):
         peakbagging_results_dir = self.cp.diamonds_path/'PeakBagging'/'results'
         self.star_dir = peakbagging_results_dir/(self.catalog_id+self.star_id)
 
-        # Read in the fitted background parameters
-        background_results_dir = self.cp.diamonds_path/'Background'/'results'
+        if background_run_number:
+            self.cp.background_run_number = background_run_number 
 
-        if self.cp.print_on_screen:
-            if self.cp.external_background_results_dir != '-99':
-                print(' Using an external background fit provided by the user')
-                
-        self.bgp = diamonds.get_background(self.catalog_id, self.star_id, background_results_dir, self.cp.background_run_number, self.cp.external_background_results_dir, self.cp.external_background_filename_suffix)
+
+        # Read in the fitted background parameters
+        if self.cp.background_data_dir == '-99':
+            self.cp.background_data_dir = self.cp.diamonds_path/'Background'/'data'
+        else:
+            self.cp.background_data_dir = Path(self.cp.background_data_dir)
+
+        if self.cp.background_results_dir == '-99':
+            self.cp.background_results_dir = self.cp.diamonds_path/'Background'/'results'
+        else:
+            self.cp.background_results_dir = Path(self.cp.background_results_dir)
+
+        if self.cp.external_background_results_dir != '-99':
+            self.cp.external_background_results_dir = Path(self.cp.external_background_results_dir)
+ 
+        self.bgp = diamonds.get_background(self.catalog_id, self.star_id, self.cp.background_results_dir, self.cp.background_run_number, self.cp.external_background_results_dir, self.cp.external_background_filename_suffix)
 
 
     ### Methods to be used by mupltiple modalities (e.g. GLOBAL and CHUNK)

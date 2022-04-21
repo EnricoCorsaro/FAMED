@@ -18,6 +18,8 @@ prior_filename prior_hyperParameters
 background_run_number 00
 n_threads 12
 logo_filename YOUR_LOCAL_ROOT_PATH_HERE/FAMED/docs/figures/FAMED_LOGO_BLACK_small.jpeg
+background_data_dir -99
+background_results_dir -99
 external_background_results_dir -99
 external_background_filename_suffix _backgroundParameters.txt
 #

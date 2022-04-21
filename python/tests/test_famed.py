@@ -60,8 +60,8 @@ def test_run(silent_remove=False):
     move_test_data(cat_id, star_id)
     
     # Run test
-    star = f.run.GLOBAL('KIC', '006117517', 4687, force=True)
-    star = f.run.CHUNK('KIC', '006117517')
+    star = f.run.GLOBAL(cat_id, star_id, teff, force=True)
+    star = f.run.CHUNK(cat_id, star_id)
 
 def test_external_background():
     # Test the adoption of an external background fit solution
@@ -77,7 +77,7 @@ def test_external_background():
 
     os.system(Path('cp ' + origin + ' ' + target_dir))
     os.system('cp ../famed/famed_configuring_parameters.txt ../famed/famed_configuring_parameters.txt.local')
-    os.system(Path('sed -i.old s^-99^../../tutorials/data/Background/results/' + cat_id + star_id + '/^g ../famed/famed_configuring_parameters.txt'))
+    os.system(Path('sed -i.old 23s^-99^../../tutorials/data/Background/results/' + cat_id + star_id + '/^g ../famed/famed_configuring_parameters.txt'))
     
     # Run test
     star = f.run.GLOBAL(cat_id, star_id, teff, force=True)
@@ -142,10 +142,10 @@ if __name__ == '__main__':
     
     print('Testing in step-by-step mode')
     test_global_steps(silent_remove)
-    test_chunk_steps()
+    #test_chunk_steps()
 
-    print('Testing in run all at once mode.')
-    test_run(silent_remove)
+    #print('Testing in run all at once mode.')
+    #test_run(silent_remove)
 
-    print('Testing adoption of an external background.')
-    test_external_background()
+    #print('Testing adoption of an external background.')
+    #test_external_background()

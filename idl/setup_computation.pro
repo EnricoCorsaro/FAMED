@@ -28,10 +28,18 @@ endif
 ; -------------------------------------------------------------------------------------------------------
 ; Setup input and output directories and filenames for computation 
 ; -------------------------------------------------------------------------------------------------------
-peakbagging_data_dir = root_path + 'PeakBagging/data/'
-peakbagging_results_dir =  root_path + 'PeakBagging/results/'
-background_data_dir = root_path + 'Background/data/'
-background_results_dir = root_path + 'Background/results/'
+if (par_value(where(par_name eq 'background_data_dir')))[0] eq '-99' then begin
+    background_data_dir = root_path + 'Background/data/'
+endif else begin
+    background_data_dir = (par_value(where(par_name eq 'background_data_dir')))[0]
+endelse
+
+if (par_value(where(par_name eq 'background_results_dir')))[0] eq '-99' then begin
+    background_results_dir = root_path + 'Background/results/'
+endif else begin
+    background_results_dir = (par_value(where(par_name eq 'background_results_dir')))[0]
+endelse
+
 peakbagging_filename_label = '_peakbagging_'
 local_configuring_parameters_filename = 'famed_configuring_parameters_'
 
@@ -56,9 +64,9 @@ info = {   root_path:                             root_path,                    
            n_threads:                             (par_value(where(par_name eq 'n_threads')))[0],                                  $
            logo_filename:                         (par_value(where(par_name eq 'logo_filename')))[0],                              $
            prior_filename:                        (par_value(where(par_name eq 'prior_filename')))[0],                             $
-           peakbagging_data_dir:                  peakbagging_data_dir,                                                            $
+           peakbagging_data_dir:                  root_path + 'PeakBagging/data/',                                                 $
+           peakbagging_results_dir:               root_path + 'PeakBagging/results/',                                              $
            background_data_dir:                   background_data_dir,                                                             $
-           peakbagging_results_dir:               peakbagging_results_dir,                                                         $
            background_results_dir:                background_results_dir,                                                          $
            external_background_results_dir:       (par_value(where(par_name eq 'external_background_results_dir')))[0],            $
            external_background_filename_suffix:   (par_value(where(par_name eq 'external_background_filename_suffix')))[0],        $

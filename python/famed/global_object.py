@@ -28,12 +28,15 @@ class Global(FamedStar):
         ID of the star as a string (e.g. '0012008916' or '7037405').
     teff : float
         Effective temperature of the star in Kelvin.
+    background_run_number : str or int
+        Number of the background subfolder that contains the results of
+        the background fit.
     load_islands : bool, default: False
         Flag to read the pickled object if `make_islands` or `find_islands` has 
         already been ran.
     """
-    def __init__(self, catalog_id, star_id, teff, load_islands=False):
-        FamedStar.__init__(self, catalog_id, star_id, teff)
+    def __init__(self, catalog_id, star_id, teff, background_run_number=None, load_islands=False):
+        FamedStar.__init__(self, catalog_id, star_id, teff, background_run_number)
 
         if self.cp.print_on_screen:
             print('-------------------------------------------------')
@@ -81,7 +84,7 @@ class Global(FamedStar):
         modality of FAMED. It generates the directory structure to be used for 
         future steps as well.
         """
-        diamonds.set_peakbagging(self.catalog_id, self.star_id, self.bgp, self.cp.diamonds_path, self.cp.external_background_results_dir, self.cp.dnu_cl, self.cp.dnu_tip, self.cp.n_dnu_envelope, self.cp.n_sigma_envelope, self.cp.n_sigma_envelope_cl, self.cp.n_sigma_envelope_tip, self.cp.numax_threshold, self.cp.numax_coeff_low, self.cp.numax_coeff_high, self.cp.numax_exponent_low, self.cp.numax_exponent_high,force=force)
+        diamonds.set_peakbagging(self.catalog_id, self.star_id, self.bgp, self.cp.diamonds_path, self.cp.background_data_dir, self.cp.background_results_dir, self.cp.external_background_results_dir, self.cp.dnu_cl, self.cp.dnu_tip, self.cp.n_dnu_envelope, self.cp.n_sigma_envelope, self.cp.n_sigma_envelope_cl, self.cp.n_sigma_envelope_tip, self.cp.numax_threshold, self.cp.numax_coeff_low, self.cp.numax_coeff_high, self.cp.numax_exponent_low, self.cp.numax_exponent_high,force=force)
         
         # Read input PSD and global asteroseismic parameters
         peakbagging_data_dir = self.cp.diamonds_path/'PeakBagging'/'data'

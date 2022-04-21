@@ -54,7 +54,6 @@ class Chunk(FamedStar):
         frequencies, their uncertainties, and mode identification. This function
         cannot be executed if the GLOBAL modality was not previously performed.
         """
-        diamonds.set_peakbagging(self.catalog_id, self.star_id, self.bgp, self.cp.diamonds_path, self.cp.external_background_results_dir, self.cp.dnu_cl, self.cp.dnu_tip, self.cp.n_dnu_envelope, self.cp.n_sigma_envelope, self.cp.n_sigma_envelope_cl, self.cp.n_sigma_envelope_tip, self.cp.numax_threshold, self.cp.numax_coeff_low, self.cp.numax_coeff_high, self.cp.numax_exponent_low, self.cp.numax_exponent_high,force=force)
         peakbagging_filename_global = self.star_dir/self.cp.summary_subdir/(self.catalog_id + self.star_id + self.cp.peakbagging_filename_label + self.cp.isla_subdir + '_' + self.cp.global_subdir + '_GLOBAL.txt')
         
         # Read input PSD and global asteroseismic parameters

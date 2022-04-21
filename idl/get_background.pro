@@ -18,6 +18,10 @@ bg_name_list = ['Flat','Original','OneHarvey','OneHarveyColor','TwoHarvey','TwoH
 if info.external_background_results_dir eq '-99' then begin
     ; Read background model fitted parameters
     
+    if info.print_on_screen eq 1 then begin
+        print,' Reading background fit result from subfolder ', info.background_run_number
+    endif
+
     readcol,info.background_results_dir + catalog_id + star_id + '/' + info.background_run_number + '/background_parameterSummary.txt',bg_par,format='D,x,x,x,x,x,x',   $
     comment='#',/silent
 

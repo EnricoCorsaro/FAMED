@@ -11,7 +11,7 @@ PLOTTING:
     # Dark config
     dark:
         mplstyle: 'data/famed_dark.mplstyle'
-        logo_filename: '../../docs/figures/FAMED_LOGO_BLACK.jpg'
+        logo_filename: '../../docs/figures/FAMED_LOGO_BLACK_NEW.jpg'
         text1: 'gold'
         text2:  'lime'
         text3: 'cyan'
@@ -47,7 +47,7 @@ PLOTTING:
     # Light config
     light:
         mplstyle: 'data/famed.mplstyle'
-        logo_filename: '../../docs/figures/FAMED_LOGO_WHITE.jpg'
+        logo_filename: '../../docs/figures/FAMED_LOGO_WHITE_NEW.jpg'
         text1: 'darkorange'
         text2:  'limegreen'
         text3: 'cornflowerblue'

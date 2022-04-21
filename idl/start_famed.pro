@@ -1,4 +1,26 @@
-pro start_famed,catalog_id,star_id,teff,fit=fit,global=global,chunk=chunk,echelle=echelle,complete=complete,force=force
+pro start_famed,catalog_id,star_id,teff,background_run_number=background_run_number,fit=fit,global=global,chunk=chunk,echelle=echelle,complete=complete,force=force
+; -------------------------------------------------------------------------------------------------------
+; Auuthor:     Enrico Corsaro
+; e-mail:      enrico.corsaro@inaf.it
+; Date:        February 2019
+; Place:       Catania, Italy
+; Purpose:     Executes the FAMED pipeline in either of its modalities. The user can activate multiple 
+;              modalities if desired, which will be automatically executed in a sequential order.
+; Usage:       <catalog_id>: string specifying the Catalog name of the star (e.g. KIC, TIC, etc.).
+;              <star_id>: string specifying the ID number of the star. 
+;              <teff>: integer or float specifying the effective temperature of the star.
+;              <background_run_number>: [OPTIONAL] string specifying the subfolder number containing
+;              the results of the background fit obtained with the DIAMONDS+Background code. Omit this
+;              input if the default value read by the input configuring parameters has to be adopted.
+;              <fit>: [OPTIONAL] activate this keyword to force FAMED computing the multi-modal fit.
+;              This keyword is unnecessary when the fitting part is already done and one wants to
+;              process the multi-modal fit (e.g. by re-running a different set of input configuring
+;              parameters of the pipeline)
+;              <global>: activate this keyword to perform the analysis of the GLOBAL module.
+;              <chunk>: activate this keyword to perform the analysis of the CHUNK module.
+;              <force>: activate this keyword to force FAMED overwriting the results of the analysis 
+;              over a previous run (these are not overwritten by default).
+; -------------------------------------------------------------------------------------------------------
 COMMON CONFIG,cp
 COMMON STAR,info
 COMMON DIAMONDS,dp
@@ -7,6 +29,8 @@ setup_computation
 peakbagging_filename_global = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/' $
                               + catalog_id + star_id + info.peakbagging_filename_label + $
                                 info.isla_subdir + '_' + info.global_subdir + '_GLOBAL.txt'
+
+if keyword_set(background_run_number) then info.background_run_number = background_run_number
 
 ; Perform GLOBAL modality
 if keyword_set(global) then begin
