@@ -142,10 +142,10 @@ if __name__ == '__main__':
     
     print('Testing in step-by-step mode')
     test_global_steps(silent_remove)
-    #test_chunk_steps()
+    test_chunk_steps()
 
-    #print('Testing in run all at once mode.')
-    #test_run(silent_remove)
+    print('Testing in run all at once mode.')
+    test_run(silent_remove)
 
-    #print('Testing adoption of an external background.')
-    #test_external_background()
+    print('Testing adoption of an external background.')
+    test_external_background()
