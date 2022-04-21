@@ -65,7 +65,7 @@ YOUR_LOCAL_ROOT_PATH_HERE/FAMED/docs/figures/FAMED_LOGO_BLACK_small.jpeg
 The filename, including the full path, of the FAMED logo. By default when downloading the package it is placed inside FAMED/docs/figures, but the user may decide to place the file in any other place. Change the name YOUR_LOCAL_ROOT_PATH_HERE according to your system if you are not using the shell script installation.
 
 * ``background_data_dir``
-The full path specifying the folder containing the stellar Power Spectral Density used for the background fit. The default value is set to -99, meaning that the data are intented to be store inside the ``Background/data/`` folder of the DIAMONDS+Background code. As an example you can use this parameter in case you have your data stored in a separate hard drive.
+The full path specifying the folder containing the stellar Power Spectral Density used for the background fit. The default value is set to -99, meaning that the data are stored inside the ``Background/data/`` folder of the DIAMONDS+Background code. As an example you can use this parameter in case you have your data stored in a separate hard drive.
 
 * ``background_results_dir``
 The full path specifying the folder containing the results of the background fit obtained with the DIAMONDS+Background code. The default value is set to -99, meaning that the results are stored inside the ``Background/results/`` folder of the DIAMONDS+Background code. As an example you can use this parameter in case you have background fit results stored in a separate hard drive.

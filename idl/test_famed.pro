@@ -39,7 +39,7 @@ star_id = '012008916'
 teff = 5454
 
 spawn,'cp famed_configuring_parameters.txt famed_configuring_parameters.txt.local'
-spawn,'sed -i.old "s^-99^../tutorials/data/Background/results/' + catalog_id + star_id + '/^g" famed_configuring_parameters.txt'
+spawn,'sed -i.old "22s^-99^../tutorials/data/Background/results/' + catalog_id + star_id + '/^g" famed_configuring_parameters.txt'
 
 ; Remove existing test files if present
 if file_test('../../PeakBagging/results/' + catalog_id + star_id + '/*') eq 1 then begin

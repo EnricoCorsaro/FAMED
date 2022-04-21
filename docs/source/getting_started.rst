@@ -50,11 +50,23 @@ Once the GLOBAL analysis is completed you can decide to move on by performing th
 
     IDL> start_famed,'KIC','012069424',5825,/fit,/chunk
 
-The ``/fit`` option has to be activated when executing a module for the first time because this turns on the making of the multi-modal sampling with DIAMONDS. If one has to repeat the analysis starting from an existing multi-modal sampling (e.g. suppose you want to make a new test by changing any of the configuring parameters of the pipeline), then this option can be deactivated. The options ``/global`` and ``/chunk`` can also be used in combination so that the modules GLOBAL and CHUNK are executed one right after the other as soon as the former is completed, without requiring any intervention by the user. In this case, the entire analysis can be started from an IDL prompt by using the command:
+The ``/fit`` option has to be activated when executing a module for the first time because this turns on the making of the multi-modal sampling with DIAMONDS. If one has to repeat the analysis starting from an existing multi-modal sampling (e.g. suppose you want to make a new test by changing any of the configuring parameters of the pipeline), then this option can be deactivated. 
+
+All at once
+-----------
+The options ``/global`` and ``/chunk`` of the ``start_famed`` procedure can thus be used in combination so that the modules GLOBAL and CHUNK are executed one right after the other as soon as the former is completed, without requiring any intervention by the user. In this case, the entire analysis can be started from an IDL prompt by using the command:
 
 .. code :: idl
 
     IDL> start_famed,'KIC','012069424',5825,/fit,/global,/chunk
+
+The all at once method offers an additional functionality. If desired you can specify an input integer or a string to change at runtime the reference subfolder containing the background fit solution obtained from the DIAMONDS+Background code. By default this subfolder is read from the input ``famed_configuring_parameters.txt`` file (where it is set to 00). This is possible once again by means of the ``start_famed`` procedure, using the following calling sequence:
+
+.. code :: idl
+
+    IDL> start_famed,'KIC','012069424',5825, background_run_number=10, /fit,/global,/chunk
+
+where, in the example provided, the background fit solution will have to be contained within the subfolder 10 (instead of the default 00). This option can be useful if one wants to adopt and test the outcomes of the analysis for different background solutions for the same star, or in case a large number of targets (each one with a different subfolder) is being considered.
 
 Using an external background fit solution
 -----------------------------------------
@@ -123,6 +135,14 @@ If the input configuring parameter ``save_progress_pickle`` is set to 1, a pickl
 
      >>> star = f.Global('KIC', '006117517', 4687, load_islands=True)
 
+Similarly to the case of the IDL version, you can also decide to change at runtime the reference subfolder containing the background fit solution obtained with the DIAMONDS+Background code. For this purpose the general calling sequence of the GLOBAL module becomes:
+
+.. code :: python
+
+     >>> star = f.Global('KIC', '006117517', 4687, 10)
+
+where in this example the last input, here set to 10, represents the subfolder name that will be considered when reading the background fit solution (instead of the default value 00 read from the input ``famed_configuring_parameters.txt`` file).
+
 All at once
 -----------
 This method does everything in the step-by-step method with a single command. This is helpful if you do not need to examine individual steps of the process and just want to get the results and output created. By default this method has ``force=True`` for both ``make_islands`` and ``find_islands``. It will only produce plots if the ``save_png`` or ``save_eps`` flags are set in the configuring parameters.
@@ -131,6 +151,14 @@ This method does everything in the step-by-step method with a single command. Th
 
      >>> import famed as f
      >>> f.run.GLOBAL('KIC', '012069424', 5825)
+
+In this method one can decide to change at runtime the reference subfolder containing the background fit solution obtained with the DIAMONDS+Background code. The general calling sequence thus becomes:
+
+ .. code :: python
+
+     >>> f.run.GLOBAL('KIC', '012069424', 5825, 10)
+
+where we adopted the same example used above, namely forcing the pipeline to use the background fit solution stored inside the subfolder 10 (instead of the default 00).
 
 Using an external background fit solution
 -----------------------------------------
