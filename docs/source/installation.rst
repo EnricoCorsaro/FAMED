@@ -15,10 +15,12 @@ Before continuiting we advise you to read the original code papers, namely the o
 1.
 Before installing the DIAMONDS-related codes you need to install the `CMake <http://www.cmake.org/>`_ compiler, a compiler suited for C, C++ source files that is able to recognize the most suited compiler installed in your machine, depending on the platform you have. For Mac OS X it is clang, while for Linux-based OS it is gcc. For our purposes, we recommend you to install CMake 2.8 or later. You can find the dmg file of the version 2.8.12.2 (suggested for Mavericks OS) `here <http://www.cmake.org/files/v2.8/cmake-2.8.12.2-Darwin64-universal.dmg>`_, while more recent versions are required for El Captain OS or more recent OS X (we recommend CMake version 3.5.1 or later in this case). 
 
-    .. warning:: 
+    .. warning 1:: 
         Make sure you install the CMake command line tool as well, since you need that to compile DIAMONDS via terminal. To do so, either open the CMake app and go to Tools/Install for Command Line Use if you have installed it already, or select the option during the installation phase. To avoid further compilation issues, we also recommend to update Xcode to its latest version if you are running under a Mac OSX.
 	
-
+    .. warning 2:: 
+        If you have MESA-SDK libraries installed, you may run into conflict issues related to the C++ compiler. In this case we recommend using the install script by specifying an explicit path to the binary file to use for the installation. See the Shell script installation section for more details. 
+    
 You also have the possibility to install cmake directly from the terminal. If you are running on a Mac OS X system, then execute the command
 
 .. code:: shell
@@ -86,6 +88,12 @@ In order to start the installation from scratch, go to the directory where you w
 This will install the software DIAMONDS (-d), Background (-b), PeakBagging (-p), Asymptotic (-a), and the GNUparallel tool (-g) inside the folder where you ran the shell script. Additionally, the labels YOUR_LOCAL_ROOT_PATH_HERE inside the ``famed_configuring_parameters.txt`` file will be replaced with your local working path containing the DIAMONDS-related software.
 
 The script is assuming that either curl or wget are available in your system as shell scripts to download the GNUparallel tool. We note that the ``install_osx.sh`` and ``install_unix.sh`` scripts can run using different options. If you happen to have any of the DIAMONDS, Background, and PeakBagging codes already installed, you can skip their installation by discarding the corresponding options when executing the installing shell script.
+
+If you are a Linux user and you have MESA-SDK libraries installed you may encounter a conflict when installing the DIAMONDS-related software. Here we recommend using this alternative installing command via terminal:
+
+.. code:: shell
+
+    $ env PATH=/usr/local/bin:/usr/bin ./install_unix.sh -d -b -p -a -g 
 
     .. warning:: 
         When installing FAMED without installing the DIAMONDS-related software, e.g. because already installed in your system, make sure that you have the latest versions of each software available in the corresponding GitHub repositories. If this is not the case, the FAMED pipeline will not be able to run.

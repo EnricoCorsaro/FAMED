@@ -147,8 +147,7 @@ if n_runs gt 1 then begin
             output_err_filename = catalog_id + star_id + '_' + parameters.subdir + '_parallel.out'
             spawn,'parallel ./peakbagging ::: ' + catalog_id + ' ::: ' + star_id + ' ::: ' + parameters.subdir + $
                    ' :::: ' + filename_run + ' ::::+ ' + filename_bg + ' ::::+ ' + filename_prior + ' ::::+ ' + filename_fwhm + $
-                   ' ::: ' + flag_peaktest + ' ::: ' + flag_asymptotic + ' ::: ' + flag_bglevel + ' &> ' + $
-                   output_err_filename,error,/stderr
+                   ' ::: ' + flag_peaktest + ' ::: ' + flag_asymptotic + ' ::: ' + flag_bglevel,output,error
             
             file_delete,filename_run
             file_delete,filename_bg
@@ -160,25 +159,25 @@ if n_runs gt 1 then begin
             printf,lun1,parameters.run(start_index:end_index),format='(A0)'
             free_lun,lun1
             
-            output_err_filename = catalog_id + star_id + '_' + parameters.subdir + '_'+ parameters.filename_run + '_parallel.out'
             spawn,'parallel ./peakbagging ::: ' + catalog_id + ' ::: ' + star_id + ' ::: ' + parameters.subdir + $
                   ' :::: ' + parameters.filename_run + '.txt ::: ' + parameters.background + ' ::: ' + info.prior_filename +      $ 
-                  ' ::: ' + strcompress(string(parameters.fwhm),/remove_all) + ' ::: ' + flag_peaktest + ' ::: ' + flag_asymptotic + ' ::: ' + flag_bglevel + ' &> ' + $
-                  output_err_filename,error,/stderr
-            
+                  ' ::: ' + strcompress(string(parameters.fwhm),/remove_all) + ' ::: ' + flag_peaktest + ' ::: ' + flag_asymptotic + ' ::: ' + flag_bglevel,output,error
+
             file_delete,parameters.filename_run + '.txt'
         endelse
     endfor
 endif else begin
-    output_err_filename = catalog_id + star_id + '_' + parameters.subdir + '_' + strcompress(string(parameters.run),/remove_all) + '.out'
-    
     spawn,'./peakbagging ' + catalog_id + ' ' + star_id + ' ' + $
           parameters.subdir + ' ' + strcompress(string(parameters.run),/remove_all) + ' ' + parameters.background + ' ' + $
-          info.prior_filename + ' ' + strcompress(string(parameters.fwhm),/remove_all) + ' ' + flag_peaktest + ' ' + flag_asymptotic + ' ' + flag_bglevel + ' &> ' + $
-          output_err_filename,error,/stderr
+          info.prior_filename + ' ' + strcompress(string(parameters.fwhm),/remove_all) + ' ' + flag_peaktest + ' ' + flag_asymptotic + ' ' + flag_bglevel,output,error
 endelse
 
-file_delete, output_err_filename
+if (size(error))[0] ne 0 then begin
+    if info.print_on_screen eq 1 then begin
+        print,' Peakbagging fit could not be completed. '
+    endif
+endif
+
 cd, info.famed_path
 
 star_dir = info.peakbagging_results_dir + catalog_id + star_id + '/'

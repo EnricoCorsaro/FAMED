@@ -18,8 +18,13 @@ if file_test('../../PeakBagging/results/' + catalog_id + star_id + '/*') eq 1 th
 	print,'Do you want to remove old test files? ( 1 = YES | Otherwise = NO)'
 	read,response
 	if response eq 1 then begin
-		file_mkdir,'../../PeakBagging/results/' + catalog_id + star_id + '/old'
-		spawn,'mv ../../PeakBagging/results/' + catalog_id + star_id + '/* ../../PeakBagging/results/' + catalog_id + star_id + '/old/'
+		if file_test('../../PeakBagging/results/' + catalog_id + star_id + '/old',/directory) eq 0 then begin
+			file_mkdir,'../../PeakBagging/results/' + catalog_id + star_id + '/old'
+		endif else begin
+			spawn,'rm -r ' + '../../PeakBagging/results/' + catalog_id + star_id + '/old/*',output,/stderr
+		endelse
+		
+		spawn,'mv ../../PeakBagging/results/' + catalog_id + star_id + '/* ../../PeakBagging/results/' + catalog_id + star_id + '/old/',output,/stderr
 	endif else begin
 		print,'Previous test files were not deleted. Aborting test.'
 		return
@@ -27,8 +32,8 @@ if file_test('../../PeakBagging/results/' + catalog_id + star_id + '/*') eq 1 th
 endif
 
 ; Copy stellar PSD and background fit solution inside the expected directories
-spawn,'cp ../tutorials/data/Background/data/' + catalog_id + star_id + '.txt ../../Background/data/' 
-spawn,'cp -r ../tutorials/data/Background/results/' + catalog_id + star_id + ' ../../Background/results/'
+spawn,'cp ../tutorials/data/Background/data/' + catalog_id + star_id + '.txt ../../Background/data/',output,/stderr 
+spawn,'cp -r ../tutorials/data/Background/results/' + catalog_id + star_id + ' ../../Background/results/',output,/stderr
 start_famed,catalog_id,star_id,teff,/fit,/global,/chunk
 end
 
@@ -46,8 +51,13 @@ if file_test('../../PeakBagging/results/' + catalog_id + star_id + '/*') eq 1 th
 	print,'Do you want to remove old test files? ( 1 = YES | Otherwise = NO)'
 	read,response
 	if response eq 1 then begin
-		file_mkdir,'../../PeakBagging/results/' + catalog_id + star_id + '/old'
-		spawn,'mv ../../PeakBagging/results/' + catalog_id + star_id + '/* ../../PeakBagging/results/' + catalog_id + star_id + '/old/'
+		if file_test('../../PeakBagging/results/' + catalog_id + star_id + '/old',/directory) eq 0 then begin
+			file_mkdir,'../../PeakBagging/results/' + catalog_id + star_id + '/old'
+		endif else begin
+			spawn,'rm -r ' + '../../PeakBagging/results/' + catalog_id + star_id + '/old/*',output,/stderr
+		endelse
+
+		spawn,'mv ../../PeakBagging/results/' + catalog_id + star_id + '/* ../../PeakBagging/results/' + catalog_id + star_id + '/old/',output,/stderr
 	endif else begin
 		print,'Previous test files were not deleted. Aborting test.'
 		spawn,'mv famed_configuring_parameters.txt.local famed_configuring_parameters.txt'

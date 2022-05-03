@@ -40,13 +40,15 @@ endelse
 
 cd, info.asymptotic_path
 
-output_err_filename = catalog_id + star_id + '_' + parameters.subdir + '_' + strcompress(string(parameters.run),/remove_all) + '.out'
 spawn,'./asymptotic ' + catalog_id + ' ' + star_id + ' ' + $
       parameters.subdir + ' ' + strcompress(string(parameters.run),/remove_all) + ' ' + info.prior_filename + $
-      ' ' + strcompress(string(numax),/remove_all) + ' ' + strcompress(string(ell),/remove_all) + ' &> ' + output_err_filename,    $
-      error,/stderr
+      ' ' + strcompress(string(numax),/remove_all) + ' ' + strcompress(string(ell),/remove_all),output,error
 
-file_delete, output_err_filename
+if (size(error))[0] ne 0 then begin
+    if info.print_on_screen eq 1 then begin
+        print,' Asymptotic fit could not be completed. '
+    endif
+endif
 
 cd, info.famed_path
 
