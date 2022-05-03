@@ -95,8 +95,9 @@ If you are a Linux user and you have MESA-SDK libraries installed you may encoun
 
     $ env PATH=/usr/local/bin:/usr/bin ./install_unix.sh -d -b -p -a -g 
 
-    .. warning:: 
-        When installing FAMED without installing the DIAMONDS-related software, e.g. because already installed in your system, make sure that you have the latest versions of each software available in the corresponding GitHub repositories. If this is not the case, the FAMED pipeline will not be able to run.
+
+.. warning:: 
+    When installing FAMED without installing the DIAMONDS-related software, e.g. because already installed in your system, make sure that you have the latest versions of each software available in the corresponding GitHub repositories. If this is not the case, the FAMED pipeline will not be able to run.
 
 Manual Installation (Mac OS X and Unix OS)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
