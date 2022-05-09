@@ -64,15 +64,14 @@ endif else begin
     
     min_linewidths = fltarr(n_chunks)
     bg_names = strarr(n_chunks)
+    run_labels = indgen(n_chunks)
 
     if ((chunk_id lt 0) or (chunk_id ge n_chunks)) then begin
         first_it = 0
         last_it = n_chunks-1
-        run_labels = indgen(n_chunks)
     endif else begin
         first_it = chunk_id
         last_it = chunk_id
-        run_labels = [chunk_id]
     endelse
     
     for i=first_it,last_it do begin
@@ -151,6 +150,12 @@ endif else begin
         active_chunk_index = where(bg_names ne '')
         bg_names = bg_names(active_chunk_index)
         min_linewidths = min_linewidths(active_chunk_index)
+    endif
+
+    if ((chunk_id ge 0) and (chunk_id lt n_chunks)) then begin
+        run_labels = run_labels(chunk_id)
+        bg_names = bg_names(chunk_id)
+        min_linewidths = min_linewidths(chunk_id)
     endif
 
     peakbagging_parameters = { subdir:     info.isla_subdir,     $
