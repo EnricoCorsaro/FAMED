@@ -91,7 +91,7 @@ Python Version
 ^^^^^^^^^^^^^^
 To test that the code is installed and running properly, you can run ``test_famed.py`` and confirm that output, both text and plots have been created. To do this:
 
- .. code :: shell
+.. code :: shell
 
     $ cd /YOUR_LOCAL_PATH/FAMED/python/test/
     $ python test_famed.py
@@ -106,7 +106,7 @@ Step-by-step
 ------------
 In this method we load the data in, create the initial islands sampling, identifiy modes from the islands sampling, and plot the results as separate steps.  The required input are a catalog id, star id, and effective temperature. 
 
- .. code :: python
+.. code :: python
 
      >>> import famed as f
      >>> star = f.Global('KIC', '006117517', 4687)
@@ -117,13 +117,13 @@ In this method we load the data in, create the initial islands sampling, identif
 
 To force ``make_islands`` to generate a data set with new configuring parameters we can use the ``force`` option:
  
- .. code :: python
+.. code :: python
 
      >>> star.make_islands(force=True)
 
 To force ``find_islands`` to recompute the sliding pattern fit we can use the ``force`` option:
  
- .. code :: python
+.. code :: python
 
      >>> star.find_islands(force=True)
 
@@ -131,7 +131,7 @@ With this interactive method, you can change specific configuring parameters and
 
 If the input configuring parameter ``save_progress_pickle`` is set to 1, a pickle of the star object is saved in the results directory of each star after both the ``make_islands()`` and ``find_islands()`` functions have been run. The keyword ``load_islands`` can be set to ``True`` when creating a ``Global`` object to load the pickled data. 
 
- .. code :: python
+.. code :: python
 
      >>> star = f.Global('KIC', '006117517', 4687, load_islands=True)
 
@@ -147,37 +147,50 @@ All at once
 -----------
 This method does everything in the step-by-step method with a single command. This is helpful if you do not need to examine individual steps of the process and just want to get the results and output created. By default this method has ``force=True`` for both ``make_islands`` and ``find_islands``. It will only produce plots if the ``save_png`` or ``save_eps`` flags are set in the configuring parameters.
 
- .. code :: python
+.. code :: python
 
      >>> import famed as f
      >>> f.run.GLOBAL('KIC', '012069424', 5825)
 
 In this method one can decide to change at runtime the reference subfolder containing the background fit solution obtained with the DIAMONDS+Background code. The general calling sequence thus becomes:
 
- .. code :: python
+.. code :: python
 
      >>> f.run.GLOBAL('KIC', '012069424', 5825, 10)
 
 where we adopted the same example used above, namely forcing the pipeline to use the background fit solution stored inside the subfolder 10 (instead of the default 00).
 
+We recommend using the all at once method to perform the analysis of the CHUNK module. Once the GLOBAL module has been completed, following the example above the user can activate the CHUNK with the following commands:
+
+.. code ::
+
+    >>> f.run.CHUNK('KIC', '012069424') 
+
+where we note that the input temperature is no longer required because this will be obtained directly from the solution of the GLOBAL module.
+If a specific background fit solution has to be used once again, similarly to the case of the GLOBAL module the user can force its reading with the following calling sequence:
+
+.. code ::
+
+    >>> f.run.CHUNK('KIC', '012069424', 10)  
+
 Using an external background fit solution
 -----------------------------------------
 An additional routine is provided in order to let you test the analysis of the RGB star KIC 12008916 by means of a background fit solution obtained by a code different than the DIAMONDS-Background. You can run this test in an interactive way following the steps below:
 
- .. code :: shell
+.. code :: shell
 
     $ cd /YOUR_LOCAL_PATH/FAMED/python/test/
 
 then open a Python prompt and from there:
 
- .. code :: python
+.. code :: python
 
      >>> from test_famed import *
      >>> test_external_background()
 
 The test is also automatically executed when running the test_famed.py script directly through Python with
 
- .. code :: shell
+.. code :: shell
 
     $ python test_famed.py
 

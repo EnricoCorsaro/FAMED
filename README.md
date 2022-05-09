@@ -6,7 +6,7 @@
 <a href="https://ascl.net/2006.021"><img src="https://img.shields.io/badge/ASCL-2006.021-red"/></a>
 <a href='https://famed.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/famed/badge/?version=latest' alt='Documentation Status' /></a>
 <a href="https://github.com/EnricoCorsaro/FAMED/issues"><img src="https://img.shields.io/github/issues-closed/EnricoCorsaro/FAMED"/></a>
-<img width="400" src="./docs/figures/FAMED_LOGO_WHITE.jpg"/>
+<img width="400" src="./docs/figures/FAMED_LOGO_WHITE.jpeg"/>
 </p>
 
 ### Author
