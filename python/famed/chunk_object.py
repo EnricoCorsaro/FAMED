@@ -32,8 +32,8 @@ class Chunk(FamedStar):
         Flag to read the pickled object if `make_islands` or `find_islands` has 
         already been ran.
     """
-    def __init__(self, catalog_id, star_id, load_islands=False):
-        FamedStar.__init__(self, catalog_id, star_id)
+    def __init__(self, catalog_id, star_id, background_run_number=None, load_islands=False):
+        FamedStar.__init__(self, catalog_id, star_id, background_run_number=background_run_number)
         
         if load_islands and self.cp.save_progress_pickle:
             if self.cp.print_on_screen:
@@ -44,9 +44,9 @@ class Chunk(FamedStar):
             self.__dict__ = temp.__dict__.copy()
         else:
             self.modality='CHUNK'
-            
 
-    def make_islands(self,force=False,merge=False):
+
+    def make_islands(self,run,force=False,merge=False):
         """
         Compute a chunk multi-modal fit with DIAMONDS.
 
@@ -87,6 +87,7 @@ class Chunk(FamedStar):
             chunk_number = np.array(chunk_number,dtype=int)
             min_linewidths = np.zeros(n_chunks)
             bg_names = np.zeros(n_chunks,dtype='U30')
+            run_labels = np.arange(n_chunks)
 
             # Load the background level of the star
             bg_level = np.loadtxt(self.star_dir/'backgroundLevel.txt', usecols=(1,))
@@ -96,7 +97,14 @@ class Chunk(FamedStar):
             self.spsd = [None]*n_chunks
             self.bg_level = [None]*n_chunks
 
-            for i in range(0,n_chunks):
+            if (run == -1) or (run >= n_chunks):
+                first_it = 0
+                last_it = n_chunks
+            else:
+                first_it = run
+                last_it = run + 1
+
+            for i in range(first_it,last_it):
                 run_subdir = str(i)
    
                 # Evaluate maximum PSD in the given chunk
@@ -160,11 +168,16 @@ class Chunk(FamedStar):
                 self.bg_level[i] = bg_level[f_temp_index]
                 
 
+            if (run >= 0) and (run < n_chunks):
+                run_labels = str(run_labels[first_it])
+                bg_names = bg_names[first_it]
+                min_linewidths = min_linewidths[first_it]
+
             peakbagging_parameters = { 'subdir':     self.cp.isla_subdir,
-                                       'run':        np.arange(n_chunks),
-                                       'background': bg_names,
-                                       'fwhm':       min_linewidths,
-                                       'duplet':     0}
+                                        'run':        run_labels,
+                                        'background': bg_names,
+                                        'fwhm':       min_linewidths,
+                                        'duplet':     0}
 
             flag_computation_completed = diamonds.run_peakbagging(self.catalog_id,self.star_id,peakbagging_parameters,0,0,0,self.cp.dp_isla,self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename,merge=True)
 

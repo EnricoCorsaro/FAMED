@@ -32,7 +32,7 @@ def GLOBAL(catalog_id, star_id, teff, background_run_number=None, force=True):
     famed_obj.make_global_plots()
     return famed_obj
 
-def CHUNK(catalog_id, star_id, force=True):
+def CHUNK(catalog_id, star_id, background_run_number=None, force=True):
     """
     Helper function to run all steps, including plotting, of CHUNK modality.
 
@@ -45,8 +45,8 @@ def CHUNK(catalog_id, star_id, force=True):
     teff : float
         Effective temperature of the star in Kelvin.
     """
-    famed_obj = Chunk(catalog_id,star_id)
-    result = famed_obj.make_islands()
+    famed_obj = Chunk(catalog_id,star_id,background_run_number=background_run_number)
+    result = famed_obj.make_islands(-1)
     if result:
         snr,chunks=result
         chunks = chunks[np.argsort(snr)]

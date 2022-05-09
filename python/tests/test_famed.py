@@ -31,7 +31,7 @@ def test_chunk_steps(silent_remove=False):
     
     # Run test
     star = f.Chunk(cat_id, star_id)
-    snr,chunks = star.make_islands(force=True)
+    snr,chunks = star.make_islands(-1,force=True)
         
     # Test each chunk in order of S/N
     chunks = chunks[np.argsort(snr)]

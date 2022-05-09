@@ -42,8 +42,7 @@ class FamedStar(object):
         self.star_dir = peakbagging_results_dir/(self.catalog_id+self.star_id)
 
         if background_run_number:
-            self.cp.background_run_number = background_run_number 
-
+            self.cp.background_run_number = background_run_number
 
         # Read in the fitted background parameters
         if self.cp.background_data_dir == '-99':
@@ -100,7 +99,7 @@ class FamedStar(object):
         freqbin = par_hist[1] - par_hist[0]
         dnu_range_bins = round((top_dnu-bottom_dnu)/freqbin)+1
         bottom_dnu_bins = round(bottom_dnu/freqbin)
-        lag = np.arange(dnu_range_bins) + bottom_dnu_bins
+        lag = np.arange(dnu_range_bins, dtype='int') + bottom_dnu_bins
         temp = asef_hist-np.mean(asef_hist)
         norm = np.sum(temp**2)
         result = np.correlate(temp,temp,mode='full')/norm

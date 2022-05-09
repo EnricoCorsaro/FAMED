@@ -122,7 +122,7 @@ class Global(FamedStar):
                                   'background': self.bgp['name'], 
                                   'fwhm':       linewidth,
                                   'duplet':     False}
-                                  
+
         flag_computation_completed = diamonds.run_peakbagging(self.catalog_id, self.star_id, peakbagging_parameters,0,0,1, self.cp.dp_isla, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename)
 
         # Set some attributes to keep around
