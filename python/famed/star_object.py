@@ -100,6 +100,7 @@ class FamedStar(object):
         dnu_range_bins = round((top_dnu-bottom_dnu)/freqbin)+1
         bottom_dnu_bins = round(bottom_dnu/freqbin)
         lag = np.arange(dnu_range_bins, dtype='int') + bottom_dnu_bins
+        lag = lag.astype(int)
         temp = asef_hist-np.mean(asef_hist)
         norm = np.sum(temp**2)
         result = np.correlate(temp,temp,mode='full')/norm

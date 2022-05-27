@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.interpolate import interp1d
-
+from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 import matplotlib.ticker
@@ -348,7 +348,7 @@ def text_panel(famed_obj,ax=None,chunk=None):
     ax.spines['bottom'].set_visible(False)
 
     # Logo
-    logo = plt.imread(famed_obj.cp.famed_path/famed_obj.cp.logo_filename)
+    logo=Image.open(famed_obj.cp.famed_path/famed_obj.cp.logo_filename)
     ax.imshow(logo,extent=[0.78,.98,0,.45],aspect='auto')
     ax.set_xlim(0,1)
     ax.set_ylim(0,1)
