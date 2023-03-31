@@ -167,6 +167,7 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        n_orders_side_prior_ms:                (float(par_value(where(par_name eq 'n_orders_side_prior_ms'))))[0],                $
        n_orders_side_prior_sg:                (float(par_value(where(par_name eq 'n_orders_side_prior_sg'))))[0],                $
        n_orders_side_prior_rg:                (float(par_value(where(par_name eq 'n_orders_side_prior_rg'))))[0],                $
+       remove_dipole_peak:                    (par_value(where(par_name eq 'remove_dipole_peak')))[0],                           $
        dnu_prior_lower_fraction:              (float(par_value(where(par_name eq 'dnu_prior_lower_fraction'))))[0],              $
        dnu_prior_upper_fraction:              (float(par_value(where(par_name eq 'dnu_prior_upper_fraction'))))[0],              $
        d02_prior_lower_ms:                    (float(par_value(where(par_name eq 'd02_prior_lower_ms'))))[0],                    $

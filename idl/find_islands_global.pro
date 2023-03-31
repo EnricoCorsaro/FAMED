@@ -66,13 +66,13 @@ readcol,star_dir + 'NyquistFrequency.txt',nyq,format='D',/silent
 nyq = nyq[0]
 
 if info.print_on_screen eq 1 then begin
-    print,'---------------------------------------------------'
+    print,' ---------------------------------------------------'
     print,' Parameter range (microHz): [',strcompress(string(min(par0)),/remove_all),', ', strcompress(string(max(par0)),/remove_all),']'
-    print,'---------------------------------------------------'
+    print,' ---------------------------------------------------'
     print,''
-    print,'-------------------------------------------------'
+    print,' -------------------------------------------------'
     print,' PSD frequency range (microHz): [',strcompress(string(min(freq)),/remove_all),', ', strcompress(string(max(freq)),/remove_all),']'
-    print,'-------------------------------------------------'
+    print,' -------------------------------------------------'
     print,''
 endif
 
@@ -83,9 +83,6 @@ endif
 
 if (info.save_eps ne 0) or (info.save_png ne 0) then begin
     !p.multi = pp.global.pmulti
-    position_sampling = pp.global.position_sampling             ; Sampling
-    position_asef = pp.global.position_asef                     ; ASEF
-    position_psd = pp.global.position_psd                       ; PSD
     
     if info.save_eps eq 0 then begin
         set_plot,'x'
@@ -126,7 +123,7 @@ nest_iter = findgen(n_elements(par0))
 ; -------------------------------------------------------------------------------------------------------------------
 
 if (info.save_eps ne 0) or (info.save_png ne 0) then begin
-    plot_sampling,par0,position_sampling
+    plot_sampling,par0,1
     arrow,n_elements(par0)-1,numax,n_elements(par0)*0.9,numax,/data,thick=4,/solid,hsize=pp.numax_arrow_hsize,color=pp.numax_chunk_arrow_color
 endif
 
@@ -157,12 +154,10 @@ asef_hist = ash.y
 ; -------------------------------------------------------------------------------------------------------------------
 ; Find an appropriate epsilon based on the input temperature.
 ; -------------------------------------------------------------------------------------------------------------------
-
-if (info.save_eps ne 0) or (info.save_png ne 0) then begin
-    interp_epsi = interpolate_epsilon(teff,acf_dnu,/plot)
-endif else begin
-    interp_epsi = interpolate_epsilon(teff,acf_dnu)
-endelse
+output_epsi_array = [0]
+output_teff_array = [0]
+output_dnu_array = [0]
+interpolate_epsilon,teff,acf_dnu,interp_epsi,output_epsi_array,output_dnu_array,output_teff_array,output_fit_array
 
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -234,7 +229,7 @@ sampling_counts = sampled_estimates.sampling_counts
 spsd_maximum = sampled_estimates.spsd_maximum
 
 if (info.save_eps ne 0) or (info.save_png ne 0) then begin 
-    plot_asef,par_hist,asef_hist,maximum,range_maximum,threshold_asef,position_asef
+    plot_asef,par_hist,asef_hist,maximum,range_maximum,threshold_asef,1
 endif
 
 ; Define some weights useful for identification of proper frequency peaks during mode identification
@@ -323,13 +318,12 @@ if fit_dnu le cp.dnu_threshold then begin
 
     dnu_prior = [fit_dnu*cp.dnu_prior_lower_fraction,fit_dnu*cp.dnu_prior_upper_fraction]
     d02_prior = [ap.d02,ap.d02]
+    d01_prior = [ap.d01,ap.d01]
     
-    if fit_dnu lt cp.dnu_tip then begin
-        d01_prior = [ap.d01,ap.d01]
-    endif else begin
+    if (fit_dnu ge cp.dnu_tip) and (cp.remove_dipole_peak eq 1) then begin
         d01_prior = [99.0,99.0]
-    endelse
-    
+    endif
+
     d13_prior = [99.0,99.0]
     rot_split_prior = [0.0,0.0]
     cosi_prior = [0.0,0.0]
@@ -1062,10 +1056,24 @@ endelse
 
 
 ; -------------------------------------------------------------------------------------------------------------------
+; Plot the epsilon diagram (either vs DeltaNu or Teff) and overplot both the interpolated and fitted values of epsilon.
 ; Plot the original PSD and a smoothed version of it by the mean linewidth found.
 ; Overplot an inset of the PSD if a global approach is used, to show the detail of the mode identification.
 ; -------------------------------------------------------------------------------------------------------------------
 if (info.save_eps ne 0) or (info.save_png ne 0) then begin
+    parameters = { dnu_fit:              best_dnu,               $
+                   dnu_acf:              acf_dnu,                $
+                   teff:                 teff,                   $
+                   epsi_int:             interp_epsi,            $
+                   epsi_fit:             best_epsi,              $
+                   epsi_array:           output_epsi_array,      $
+                   dnu_array:            output_dnu_array,       $
+                   teff_array:           output_teff_array,      $
+                   fit_array:            output_fit_array        $
+                 }
+
+    plot_epsilon,parameters
+
     parameters = { min_freq:             min(par_hist),          $
                    max_freq:             max(par_hist),          $
                    freq_list:            freq1_final,            $
@@ -1080,7 +1088,8 @@ if (info.save_eps ne 0) or (info.save_png ne 0) then begin
                    max_psd:              max(psd)                $
                  }
 
-    plot_psd,freq,psd,spsd,bg_level_local,parameters,position_psd,1
+    plot_psd,freq,psd,spsd,bg_level_local,parameters,1
+
 endif
 
 if cp.save_asymptotic_radial eq 1 then begin
@@ -1166,8 +1175,8 @@ linewidth = get_linewidth(freq1_final,teff,numax)
 
 get_lun,lun1
 openw,lun1,peakbagging_filename_global
-printf,lun1,'# nuMax (microHz), DeltaNu_ACF (microHz), DeltaNu_fit (microHz), epsilon, alpha, Teff (K), N_chunks, Flag depressed dipole',format='(A0)'
-printf,lun1,numax,acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole,format='(F0.4,F10.4,F10.4,F10.4,F10.4,F10.1,I6,I6)'
+printf,lun1,'# nuMax (microHz), DeltaNu_ACF (microHz), DeltaNu_fit (microHz), epsilon, epsilon (interpolated), alpha, Teff (K), N_chunks, Flag depressed dipole',format='(A0)'
+printf,lun1,numax,acf_dnu,best_dnu,best_epsi,interp_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole,format='(F0.4,F10.4,F10.4,F10.4,F10.4,F10.4,F10.1,I6,I6)'
 
 ; Save the frequency positions of each chunk identified with the global fit
 

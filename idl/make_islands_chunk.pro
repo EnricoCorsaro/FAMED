@@ -51,7 +51,7 @@ if file_test(peakbagging_filename_global) eq 0 then begin
 endif else begin
     ; Load global parameters
 
-    readcol,peakbagging_filename_global,acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks,format='x,D,D,D,D,D,I',numline=2,comment='#',/silent
+    readcol,peakbagging_filename_global,acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks,format='x,D,D,D,x,D,D,I',numline=2,comment='#',/silent
     best_dnu = best_dnu(0)
     best_epsi = best_epsi(0)
     best_alpha = best_alpha(0)

@@ -89,7 +89,7 @@ This will install the software DIAMONDS (-d), Background (-b), PeakBagging (-p),
 
 The script is assuming that either curl or wget are available in your system as shell scripts to download the GNUparallel tool. We note that the ``install_osx.sh`` and ``install_unix.sh`` scripts can run using different options. If you happen to have any of the DIAMONDS, Background, and PeakBagging codes already installed, you can skip their installation by discarding the corresponding options when executing the installing shell script.
 
-If you are a Linux user and you have MESA-SDK libraries installed you may encounter a conflict when installing the DIAMONDS-related software. Here we recommend using this alternative installing command via terminal:
+If you are a Linux user and you have MESA-SDK libraries installed you may encounter a conflict when installing the DIAMONDS-related software. First make sure that ``$HOME/bin/`` is included in your terminal ``$PATH``, so that the version of GNU Parallel installed by FAMED can be used by the pipeline. Therefore we recommend using this alternative installing command via terminal:
 
 .. code:: shell
 

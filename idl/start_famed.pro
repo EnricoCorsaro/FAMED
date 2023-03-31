@@ -67,7 +67,7 @@ if keyword_set(chunk) then begin
     endif
 
     ; Load global parameters
-    readcol,peakbagging_filename_global,best_dnu,n_chunks,format='x,x,D,x,x,x,I',numline=2,comment='#',/silent
+    readcol,peakbagging_filename_global,best_dnu,n_chunks,format='x,x,D,x,x,x,x,I',numline=2,comment='#',/silent
     best_dnu = best_dnu(0)
     n_chunks = n_chunks(0)
     

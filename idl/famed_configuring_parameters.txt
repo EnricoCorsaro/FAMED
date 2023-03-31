@@ -125,6 +125,7 @@ force_epsilon_dnu_value 0
 n_orders_side_prior_ms 1.5
 n_orders_side_prior_sg 1.5
 n_orders_side_prior_rg 1.5
+remove_dipole_peak 0
 upper_epsilon_rg_slope 0.253694
 upper_epsilon_rg_offset 0.76
 lower_epsilon_rg_slope 0.468876

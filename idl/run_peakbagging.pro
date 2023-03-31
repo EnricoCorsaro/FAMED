@@ -143,8 +143,7 @@ if n_runs gt 1 then begin
             openw,lun1,filename_fwhm
             printf,lun1,parameters.fwhm(start_index:end_index),format='(F0.3)'
             free_lun,lun1
-            
-            output_err_filename = catalog_id + star_id + '_' + parameters.subdir + '_parallel.out'
+           
             spawn,'parallel ./peakbagging ::: ' + catalog_id + ' ::: ' + star_id + ' ::: ' + parameters.subdir + $
                    ' :::: ' + filename_run + ' ::::+ ' + filename_bg + ' ::::+ ' + filename_prior + ' ::::+ ' + filename_fwhm + $
                    ' ::: ' + flag_peaktest + ' ::: ' + flag_asymptotic + ' ::: ' + flag_bglevel,output,error

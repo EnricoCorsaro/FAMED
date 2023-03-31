@@ -348,6 +348,9 @@ Similar as for the parameter ``n_orders_side_prior_ms`` but used for early SG st
 * ``n_orders_side_prior_rg``
 Similar as for the parameter ``n_orders_side_prior_ms`` but used for late SG and RG stars, having :math:`\Delta\nu \leq \Delta\nu_\mathrm{thresh}`. The default value is 1.5.
 
+* ``remove_dipole_peak``
+Activate this keyword to remove the :math:`\ell = 1` peak from the sliding-pattern model for stars having :math:`\Delta\nu_\mathrm{tip} \leq \Delta\nu < \Delta\nu_\mathrm{thresh}`. This can be useful in some circumstances, for example when the :math:`\ell = 1` mode region is particularly confusing (i.e. crowded). This parameter can be used to improve the fit and avoid cases where the pipeline could end up in obtaining a swapped global mode identification (:math:`\ell = 1` identified as :math:`\ell = 0` and viceversa). The parameter is set to 0 by default, meaning that the :math:`\ell = 1` peak is included in the model but kept fixed to the position of a pure :math:`\ell = 1` p mode.
+
 * ``dnu_prior_lower_fraction``
 The fraction of :math:`\Delta\nu` with respect to the asymptotic fit value obtained in the GLOBAL modality, used to set up the uniform prior lower bound on :math:`\Delta\nu` for the sliding-pattern model. The default value is 0.96.
 

@@ -8,7 +8,7 @@ pro plot_summary,parameters,flag_global
 ; -------------------------------------------------------------------------------------------------------
 COMMON CONFIG,cp
 COMMON STAR,info
-COMMON GRAPHIC,pp,lp,sp,lpe
+COMMON GRAPHIC,pp,lp,sp,ppe,lpe
 
 ; General information on the run
 xyouts,lp.block1_1[0],lp.block1_1[1],'!3' + parameters.catalog_id + ' ' + parameters.star_id + '!X', $

@@ -1,4 +1,4 @@
-pro plot_psd,freq,psd,spsd,bg_level,parameters,position_psd,flag_global
+pro plot_psd,freq,psd,spsd,bg_level,parameters,flag_global
 ; -------------------------------------------------------------------------------------------------------
 ; Author:  Enrico Corsaro
 ; e-mail:  enrico.corsaro@inaf.it
@@ -8,13 +8,15 @@ pro plot_psd,freq,psd,spsd,bg_level,parameters,position_psd,flag_global
 ;          modality used by the FAMED pipeline. It overplots the extracted oscillation frequency peaks.
 ; -------------------------------------------------------------------------------------------------------
 COMMON CONFIG,cp
-COMMON GRAPHIC,pp,lp,sp,lpe
+COMMON GRAPHIC,pp,lp,sp,ppe,lpe
 COMMON STAR,info
 
 if flag_global eq 1 then begin
     h_fac = 17.
+    position_psd = pp.global.position_psd
 endif else begin
     h_fac = 6.
+    position_psd = pp.chunk.position_psd
 endelse
 
 loadct,39,/silent

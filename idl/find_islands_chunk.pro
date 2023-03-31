@@ -65,13 +65,13 @@ readcol,star_dir + 'NyquistFrequency.txt',nyq,format='D',/silent
 nyq = nyq[0]
 
 if info.print_on_screen eq 1 then begin
-    print,'---------------------------------------------------'
+    print,' ---------------------------------------------------'
     print,' Parameter range (microHz): [',strcompress(string(min(par0)),/remove_all),', ', strcompress(string(max(par0)),/remove_all),']'
-    print,'---------------------------------------------------'
+    print,' ---------------------------------------------------'
     print,''
-    print,'-------------------------------------------------'
+    print,' -------------------------------------------------'
     print,' PSD frequency range (microHz): [',strcompress(string(min(freq)),/remove_all),', ',strcompress(string(max(freq)),/remove_all),']'
-    print,'-------------------------------------------------'
+    print,' -------------------------------------------------'
     print,''
 endif
 
@@ -82,9 +82,8 @@ endif
 
 ; Load asymptotic parameters
 
-readcol,peakbagging_filename_global,acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole,format='x,F,F,F,F,F,I,I',numline=2,comment='#',/silent
+readcol,peakbagging_filename_global,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole,format='x,x,F,F,x,F,F,I,I',numline=2,comment='#',/silent
 
-acf_dnu = acf_dnu(0)
 best_dnu = best_dnu(0)
 best_epsi = best_epsi(0)
 best_alpha = best_alpha(0)
@@ -199,9 +198,6 @@ endelse
 
 if info.print_on_screen eq 1 then begin
     !p.multi = pp.chunk.pmulti
-    position_sampling = pp.chunk.position_sampling       ; Sampling
-    position_asef = pp.chunk.position_asef               ; ASEF
-    position_psd = pp.chunk.position_psd                 ; PSD
     
     if info.save_eps eq 0 then begin
         set_plot,'x'
@@ -239,7 +235,7 @@ nest_iter = findgen(n_elements(par0))
 ; Plot the nested sampling evolution of the frequency parameter as obtained by Diamonds.
 ; -------------------------------------------------------------------------------------------------------------------
 if info.print_on_screen eq 1 then begin
-    plot_sampling,par0,position_sampling
+    plot_sampling,par0,0
 endif
 
 
@@ -315,7 +311,7 @@ spsd_maximum = sampled_estimates.spsd_maximum
 
 
 if info.print_on_screen eq 1 then begin
-    plot_asef,par_hist,asef_hist,maximum,range_maximum,threshold,position_asef
+    plot_asef,par_hist,asef_hist,maximum,range_maximum,threshold,0
 
     for i=0, n_elements(freq_global)-1 do begin
         oplot,[freq_global(i),freq_global(i)],[0,max(asef_hist)*1.4],linestyle=2,color=80,thick=3
@@ -2849,6 +2845,8 @@ if detected_indices(0) ne -1 then begin
 
             if file_test(rotation_probability_filename) eq 1 then begin
                 if (duplicity_probability_final(local_index) ne -99.0) then begin
+                    ; Both the rotation and duplicity tests are available.
+
                     readcol,rotation_probability_filename,p_FE,p_GE,p_GF,left_freq,right_freq,left_fwhm,right_fwhm,central_freq,rot_split,cosi,  $
                             format='F,F,F,x,F,F,F,F,F,F,F',/silent,comment='#'
                     
@@ -2861,10 +2859,12 @@ if detected_indices(0) ne -1 then begin
                         freq_duplet = [mean(left_freq),mean(right_freq)]
                     endif
                 endif else begin
+                    ; This means that the duplicity test was not conducted, i.e. only the rotation test is available.
+
                     readcol,rotation_probability_filename,p_FE,central_freq,rot_split,cosi,format='F,x,F,F,F',/silent,comment='#'
                     max_p_FE = float(round(max(p_FE)*1.d3)/1.d3)
                 endelse
-               
+             
                 external_indices = where(freq1_final ne freq_local)
 
                 if flag_duplicity_split eq 1 then begin
@@ -2959,6 +2959,9 @@ if detected_indices(0) ne -1 then begin
                         order_number_duplet = [enn_radial-1,enn_radial-1]
                     endelse
 
+
+                    ; Check whether there are frequencies other than this duplet 
+                    
                     if external_indices(0) ne -1 then begin
                         range_maximum_final = [[range_maximum_final(*,external_indices)],[range_maximum_new]]
                         divisions_maximum_final = [[divisions_maximum_final(*,external_indices)],[divisions_maximum_new]]
@@ -2977,8 +2980,8 @@ if detected_indices(0) ne -1 then begin
                         ; that the peak is split up again later on.
                         
                         detection_probability_final = [detection_probability_final(external_indices),fltarr(2) + detection_probability_final(local_index)]
-                        rotation_probability_final = [rotation_probability_final(external_indices),fltarr(2) - 99.0]
-                        duplicity_probability_final = [duplicity_probability_final(external_indices),fltarr(2) - 99.0]
+                        rotation_probability_final = [rotation_probability_final(external_indices),fltarr(2) + rotation_probability_final(local_index)]
+                        duplicity_probability_final = [duplicity_probability_final(external_indices),fltarr(2) + duplicity_probability_final(local_index)]
                         blending_profile_flag_final = [blending_profile_flag_final(external_indices),intarr(2)]
                         sinc_profile_flag_final = [sinc_profile_flag_final(external_indices),intarr(2)]
                        
@@ -3015,12 +3018,11 @@ if detected_indices(0) ne -1 then begin
                         azimuthal_number_final = [-99.0,-99.0]
                         cosi_final = [-99.0,-99.0]
                         
-                        ; Assign the duplet the same detection probability, but remove the duplicity and rotation test from it, in order to avoid
-                        ; that the peak is split up again later on.
+                        ; Assign the duplet the same detection probability, but report both the rotation and duplicity probabilies for reference.
                         
                         detection_probability_final = [fltarr(2) + detection_probability_final(local_index)]
-                        rotation_probability_final = [fltarr(2) - 99.0]
-                        duplicity_probability_final = [fltarr(2) - 99.0]
+                        rotation_probability_final = [fltarr(2) + rotation_probability_final(local_index)]
+                        duplicity_probability_final = [fltarr(2) + duplicity_probability_final(local_index)]
                         blending_profile_flag_final = [intarr(2)]
                         sinc_profile_flag_final = [intarr(2)]
                     endelse
@@ -3206,8 +3208,7 @@ if detected_indices(0) ne -1 then begin
                         azimuthal_number_final = [-1,0,1]
                         cosi_final = [cosi,cosi,cosi]
 
-                        ; Assign the duplet the same detection probability, but remove the duplicity and rotation test from it, in order to avoid
-                        ; that the peak is split up again later on.
+                        ; Assign the rotational multiplet the same detection probability, but report both the rotation and duplicity probabilies for reference.
                         
                         detection_probability_final = [fltarr(3) + detection_probability_final(local_index)]
                         rotation_probability_final = [fltarr(3) + rotation_probability_final(local_index)]
@@ -3309,7 +3310,7 @@ if info.print_on_screen eq 1 then begin
                     max_psd:        max(psd_total)            $
                  }
         
-    plot_psd,freq,psd,spsd,bg_level_local,parameters,position_psd,0
+    plot_psd,freq,psd,spsd,bg_level_local,parameters,0
 endif
 
 
@@ -3339,7 +3340,6 @@ parameters = { catalog_id:     catalog_id,     $
                best_dnu:       best_dnu,       $
                best_alpha:     best_alpha,     $
                best_epsi:      best_epsi,      $
-               acf_dnu:        acf_dnu,        $
                local_epsi:     local_epsi,     $
                local_d02:      local_d02,      $
                local_dp:       local_dp,       $

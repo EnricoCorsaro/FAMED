@@ -1,4 +1,4 @@
-pro plot_asef,par_hist,asef_hist,maximum,range_maximum,threshold,position_asef
+pro plot_asef,par_hist,asef_hist,maximum,range_maximum,threshold,flag_global
 ; -------------------------------------------------------------------------------------------------------
 ; Author:  Enrico Corsaro
 ; e-mail:  enrico.corsaro@inaf.it
@@ -8,16 +8,21 @@ pro plot_asef,par_hist,asef_hist,maximum,range_maximum,threshold,position_asef
 ;          highlights the frequency regions of each local maximum, as obtained from a hill-climbing
 ;          algorithm.
 ; -------------------------------------------------------------------------------------------------------
-COMMON GRAPHIC,pp,lp,sp,lpe
+COMMON GRAPHIC,pp,lp,sp,ppe,lpe
 
 bin_width = (max(par_hist)-min(par_hist))/n_elements(par_hist)
 width = (par_hist(1)-par_hist(0))/10.d0
-y_title = '!3ASEF (Nested iteration)'
+
+if flag_global eq 1 then begin
+    position_asef = pp.global.position_asef
+endif else begin
+    position_asef = pp.chunk.position_asef
+endelse
 
 plot,par_hist,asef_hist,xr=[min(par_hist),max(par_hist)],yr=[0,max(asef_hist)*1.30],       $
 xcharsize=pp.xcharsize,ycharsize=pp.ycharsize,font=-1,thick=pp.thick,                      $
 xthick=pp.xthick,ythick=pp.ythick,xticklen=0.03,yticklen=0.02,charsize=pp.charsize,        $
-charthick=pp.charthick,ytitle=y_title,/nodata,xtitle='!3Frequency (' + sp.freq_unit_str + ')',     $
+charthick=pp.charthick,ytitle='!3ASEF (Nested iteration)',/nodata,xtitle='!3Frequency (' + sp.freq_unit_str + ')',     $
 position=position_asef,xstyle=1,ystyle=1
 
 loadct,39,/silent

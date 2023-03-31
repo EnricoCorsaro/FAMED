@@ -1,4 +1,4 @@
-pro plot_sampling,par0,position_sampling
+pro plot_sampling,par0,flag_global
 ; -------------------------------------------------------------------------------------------------------
 ; Author:  Enrico Corsaro
 ; e-mail:  enrico.corsaro@inaf.it
@@ -6,7 +6,13 @@ pro plot_sampling,par0,position_sampling
 ; Place:   Catania, Italy
 ; Purpose: This routine plots the sampling evolution obtained from the multi-modal fit with DIAMONDS.
 ; -------------------------------------------------------------------------------------------------------
-COMMON GRAPHIC,pp,lp,sp,lpe
+COMMON GRAPHIC,pp,lp,sp,ppe,lpe
+
+if flag_global eq 1 then begin
+	position_sampling = pp.global.position_sampling
+endif else begin
+	position_sampling = pp.chunk.position_sampling
+endelse
 
 x_title = '!3Nested iteration'
 loadct,39,/silent
