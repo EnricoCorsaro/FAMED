@@ -72,7 +72,7 @@ class Chunk(FamedStar):
             return False
         else:
             # Load global parameters
-            acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks = np.loadtxt(peakbagging_filename_global,max_rows=1,usecols=(1,2,3,4,5,6))
+            acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks = np.loadtxt(peakbagging_filename_global,max_rows=1,skiprows=1,usecols=(1,2,3,5,6,7))
             n_chunks = int(n_chunks)
 
             self.n_chunks = n_chunks
@@ -280,16 +280,16 @@ class Chunk(FamedStar):
         nyq = np.loadtxt(self.star_dir/'NyquistFrequency.txt')
 
         if self.cp.print_on_screen:
-            print('---------------------------------------------------')
+            print(' ---------------------------------------------------')
             print(' Parameter range (microHz): [{:.2f}, {:.2f}]'.format(min(par0),max(par0)))
-            print('---------------------------------------------------\n')
-            print('-------------------------------------------------')
+            print(' ---------------------------------------------------\n')
+            print(' -------------------------------------------------')
             print(' PSD frequency range (microHz): [{:.2f}, {:.2f}]'.format(min(freq),max(freq)))
-            print('-------------------------------------------------\n')
+            print(' -------------------------------------------------\n')
 
         # Load the information available from the global fit
         # Load asymptotic parameters
-        acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole = np.loadtxt(peakbagging_filename_global, max_rows=1, usecols=(1,2,3,4,5,6,7))
+        acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole = np.loadtxt(peakbagging_filename_global, max_rows=1, skiprows=1, usecols=(1,2,3,5,6,7,8))
         n_chunks = int(n_chunks)
         flag_depressed_dipole = int(flag_depressed_dipole)
 
@@ -314,7 +314,7 @@ class Chunk(FamedStar):
             fwhm_global = fwhm_global[tmp_chunk]
             self.freqs_global[run_number] = freq_global
         else:
-            print('This chunk is empty according to global fit. Skip chunk.')
+            print(' This chunk is empty according to global fit. Skip chunk.')
             return False
 
 
@@ -376,7 +376,6 @@ class Chunk(FamedStar):
         numax = gauss_par[1]
         scaling_dnu = astero.compute_scaling_dnu(numax)
 
-
         # Set a binwidth proportional to the expected separation between adjacent peaks (normally taken as d02/2) if MS
         # or smaller if RG star.
         par_range = max(par0) - min(par0)
@@ -390,7 +389,8 @@ class Chunk(FamedStar):
         par_hist, asef_hist = self.compute_asef(par0,nest_iter,n_bins)
         
         # Find the local maxima using a hill-climbing algorithm on the envelope function        
-        index_maximum = self.hill_climbing(par_hist,asef_hist,self.threshold_asef,self.cp.min_bin_separation)
+        threshold = self.threshold_asef*np.max(asef_hist)
+        index_maximum = self.hill_climbing(par_hist,asef_hist,threshold,self.cp.min_bin_separation)
         maximum = par_hist[index_maximum]
         asef_maximum = asef_hist[index_maximum]
 
@@ -460,7 +460,7 @@ class Chunk(FamedStar):
         if len(filename_summary) > 0:
             d02_array = np.zeros(len(filename_summary))
             for jj in range(0, len(filename_summary)):
-                d02_chunk = np.loadtxt(filename_summary[jj],usecols=(1,), max_rows=1)
+                d02_chunk = np.loadtxt(filename_summary[jj],usecols=(1,), skiprows=1, max_rows=1)
                 d02_array[jj] = d02_chunk
     
             # Remove zeros from possible solutions (e.g. if a chunk had no l=2 mode detected)
@@ -1012,7 +1012,7 @@ class Chunk(FamedStar):
                         #upper_bound_radial = upper_bound_radial[0]
                         tmp_hist_range = np.where((par_hist < upper_bound_radial) & (par_hist >= lower_bound_radial))[0]
                     else:
-                        print('Not enough bins in the specified ASEF range for l=0. Quitting program.')
+                        print(' Not enough bins in the specified ASEF range for l=0. Quitting program.')
                         return False
                     iteration +=1
 
@@ -2465,6 +2465,7 @@ class Chunk(FamedStar):
 
                     if os.path.isfile(rotation_probability_filename):
                         if (duplicity_probability_final[local_index] != -99.0):
+                            # Both the rotation and duplicity tests are available.
                             p_FE,p_GE,p_GF,left_freq,right_freq,left_fwhm,right_fwhm,central_freq,rot_split,cosi = np.loadtxt(rotation_probability_filename, usecols=(0,1,2,4,5,6,7,8,9,10),unpack=True)
                     
                             max_p_FE = round(max(p_FE),3)
@@ -2475,9 +2476,10 @@ class Chunk(FamedStar):
                                 flag_duplicity_split = 1
                                 freq_duplet = [np.mean(left_freq),np.mean(right_freq)]
                         else:
+                            # This means that the duplicity test was not conducted, i.e. only the rotation test is available.
                             p_FE,central_freq,rot_split,cosi = np.loadtxt(rotation_probability_filename, usecols=(0,2,3,4),unpack=True)
                             max_p_FE = round(max(p_FE),3)
-                               
+
                         external_indices = np.where(freq1_final != freq_local)[0]
                         if flag_duplicity_split==1:
                             # In this case the duplicity is the favored scenario.
@@ -2565,7 +2567,9 @@ class Chunk(FamedStar):
                             else:
                                 angular_degree_duplet = [1,1]
                                 order_number_duplet = [enn_radial-1,enn_radial-1]
-                    
+                   
+                            # Check whether there are frequencies other than this duplet
+
                             if len(external_indices) > 0:
                                 range_maximum_final = np.hstack((range_maximum_final[:,external_indices],range_maximum_new))
                                 divisions_maximum_final = np.hstack((divisions_maximum_final[:,external_indices],divisions_maximum_new))
@@ -2584,8 +2588,8 @@ class Chunk(FamedStar):
                                 # that the peak is split up again later on.
                         
                                 detection_probability_final = np.append(detection_probability_final[external_indices],np.zeros(2) + detection_probability_final[local_index])
-                                rotation_probability_final = np.append(rotation_probability_final[external_indices],np.zeros(2)-99.0)
-                                duplicity_probability_final = np.append(duplicity_probability_final[external_indices],np.zeros(2)-99.0)
+                                rotation_probability_final = np.append(rotation_probability_final[external_indices],np.zeros(2) + rotation_probability_final[local_index])
+                                duplicity_probability_final = np.append(duplicity_probability_final[external_indices],np.zeros(2) + duplicity_probability_final[local_index])
                                 blending_profile_flag_final = np.append(blending_profile_flag_final[external_indices],np.zeros(2,dtype=int))
                                 sinc_profile_flag_final = np.append(sinc_profile_flag_final[external_indices],np.zeros(2,dtype=int))
                        
@@ -2625,8 +2629,8 @@ class Chunk(FamedStar):
                                 # that the peak is split up again later on.
                         
                                 detection_probability_final = np.zeros(2) + detection_probability_final[local_index]
-                                rotation_probability_final = np.zeros(2) - 99.0
-                                duplicity_probability_final = np.zeros(2) - 99.0
+                                rotation_probability_final = np.zeros(2) + rotation_probability_final[local_index]
+                                duplicity_probability_final = np.zeros(2) + duplicity_probability_final[local_index]
                                 blending_profile_flag_final = np.zeros(2,dtype=int)
                                 sinc_profile_flag_final = np.zeros(2,dtype=int)
                     
@@ -2868,10 +2872,10 @@ class Chunk(FamedStar):
         # Print summary infomation of the run
         if self.cp.print_on_screen:
             if n_freq_final != 0:
-                print('\nFrequency     sig\t n\t l\t m')
+                print('\n Frequency     sig\t n\t l\t m')
                 for i in range(0, n_freq_final):
-                    print('{:.4f}  {:10.4f}\t {:d}\t {:d}\t {:d} '.format(freq1_final[i],freq_sig1_final[i],order_number_final[i],angular_degree_final[i],azimuthal_number_final[i]))
-                print(' ------------------------------------------\n')
+                    print(' {:.4f}  {:10.4f}\t {:d}\t {:d}\t {:d} '.format(freq1_final[i],freq_sig1_final[i],order_number_final[i],angular_degree_final[i],azimuthal_number_final[i]))
+                print(' --------------------------------------------\n')
                     
 
         # Save final outputs
@@ -2946,10 +2950,10 @@ class Chunk(FamedStar):
         plt.style.use(self.cp.famed_path/self.cp.mplstyle)
         
         if chunk_number is not None:
-            print('Making plot for chunk:',chunk_number)
+            print(' Making plot for chunk:',chunk_number)
             famed_plots.chunk_plot(self,chunk_number)
         else:
-            print('Need to provide a chunk number to plot.')
+            print(' Need to provide a chunk number to plot.')
             return
             
         if self.cp.save_png:

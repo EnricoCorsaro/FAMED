@@ -215,28 +215,45 @@ def epsilon_plot(famed_obj,ax=None):
         Axes to plot this figure to. If None, the current axes are cleared and
         the plot is created on the full figure.
     """
+    epsi_variation = (famed_obj.epsilon - famed_obj.epsi_fit)/famed_obj.epsi_fit * 100.0
+
     if ax is None:
         plt.clf()
         ax = plt.axes()
     if famed_obj.acf_dnu > famed_obj.cp.dnu_threshold:
         ax.set_ylabel(r'$\epsilon$')
         ax.set_xlabel(r'$T_{\mathrm{eff}}$')
-        ax.plot(famed_obj.epsi_fit_teff_arr,famed_obj.epsi_fit_epsi_arr,'o',mfc=famed_obj.cp.epsi_dots, mec=famed_obj.cp.epsi_edge)
+        ax.plot(famed_obj.epsi_fit_teff_arr,famed_obj.epsi_fit_epsi_arr,'o',mfc=famed_obj.cp.epsi_dots, mec=famed_obj.cp.epsi_edge,ms=3)
         ax.plot(famed_obj.epsi_fit_teff_arr,famed_obj.epsi_fit_arr,'-',c=famed_obj.cp.epsi_line)
+        
         ax.axhline(famed_obj.epsi_fit,ls='--',color=famed_obj.cp.epsi_mark)
         ax.axvline(famed_obj.teff,ls='--',color=famed_obj.cp.epsi_mark)
         ax.plot([famed_obj.teff],[famed_obj.epsi_fit],'s',ms=8,mfc=famed_obj.cp.epsi_mark,mec=famed_obj.cp.epsi_edge)
+
+        ax.axhline(famed_obj.epsilon,ls='--',color=famed_obj.cp.epsi_mark2)
+        ax.axvline(famed_obj.teff,ls='--',color=famed_obj.cp.epsi_mark2)
+        ax.plot([famed_obj.teff],[famed_obj.epsilon],'o',ms=8,mfc=famed_obj.cp.epsi_mark2,mec=famed_obj.cp.epsi_edge)
         ax.invert_xaxis()
         ax.invert_yaxis()
-        ax.text(.6,.8,r'$\epsilon = %.3f$'%famed_obj.epsi_fit,transform=ax.transAxes,color=famed_obj.cp.epsi_mark)        
+        ax.text(.605,.8,r'$\epsilon_{\mathrm{int}} = %.3f$'%famed_obj.epsi_fit,transform=ax.transAxes,color=famed_obj.cp.epsi_mark,fontsize='small')
+        ax.text(.595,.7,r'$\epsilon_{\mathrm{ech}} = %.3f$'%famed_obj.epsilon,transform=ax.transAxes,color=famed_obj.cp.epsi_mark2,fontsize='small')
+        ax.text(.640,.6,r'$(%.2f \,\%%)$'%epsi_variation,transform=ax.transAxes,color=famed_obj.cp.epsi_mark2,fontsize='small')
     else:
         ax.set_xlabel(r'$\epsilon$')
         ax.set_ylabel(r'$\Delta\nu$ ($\mu$Hz)')
         ax.plot(famed_obj.epsi_fit_epsi_arr,famed_obj.epsi_fit_dnu_arr,'-',c=famed_obj.cp.epsi_line)
+
         ax.axvline(famed_obj.epsi_fit,ls='--',color=famed_obj.cp.epsi_mark)
         ax.axhline(famed_obj.acf_dnu,ls='--',color=famed_obj.cp.epsi_mark)
         ax.plot([famed_obj.epsi_fit],[famed_obj.acf_dnu],'s',ms=8,mfc=famed_obj.cp.epsi_mark,mec=famed_obj.cp.epsi_edge)
-        ax.text(.2,.8,r'$\epsilon = %.3f$'%famed_obj.epsi_fit,transform=ax.transAxes,color=famed_obj.cp.epsi_mark)
+
+        ax.axvline(famed_obj.epsilon,ls='--',color=famed_obj.cp.epsi_mark2)
+        ax.axhline(famed_obj.dnu,ls='--',color=famed_obj.cp.epsi_mark2)
+        ax.plot([famed_obj.epsilon],[famed_obj.dnu],'o',ms=8,mfc=famed_obj.cp.epsi_mark2,mec=famed_obj.cp.epsi_edge)
+
+        ax.text(.205,.8,r'$\epsilon_{\mathrm{int}} = %.3f$'%famed_obj.epsi_fit,transform=ax.transAxes,color=famed_obj.cp.epsi_mark,fontsize='small')
+        ax.text(.2,.7,r'$\epsilon_{\mathrm{ech}} = %.3f$'%famed_obj.epsilon,transform=ax.transAxes,color=famed_obj.cp.epsi_mark2,fontsize='small')
+        ax.text(.230,.6,r'$(%.2f \,\%%)$'%epsi_variation,transform=ax.transAxes,color=famed_obj.cp.epsi_mark2,fontsize='small')
         plt.xlim(min(famed_obj.epsi_fit_epsi_arr),max(famed_obj.epsi_fit_epsi_arr))
         plt.ylim(min(famed_obj.epsi_fit_dnu_arr),max(famed_obj.epsi_fit_dnu_arr))
 

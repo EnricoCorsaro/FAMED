@@ -224,14 +224,14 @@ class FamedStar(object):
         sampling_counts = np.zeros(n_maxima)
         spsd_maximum = np.zeros(n_maxima)
         nest_iter = np.arange(len(par0))
-        range_maximim_old = range_maximum
+        range_maximum_old = range_maximum
         freqbin = freq[1]-freq[0]
 
         for i in range(0, n_maxima):
             # Consider the frequency range around the local maximum
             iterations = 0
 
-            while iterations < self.cp.max_iterations_frequency + 1:
+            while iterations < self.cp.max_iterations_frequency:
                 upper_bound = range_maximum[1,i]
                 lower_bound = range_maximum[0,i]
                 tmp_freq_range = np.where((freq >= lower_bound) & (freq <= upper_bound))[0]
@@ -264,8 +264,8 @@ class FamedStar(object):
                 # Weighted by nested iteration value
                 freq1[i] = np.sum(par0_range*tmp_range**2)/np.sum(tmp_range**2)
                 freq_sig1[i] = np.sqrt(np.sum((par0_range-freq1[i])**2*tmp_range**2)/np.sum(tmp_range**2))
-
-                if iterations == 1:
+                
+                if iterations == self.cp.max_iterations_frequency - 1:
                     break
 
                 # Improve frequency ranges for computation of uncertainties and
@@ -279,6 +279,7 @@ class FamedStar(object):
                 # Try to make ranges extend by at least sigma * Y times (usually 1) on each side
                 left_freq = freq1[i]-freq_sig1[i]*self.cp.min_sigma_range
                 right_freq = freq1[i]+freq_sig1[i]*self.cp.min_sigma_range
+                
                 if lower_bound > left_freq:
                     if i == 0:
                         if left_freq <= np.min(par_hist):

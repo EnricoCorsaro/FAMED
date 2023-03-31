@@ -180,13 +180,13 @@ class Global(FamedStar):
         nyq = np.loadtxt(self.star_dir/'NyquistFrequency.txt')
 
         if self.cp.print_on_screen:
-            print('---------------------------------------------------')
+            print(' ---------------------------------------------------')
             print(' Parameter range (microHz): [',str(np.min(par0)),', ', str(np.max(par0)),']')
-            print('---------------------------------------------------\n')
-            print('-------------------------------------------------')
+            print(' ---------------------------------------------------\n')
+            print(' -------------------------------------------------')
             print(' Minimum PSD frequency: ',str(np.min(freq)),' muHz')
             print(' Maximum PSD frequency: ',str(np.max(freq)),' muHz')
-            print('-------------------------------------------------\n')
+            print(' -------------------------------------------------\n')
 
 
         # Load the nuMax information
@@ -365,10 +365,9 @@ class Global(FamedStar):
 
             dnu_prior = [fit_dnu*self.cp.dnu_prior_lower_fraction,fit_dnu*self.cp.dnu_prior_upper_fraction]
             d02_prior = [ap['d02'],ap['d02']]
+            d01_prior = [ap['d01'],ap['d01']]
 
-            if fit_dnu < self.cp.dnu_tip:
-                d01_prior = [ap['d01'],ap['d01']]
-            else:
+            if (fit_dnu >= self.cp.dnu_tip) & (self.cp.remove_dipole_peak == 1):
                 d01_prior = [99.0,99.0]
 
             d13_prior = [99.0,99.0]
@@ -1002,8 +1001,8 @@ class Global(FamedStar):
 
         # Save the value of dnu from ACF and the value of epsilon from diagram
         with open(peakbagging_filename_global, 'w') as f:
-            f.write('# nuMax (microHz), DeltaNu_ACF (microHz), DeltaNu_fit (microHz), epsilon, alpha, Teff (K), N_chunks, Flag depressed dipole\n')
-            f.write('{:.4f}  {:.4f}  {:.4f}  {:.4f}  {:.4f}  {:.1f}  {:d}  {:d}\n'.format(numax,acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole))
+            f.write('# nuMax (microHz), DeltaNu_ACF (microHz), DeltaNu_fit (microHz), epsilon, epsilon (interpolated), alpha, Teff (K), N_chunks, Flag depressed dipole\n')
+            f.write('{:.4f}  {:.4f}  {:.4f}  {:.4f}  {:.4f}   {:.4f}  {:.1f}  {:d}  {:d}\n'.format(numax,acf_dnu,best_dnu,best_epsi,interp_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole))
 
             # Save the frequency positions of each chunk identified in GLOBAL.
             f.write('# Chunk index, start and end frequency values for each chunk (one per line), SNR\n')
