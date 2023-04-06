@@ -12,6 +12,7 @@ global_subdir global
 save_complete_lists 0
 save_png 1
 save_eps 0
+plot_total_solution 0
 print_on_screen 1
 prior_filename prior_hyperParameters
 background_run_number 00

@@ -104,6 +104,10 @@ if keyword_set(chunk) then begin
             find_islands_chunk,catalog_id,star_id,run_index,threshold_asef,teff,/external
         endelse
     endfor
+
+    if info.plot_total_solution eq 1 then begin
+        plot_psd_total,catalog_id,star_id,teff
+    endif
 endif
 
 ; Perform ECHELLE modality

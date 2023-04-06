@@ -59,6 +59,7 @@ info = {   root_path:                             root_path,                    
            save_test_files:                       (par_value(where(par_name eq 'save_test_files')))[0],                            $
            save_png:                              save_png,                                                                        $
            save_eps:                              save_eps,                                                                        $
+           plot_total_solution:                   (fix(par_value(where(par_name eq 'plot_total_solution'))))[0],                   $
            print_on_screen:                       (par_value(where(par_name eq 'print_on_screen')))[0],                            $
            background_run_number:                 (par_value(where(par_name eq 'background_run_number')))[0],                      $
            n_threads:                             (par_value(where(par_name eq 'n_threads')))[0],                                  $
@@ -380,7 +381,7 @@ endif else begin
     label_charthick =    2.5
     label_color =        60 
     psd_smth_thick =     3 
-    psd_smth_color =     100
+    psd_smth_color =     90
     bg_level_color =     160 
     psd_smth_inset_color =   208
     background_psd =     50

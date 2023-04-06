@@ -26,7 +26,7 @@ peakbagging_filename_global = info.peakbagging_results_dir + catalog_id + star_i
                                 info.isla_subdir + '_' + info.global_subdir + '_' + 'GLOBAL.txt'
 
 peakbagging_filename_chunk = info.peakbagging_results_dir + catalog_id + star_id + '/' + info.summary_subdir + '/'  $
-                             + catalog_id + star_id + info.peakbagging_filename_label + '_' + info.isla_subdir + '_'
+                             + catalog_id + star_id + info.peakbagging_filename_label + info.isla_subdir + '_'
 
 ; Copy FAMED configuring parameters used in this run
 
@@ -205,8 +205,8 @@ if info.print_on_screen eq 1 then begin
         device,decomposed=0,true_color=8,retain=2
     endif else begin
         set_plot,'PS'
-        filename_star = star_dir + info.figs_subdir + '/' + catalog_id + star_id + '_' + info.isla_subdir + '_' + run + '_' + modality + '.eps'
-        device,filename=filename_star,xs=pp.xsize,ys=pp.ysize,/encapsulated,/color,bits=8
+        filename_star = star_dir + info.figs_subdir + '/' + catalog_id + star_id + '_' + info.isla_subdir + '_' + run + '_' + modality
+        device,filename=filename_star + '.eps',xs=pp.xsize,ys=pp.ysize,/encapsulated,/color,bits=8
     endelse
 endif
 
@@ -3282,8 +3282,6 @@ endif
 ; Plot the original PSD and a smoothed version of it by the mean linewidth found.
 ; Overplot an inset of the PSD if a global approach is used, to show the detail of the mode identification.
 ; -------------------------------------------------------------------------------------------------------------------
-separations = fltarr(n_freq_final + 1)
-
 if info.print_on_screen eq 1 then begin
     ; Update smoothing window using fitted FWHM of the chunk radial mode
 
@@ -3302,7 +3300,7 @@ if info.print_on_screen eq 1 then begin
                     order:          order_number_final,       $
                     azimuthal:      azimuthal_number_final,   $
                     lower_freq:     low_cut_frequency,        $
-                    separations:    separations,              $
+                    separations:    fltarr(n_freq_final + 1), $
                     freq_radial:    freq_radial_chunk,        $
                     dnu:            best_dnu,                 $
                     numax:          numax,                    $
@@ -3366,7 +3364,8 @@ endelse
 
 if info.save_eps eq 1 then begin
     device,/close
-    spawn,'open '+filename_star
+    spawn,'pstopdf ' + filename_star  + '.eps'
+    spawn,'open ' + filename_star  + '.pdf'
     set_plot,'x'
 endif
    
