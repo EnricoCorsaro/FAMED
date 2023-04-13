@@ -49,6 +49,9 @@ def test_chunk_steps(silent_remove=False):
         pdf.savefig()
     pdf.close()
 
+    if star.cp.plot_total_solution:
+    star.make_chunk_plots()
+
 def test_run(silent_remove=False):
     # All at once
     cat_id = 'KIC'

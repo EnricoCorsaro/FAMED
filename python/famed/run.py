@@ -65,7 +65,10 @@ def CHUNK(catalog_id, star_id, background_run_number=None, force=True):
             else:
                 print('CHUNK {} did not run.'.format(chunk))
         pdf.close()
-        
+    
+    if famed_obj.cp.plot_total_solution:
+        famed_obj.make_chunk_plots()
+
     return famed_obj
 
 def ECHELLE():

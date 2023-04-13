@@ -88,6 +88,9 @@ class Chunk(FamedStar):
             min_linewidths = np.zeros(n_chunks)
             bg_names = np.zeros(n_chunks,dtype='U30')
             run_labels = np.arange(n_chunks)
+            
+            self.freq_left = freq_left
+            self.freq_right = freq_right
 
             # Load the background level of the star
             bg_level = np.loadtxt(self.star_dir/'backgroundLevel.txt', usecols=(1,))
@@ -2952,12 +2955,17 @@ class Chunk(FamedStar):
         if chunk_number is not None:
             print(' Making plot for chunk:',chunk_number)
             famed_plots.chunk_plot(self,chunk_number)
-        else:
-            print(' Need to provide a chunk number to plot.')
-            return
             
-        if self.cp.save_png:
-            plt.savefig(self.star_dir/self.cp.figs_subdir/(self.catalog_id+self.star_id+'_'+self.cp.isla_subdir+'_'+str(chunk_number)+'_CHUNK.png'))
-        if self.cp.save_eps:
-            plt.savefig(self.star_dir/self.cp.figs_subdir/(self.catalog_id+self.star_id+'_'+self.cp.isla_subdir+'_'+str(chunk_number)+'_CHUNK.eps'))
+            if self.cp.save_png:
+                plt.savefig(self.star_dir/self.cp.figs_subdir/(self.catalog_id+self.star_id+'_'+self.cp.isla_subdir+'_'+str(chunk_number)+'_CHUNK.png'))
+            if self.cp.save_eps:
+                plt.savefig(self.star_dir/self.cp.figs_subdir/(self.catalog_id+self.star_id+'_'+self.cp.isla_subdir+'_'+str(chunk_number)+'_CHUNK.eps'))
+        else:
+            print(' Making total plot of the stellar PSD.')
+            famed_plots.chunk_plot(self,None)
+
+            if self.cp.save_png:
+                plt.savefig(self.star_dir/self.cp.figs_subdir/(self.catalog_id+self.star_id+'_'+self.cp.isla_subdir+'_total_PSD_CHUNK.png'))
+            if self.cp.save_eps:
+                plt.savefig(self.star_dir/self.cp.figs_subdir/(self.catalog_id+self.star_id+'_'+self.cp.isla_subdir+'_total_PSD_CHUNK.eps'))
         

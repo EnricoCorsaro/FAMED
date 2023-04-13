@@ -55,18 +55,25 @@ def chunk_plot(famed_obj,chunk=None):
         A FamedStar class object that has been processed through the GLOBAL 
         module of FAMED.
     """
-    fig = plt.figure(figsize=(18,8))
-    plt.clf()
 
-    ax_nested = fig.add_axes([0.05,0.07,0.3,0.9])
-    nested_iterations_plot(famed_obj,ax_nested,chunk=chunk)
-    ax_psd = fig.add_axes([0.42,0.435,0.56,0.42])
-    psd_plot(famed_obj,ax_psd,chunk=chunk)
-    ax_asef = fig.add_axes([0.42,0.07,0.56,0.35],sharex=ax_psd)
-    asef_histogram(famed_obj,ax_asef,chunk=chunk)
-    plt.setp(ax_psd.get_xticklabels(), visible=False)
-    ax_text = fig.add_axes([0.36,0.88,0.65,0.25],xticks=[],yticks=[])
-    text_panel(famed_obj,ax_text,chunk=chunk)
+    if chunk is not None:
+        fig = plt.figure(figsize=(18,8))
+        plt.clf()
+
+        ax_nested = fig.add_axes([0.05,0.07,0.3,0.9])
+        nested_iterations_plot(famed_obj,ax_nested,chunk=chunk)
+        ax_psd = fig.add_axes([0.42,0.435,0.56,0.42])
+        psd_plot(famed_obj,ax_psd,chunk=chunk)
+        ax_asef = fig.add_axes([0.42,0.07,0.56,0.35],sharex=ax_psd)
+        asef_histogram(famed_obj,ax_asef,chunk=chunk)
+        plt.setp(ax_psd.get_xticklabels(), visible=False)
+        ax_text = fig.add_axes([0.36,0.88,0.65,0.25],xticks=[],yticks=[])
+        text_panel(famed_obj,ax_text,chunk=chunk)
+    else:
+        fig = plt.figure(figsize=(18,6))
+        plt.clf()
+        ax_psd_total = fig.add_axes([0.05,0.1,0.94,0.88])
+        psd_total_plot(famed_obj,ax_psd_total)
 
 def complete_plot(famed_obj):
     print('This feature is not yet implemented')
@@ -102,7 +109,7 @@ def nested_iterations_plot(famed_obj,ax=None,chunk=None):
         
 def psd_plot(famed_obj,ax=None,chunk=None):
     """
-    Plot the PSD and identified modes from the GLOBAL module of FAMED.
+    Plot the PSD and identified modes from the GLOBAL or CHUNK module of FAMED.
 
     Parameters
     ----------
@@ -173,7 +180,7 @@ def psd_plot(famed_obj,ax=None,chunk=None):
         
 def psd_inset_plot(famed_obj,ax=None,chunk=None):
     """
-    Plot a small inset of the PSD centered around numax
+    Plot a small inset of the PSD centered around nuMax
 
     Parameters
     ----------
@@ -201,6 +208,103 @@ def psd_inset_plot(famed_obj,ax=None,chunk=None):
     ax.yaxis.set_minor_locator(y_minor)
     ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     plt.setp(ax.get_yticklabels(), visible=False)
+
+def psd_total_plot(famed_obj,ax=None):
+    """
+    Plot the total PSD of the oscillating region and the corresponding identified modes from the CHUNK module of FAMED.
+
+    Parameters
+    ----------
+    famed_obj : FamedStar object
+        A FamedStar class object that has been processed through the GLOBAL 
+        module of FAMED.
+    ax : matplotlib.pyplot.axes object, default: None
+        Axes to plot this figure to. If None, the current axes are cleared and
+        the plot is created on the full figure.
+ """
+    freq_total = np.array([])
+    bg_level_total = np.array([])
+    psd_total = np.array([])
+    spsd_total = np.array([])
+    modes_total = np.array([])
+    orders_total = np.array([])
+    degrees_total = np.array([])
+    sigs_total = np.array([])
+
+    for j in range(0,famed_obj.n_chunks-1):
+        freq, psd, spsd, bg_level = famed_obj.freq[j], famed_obj.psd[j], famed_obj.spsd[j], famed_obj.bg_level[j]
+        modes,orders,degrees,sigs = famed_obj.freqs[j], famed_obj.orders[j], famed_obj.degrees[j], famed_obj.freqs_sig[j]
+        freq_total = np.append(freq_total,freq)
+        psd_total = np.append(psd_total,psd)
+        spsd_total = np.append(spsd_total,spsd)
+        bg_level_total = np.append(bg_level_total,bg_level)
+        modes_total = np.append(modes_total,modes)
+        orders_total = np.append(orders_total,orders)
+        degrees_total = np.append(degrees_total,degrees)
+        sigs_total = np.append(sigs_total,sigs)
+
+    freq_total,indices = np.unique(freq_total,return_index=True)
+    psd_total = psd_total[indices]
+    spsd_total = spsd_total[indices]
+    bg_level_total = bg_level_total[indices]
+
+    modes_total,indices = np.unique(modes_total,return_index=True)
+    orders_total = orders_total[indices]
+    degrees_total = degrees_total[indices]
+    sigs_total = sigs_total[indices]
+    orders_total = orders_total.astype(int)
+    degrees_total = degrees_total.astype(int)
+
+    if ax is None:
+        plt.clf()
+        ax = plt.axes()
+    
+    ax.set_ylabel(r'PSD (ppm$^2/\mu$Hz)')
+    ax.set_xlabel(r'Frequency ($\mu$Hz)')
+
+    min_freq = max([min(modes_total)-famed_obj.best_dnu/2.0,min(freq_total)])
+    max_freq = min([max(modes_total)+famed_obj.best_dnu/2.0,max(freq_total)])
+
+    ax.semilogy(freq_total,psd_total,'-',c=famed_obj.cp.psd_psd)
+    ax.semilogy(freq_total,spsd_total,'-',c=famed_obj.cp.psd_spsd,lw=2)
+    ax.semilogy(freq_total,bg_level_total,'--',c=famed_obj.cp.psd_bg,lw=2)
+    ax.set_xlim(min_freq,max_freq)
+    ax.set_ylim(min(bg_level_total)*.85,max(spsd_total)*100)
+
+    
+    # nu_max arrow
+    ann = ax.annotate('',xy=(famed_obj.numax,.92),xycoords=transforms.blended_transform_factory(ax.transData,ax.transAxes),xytext=(famed_obj.numax,1),textcoords=transforms.blended_transform_factory(ax.transData,ax.transAxes),arrowprops=dict(color=famed_obj.cp.numax_arrow, lw=3, arrowstyle='-|>'))
+    ann.arrow_patch.set_clip_box(ax.bbox)
+
+    # Shading for global regions
+    for i in range(0,len(famed_obj.freq_left)-1):
+        if i%2 == 0:
+            ax.axvspan(famed_obj.freq_left[i],famed_obj.freq_right[i],color=famed_obj.cp.psd_chunk3,alpha=1,ec='None')
+            #ax.text((famed_obj.freq_left[i]+famed_obj.freq_right[i+1])/2,.88,r'$%i$'%i,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),fontweight='heavy',fontsize='medium',color=famed_obj.cp.psd_chunkN,zorder=4,clip_on=True)
+        else:
+            ax.axvspan(famed_obj.freq_left[i],famed_obj.freq_right[i],color=famed_obj.cp.psd_chunk4,alpha=1,ec='None')
+            #ax.text((famed_obj.freq_left[i]+famed_obj.freq_right[i+1])/2,.88,r'$%i$'%i,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),fontweight='heavy',fontsize='medium',color=famed_obj.cp.psd_chunkN,zorder=4,clip_on=True)
+    
+    #### Fade-away shading of regions for l=0,1,2,3  at back
+    colors = ['b','r','g','silver']
+    intervals = np.linspace(.1,1,50)#**3
+    mode_number = 0
+
+    if modes_total is not None:
+        for mode,order,degree,sig in zip(modes_total,orders_total,degrees_total,sigs_total):
+            for i in range(0,len(intervals)):
+                plt.axvspan(mode-intervals[i]*3*sig,mode+intervals[i]*3*sig,facecolor=colors[degree],edgecolor=colors[degree],alpha=.01,zorder=1)
+
+            # Mode lines, arrows, and id (n,l) 
+            ax.axvline(mode,ls=':',color=famed_obj.cp.psd_line,zorder=1)
+            if mode_number > 0:
+                if degrees_total[mode_number] != degrees_total[mode_number-1]:
+                    ax.text(mode,.73,'(%i,%i)'%(order,degree),rotation='vertical',ha='right',fontsize='x-small',color=famed_obj.cp.psd_modeid,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),clip_on=True)
+            else:
+                ax.text(mode,.73,'(%i,%i)'%(order,degree),rotation='vertical',ha='right',fontsize='x-small',color=famed_obj.cp.psd_modeid,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),clip_on=True)
+            
+            mode_number += 1
+
 
 def epsilon_plot(famed_obj,ax=None):
     """
