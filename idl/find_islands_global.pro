@@ -263,6 +263,7 @@ endif
 ; Obtain epsilon from an échelle value of the l=0 ridge échelle frequency position.
 ; -------------------------------------------------------------------------------------------------------------------
 
+flag_bad_epsi = 0
 fit_dnu = acf_dnu
 central_freq = numax
 run_subdir = 'sliding'
@@ -648,24 +649,31 @@ while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
         epsilon_upper_limit = cp.upper_epsilon_rg_slope * alog(fit_dnu) + cp.upper_epsilon_rg_offset
         epsilon_lower_limit = cp.lower_epsilon_rg_slope * alog(fit_dnu) + cp.lower_epsilon_rg_offset
         
-        ; The sliding pattern without including the l=1 mode peak may have failed in providing a reliable epsilon.
-        ; If this is the case repeat the fit by including a l=1 mode peak, having a position fixed to the p-mode frequency of the
-        ; asymptotic relation.
+        ; The sliding pattern for evolved stars may have failed in providing a reliable epsilon.
+        ; If this is the case, and the dipole peak was removed by configuration, repeat the fit by including a l=1 mode peak, 
+        ; having a position fixed to the p-mode frequency of the asymptotic relation.
 
         if (median_echelle_epsi ge epsilon_upper_limit) or ((median_echelle_epsi le epsilon_lower_limit) and (fit_dnu ge cp.dnu_cl2)) then begin
-            if info.print_on_screen eq 1 then begin
-                if sliding_iteration gt 0 then begin
+            if sliding_iteration gt 0 then begin
+                if info.print_on_screen eq 1 then begin
                     print,' Repeating the sliding-pattern-fit did not solve the issue. Epsilon is likely to be wrong for this star.'
-                endif else begin
+                endif
+                flag_bad_epsi = 1
+            endif else begin
+                if info.print_on_screen eq 1 then begin
                     if median_echelle_epsi ge epsilon_upper_limit then begin
-                        print,' Repeating the sliding-pattern fit because epsilon exceeds the upper limit for RGs.'
+                        print,' Repeating the sliding-pattern fit by including l=1 (if removed before) because epsilon exceeds the upper limit for RGs.'
                     endif else begin
-                        print,' Repeating the sliding-pattern fit because epsilon exceeds the lower limit for RGs.'
+                        print,' Repeating the sliding-pattern fit by including l=1 (if removed before) because epsilon exceeds the lower limit for RGs.'
                     endelse
-                endelse
-            endif
+                endif
+            endelse
 
-            d01_prior = [ap.d01,ap.d01]
+            if cp.remove_dipole_peak eq 1 then begin
+                d01_prior = [ap.d01,ap.d01]
+            endif else begin
+                flag_repeat_sliding_fit = 0
+            endelse
         endif else begin
             ; Epsilon from the sliding-pattern fit has been validated. Therefore exit the while loop.
             flag_repeat_sliding_fit = 0
@@ -694,7 +702,7 @@ endelse
 
 ; Control check on epsilon for late subgiants/early RGB
 
-interp_epsi_flag = 0
+flag_interp_epsi = 0
 
 if cp.force_epsilon_dnu_value eq 1 then begin
     if fit_dnu le cp.dnu_threshold and fit_dnu ge cp.dnu_cl then begin
@@ -707,15 +715,17 @@ if cp.force_epsilon_dnu_value eq 1 then begin
         
         if (modeid_sliding.degree ne modeid_epsi_dnu.degree) or (diff_radial ge fit_dnu/4.) then begin
             median_echelle_epsi = interp_epsi
-            interp_epsi_flag = 1
+            flag_interp_epsi = 1
+            flag_bad_epsi = 1
+            
+            if info.print_on_screen eq 1 then begin
+                print,' Sliding fit mode identification did not match epsilon-Dnu relation.'
+                print,' Applying correction to epsilon from epsilon-Dnu relation.'
+                print,' '
+            endif
 
             if modeid_epsi_dnu.degree eq 1 then begin
                 radial_freq_reference = freq1(closest(radial_freq_reference2+fit_dnu/2.,freq1))
-
-                if info.print_on_screen eq 1 then begin
-                    print,' Applying correction to epsilon from epsilon-Dnu relation.'
-                    print,' '
-                endif 
             endif else begin
                 radial_freq_reference = radial_freq_reference2
             endelse
@@ -736,15 +746,17 @@ if teff ge cp.teff_sg then begin
 
     if (modeid_sliding.degree ne modeid_teff.degree) or (diff_radial ge fit_dnu/4.) then begin
         median_echelle_epsi = interp_epsi
-        interp_epsi_flag = 1
+        flag_interp_epsi = 1
+        flag_bad_epsi = 1
         
+        if info.print_on_screen eq 1 then begin
+            print,' Sliding fit mode identification did not match epsilon-Teff relation.'
+            print,' Applying correction to epsilon from epsilon-Teff relation.'
+            print,' '
+        endif 
+
         if modeid_teff.degree eq 1 then begin
             radial_freq_reference = freq1(closest(radial_freq_reference2+fit_dnu/2.,freq1))
-
-            if info.print_on_screen eq 1 then begin
-                print,' Applying correction to epsilon from epsilon-Teff relation.'
-                print,' '
-            endif 
         endif else begin
             radial_freq_reference = radial_freq_reference2
         endelse
@@ -912,7 +924,7 @@ while (flag_dnu_fit eq 1) and (iterations lt cp.max_skim_iterations_global) do b
            
             ; If the sliding pattern fit was not successful, i.e. epsilon comes from an interpolated relation, then fit it within a small prior range. 
             
-            if interp_epsi_flag eq 1 then begin
+            if flag_interp_epsi eq 1 then begin
                 epsi_prior = [fit_epsi*cp.epsi_prior_lower_fraction_as,fit_epsi*cp.epsi_prior_upper_fraction_as]
             endif  
         endelse
@@ -1138,7 +1150,8 @@ if (info.save_eps ne 0) or (info.save_png ne 0) then begin
                    n_bins:         n_bins,                 $
                    tolerance:      tolerance,              $
                    n_freq:         n_freq,                 $
-                   n_chunks:       n_chunks                $
+                   n_chunks:       n_chunks,               $
+                   flag_bad_epsi:  flag_bad_epsi           $
                  }
 
     plot_summary,parameters,1

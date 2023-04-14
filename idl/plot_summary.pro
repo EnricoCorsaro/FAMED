@@ -43,9 +43,14 @@ charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=lp.blo
 
 if flag_global eq 1 then begin
     epsi_subscript = 'ech'
-    
-    xyouts,lp.block2_6[0],lp.block2_6[1],'!3'+sp.epsi_str+'!D'+epsi_subscript+'!n = '+strcompress(string(parameters.best_epsi,format='(F0.3)'),/remove_all),    $
-    charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=lp.block2_color,/normal
+   
+    if parameters.flag_bad_epsi eq 1 then begin
+        xyouts,lp.block2_6[0],lp.block2_6[1],'!3'+sp.epsi_str+'!D'+epsi_subscript+'!n = '+strcompress(string(parameters.best_epsi,format='(F0.3)'),/remove_all),    $
+        charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=245,/normal
+    endif else begin
+        xyouts,lp.block2_6[0],lp.block2_6[1],'!3'+sp.epsi_str+'!D'+epsi_subscript+'!n = '+strcompress(string(parameters.best_epsi,format='(F0.3)'),/remove_all),    $
+        charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=lp.block2_color,/normal
+    endelse
 endif else begin
     xyouts,lp.block2_6[0],lp.block2_6[1],'!3'+sp.dp_str+' = '+strcompress(string(parameters.local_dp,format='(F0.1)'),/remove_all) + ' s',    $
     charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=lp.block2_color,/normal

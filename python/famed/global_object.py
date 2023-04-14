@@ -660,21 +660,27 @@ class Global(FamedStar):
                 epsilon_upper_limit  = self.cp.upper_epsilon_rg_slope * np.log(fit_dnu) + self.cp.upper_epsilon_rg_offset
                 epsilon_lower_limit  = self.cp.lower_epsilon_rg_slope * np.log(fit_dnu) + self.cp.lower_epsilon_rg_offset
 
-                # The sliding pattern without including the l=1 mode peak has
-                # failed in providing a reliable epsilon. Therefore repeat the
-                # fit by including the l=1 model peak, having the position fixed
+                # The sliding pattern for evolved stars may have
+                # failed in providing a reliable epsilon. If this is the case, 
+                # and the dipole peak was removed by configuration, 
+                # repeat the fit by including a l=1 mode peak, having the position fixed
                 # to the p-mode frequency of the asymptotic relation
                 if (median_echelle_epsi >= epsilon_upper_limit) or ((median_echelle_epsi <= epsilon_lower_limit) & (fit_dnu >= self.cp.dnu_cl2)):
-                    if self.cp.print_on_screen:
-                        if sliding_iteration>0:
-                            print('Repeating the sliding-pattern fit did not solve the issue. Epsilon is likely to be wrong for this star')
-                            self.bad_epsi = True
-                        else:
+                    if sliding_iteration>0:
+                        if self.cp.print_on_screen:
+                            print(' Repeating the sliding-pattern fit did not solve the issue. Epsilon is likely to be wrong for this star')
+                        self.bad_epsi = True
+                    else:
+                        if self.cp.print_on_screen:
                             if median_echelle_epsi >= epsilon_upper_limit: 
-                                print('Repeating the sliding-pattern fit because epsilon exceeds the upper limit for RGs')
+                                print(' Repeating the sliding-pattern fit by including l=1 (if removed before) because epsilon exceeds the upper limit for RGs')
                             else:
-                                print('Repeating the sliding-pattern fit because epsilon exceeds the lower limit for RGs')
-                    d01_prior = [ap['d01'],ap['d01']]
+                                print(' Repeating the sliding-pattern fit by including l=1 (if removed before) because epsilon exceeds the lower limit for RGs')
+                    
+                    if self.cp.remove_dipole_peak == 1:
+                        d01_prior = [ap['d01'],ap['d01']]
+                    else:
+                        flag_repeat_sliding_fit = False
                 else:
                     # Epsilon from the sliding-pattern fit has been validated.
                     # Therefore exit the while loop.
@@ -697,7 +703,7 @@ class Global(FamedStar):
                 fit_d01 = 0
 
         # Control check on epsilon for late subgiants/early RGB
-        interp_epsi_flag = False
+        flag_interp_epsi = False
 
         if self.cp.force_epsilon_dnu_value:
             if (fit_dnu <= self.cp.dnu_threshold) & (fit_dnu >= self.cp.dnu_cl):
@@ -710,15 +716,15 @@ class Global(FamedStar):
 
                 if (modeid_sliding['degree'] != modeid_epsi_dnu['degree']) or (diff_radial >= fit_dnu/4):
                     median_echelle_epsi = interp_epsi
-                    interp_epsi_flag = True
+                    flag_interp_epsi = True
                     self.bad_epsi = True
+                    
                     if self.cp.print_on_screen:
-                        print('Sliding mode identification did not match epsilon-dnu relation.\n')
+                        print(' Sliding fit mode identification did not match epsilon-Dnu relation.\n')
+                        print(' Applying correction to epsilon from epsilon-Dnu relation.\n')
                     
                     if modeid_epsi_dnu['degree'] == 1:
                         radial_freq_reference = closest(radial_freq_reference2+fit_dnu/2,freq1)
-                        if self.cp.print_on_screen:
-                            print('Applying correction to epsilon from epsilon-Dnu relation.\n')
                     else:
                         radial_freq_reference = radial_freq_reference2
 
@@ -735,15 +741,15 @@ class Global(FamedStar):
 
             if (modeid_sliding['degree'] != modeid_teff['degree']) or (diff_radial >= fit_dnu/4):
                     median_echelle_epsi = interp_epsi
-                    interp_epsi_flag = True
+                    flag_interp_epsi = True
                     self.bad_epsi = True
+
                     if self.cp.print_on_screen:
-                        print('Sliding mode identification did not match epsilon-Teff relation well.\n')
+                        print(' Sliding fit mode identification did not match epsilon-Teff relation.\n')
+                        print(' Applying correction to epsilon from epsilon-Teff relation.\n')
                     
                     if modeid_teff['degree'] == 1:
                         radial_freq_reference = closest(radial_freq_reference2+fit_dnu/2,freq1)
-                        if self.cp.print_on_screen:
-                            print('Applying correction to epsilon from epsilon-Teff relation well.\n')
                     else:
                         radial_freq_reference = radial_freq_reference2
 
@@ -884,7 +890,7 @@ class Global(FamedStar):
                     alpha_prior = [0.0,0.0]
                 else:
                     alpha_prior = [self.cp.alpha_prior_lower_as,self.cp.alpha_prior_upper_as]
-                    if interp_epsi_flag:
+                    if flag_interp_epsi:
                         epsi_prior = [fit_epsi*self.cp.epsi_prior_lower_fraction_as,fit_epsi*self.cp.epsi_prior_upper_fraction_as]
 
                 boundaries = np.array([dnu_prior,epsi_prior,alpha_prior])

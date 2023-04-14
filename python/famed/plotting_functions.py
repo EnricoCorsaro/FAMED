@@ -280,15 +280,15 @@ def psd_total_plot(famed_obj,ax=None):
     for i in range(0,len(famed_obj.freq_left)-1):
         if i%2 == 0:
             ax.axvspan(famed_obj.freq_left[i],famed_obj.freq_right[i],color=famed_obj.cp.psd_chunk3,alpha=1,ec='None')
-            #ax.text((famed_obj.freq_left[i]+famed_obj.freq_right[i+1])/2,.88,r'$%i$'%i,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),fontweight='heavy',fontsize='medium',color=famed_obj.cp.psd_chunkN,zorder=4,clip_on=True)
         else:
             ax.axvspan(famed_obj.freq_left[i],famed_obj.freq_right[i],color=famed_obj.cp.psd_chunk4,alpha=1,ec='None')
-            #ax.text((famed_obj.freq_left[i]+famed_obj.freq_right[i+1])/2,.88,r'$%i$'%i,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),fontweight='heavy',fontsize='medium',color=famed_obj.cp.psd_chunkN,zorder=4,clip_on=True)
     
     #### Fade-away shading of regions for l=0,1,2,3  at back
     colors = ['b','r','g','silver']
     intervals = np.linspace(.1,1,50)#**3
     mode_number = 0
+    shift_step = 0.1
+    shift_count = 0
 
     if modes_total is not None:
         for mode,order,degree,sig in zip(modes_total,orders_total,degrees_total,sigs_total):
@@ -299,9 +299,13 @@ def psd_total_plot(famed_obj,ax=None):
             ax.axvline(mode,ls=':',color=famed_obj.cp.psd_line,zorder=1)
             if mode_number > 0:
                 if degrees_total[mode_number] != degrees_total[mode_number-1]:
-                    ax.text(mode,.73,'(%i,%i)'%(order,degree),rotation='vertical',ha='right',fontsize='x-small',color=famed_obj.cp.psd_modeid,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),clip_on=True)
+                    if degrees_total[mode_number] > degrees_total[mode_number-1]:
+                        shift_count +=1
+                    else:
+                        shift_count = 0
+                    ax.text(mode,.86-shift_step*shift_count,'(%i,%i)'%(order,degree),rotation='vertical',ha='right',fontsize='x-small',color=famed_obj.cp.psd_modeid,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),clip_on=True)
             else:
-                ax.text(mode,.73,'(%i,%i)'%(order,degree),rotation='vertical',ha='right',fontsize='x-small',color=famed_obj.cp.psd_modeid,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),clip_on=True)
+                ax.text(mode,.86,'(%i,%i)'%(order,degree),rotation='vertical',ha='right',fontsize='x-small',color=famed_obj.cp.psd_modeid,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),clip_on=True)
             
             mode_number += 1
 
@@ -480,13 +484,13 @@ def text_panel(famed_obj,ax=None,chunk=None):
 
         # Text 2 global
         if famed_obj.bad_epsi:
-            ax.text(0.15,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{ACF}}$ = %.3f $\mu$Hz''\n'r' SNR = %.1f\, $\epsilon_{\mathrm{ech}}$ = %.3f'%(famed_obj.numax,famed_obj.dnu,famed_obj.acf_dnu,famed_obj.snr,famed_obj.epsilon),fontsize='small',color='red')
-            ax.text(0.15,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{ACF}}$ = %.3f $\mu$Hz''\n'r' SNR = %.1f\,'%(famed_obj.numax,famed_obj.dnu,famed_obj.acf_dnu,famed_obj.snr),fontsize='small',color=famed_obj.cp.text2)
+            ax.text(0.14,.05,r' SNR = %.1f\, $\epsilon_{\mathrm{ech}}$ = %.3f'%(famed_obj.snr,famed_obj.epsilon),fontsize='small',color='red')
+            ax.text(0.14,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz \, $\alpha$ = %.3f''\n'r' $\Delta\nu_{\mathrm{ACF}}$ = %.3f $\mu$Hz''\n'%(famed_obj.numax,famed_obj.dnu,famed_obj.alpha,famed_obj.acf_dnu),fontsize='small',color=famed_obj.cp.text2)
         else:
-            ax.text(0.15,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{ACF}}$ = %.3f $\mu$Hz''\n'r' SNR = %.1f\, $\epsilon_{\mathrm{ech}}$ = %.3f'%(famed_obj.numax,famed_obj.dnu,famed_obj.acf_dnu,famed_obj.snr,famed_obj.epsilon),fontsize='small',color=famed_obj.cp.text2)
+            ax.text(0.14,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz \, $\alpha$ = %.3f''\n'r' $\Delta\nu_{\mathrm{ACF}}$ = %.3f $\mu$Hz''\n'r' SNR = %.1f\, $\epsilon_{\mathrm{ech}}$ = %.3f'%(famed_obj.numax,famed_obj.dnu,famed_obj.alpha,famed_obj.acf_dnu,famed_obj.snr,famed_obj.epsilon),fontsize='small',color=famed_obj.cp.text2)
 
         # Text 3 global
-        ax.text(0.36,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{\nu\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' H$_{\mathrm{max,prior}}$ = %.1e ppm$^2/\mu$Hz''\n'r'  $\alpha$ = %.3f\, $T_{\mathrm{eff}}$ = %i K'%(famed_obj.linewidth_numax,famed_obj.linewidth_numax,famed_obj.hmax_prior,famed_obj.alpha,famed_obj.teff),fontsize='small',color=famed_obj.cp.text3)
+        ax.text(0.38,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{\nu\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' H$_{\mathrm{max,prior}}$ = %.1e ppm$^2/\mu$Hz''\n'r'  $\alpha$ = %.3f\, $T_{\mathrm{eff}}$ = %i K'%(famed_obj.linewidth_numax,famed_obj.linewidth_numax,famed_obj.hmax_prior,famed_obj.alpha,famed_obj.teff),fontsize='small',color=famed_obj.cp.text3)
 
         # Text 4
         ax.text(0.61,.05,r' ASEF$_{\mathrm{threshold}}$ = %.2f \%%''\n'r' ASEF$_{\mathrm{bins}}$ = %i''\n'r' $\Delta\nu_{\mathrm{tolerance}}$ = %.2f \%%''\n'r' N$_{\mathrm{freq}}$ = %i \,\,\,  N$_{\mathrm{orders}}$ = %i'%(100*famed_obj.cp.threshold_asef_global,famed_obj.asef_bins,100*famed_obj.dnu_tol,famed_obj.n_freq,famed_obj.n_chunks),fontsize='small',color=famed_obj.cp.text4)
