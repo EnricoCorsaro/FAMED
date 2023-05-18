@@ -621,6 +621,11 @@ class Global(FamedStar):
                                           'duplet':          False}
 
                 flag_computation_completed = diamonds.run_peakbagging(self.catalog_id, self.star_id, peakbagging_parameters, 0, 1, 0, self.cp.dp_slid, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename)
+            
+                if self.cp.save_test_files != 1:
+                    for k in range(0, self.cp.n_sliding_test):
+                        os.remove(data_range_filenames[k])
+                        os.remove(prior_filenames[k])
             else:
                 if self.cp.print_on_screen:
                     print(' Load information from asymptotic pattern fit with DIAMONDS.')
@@ -637,6 +642,7 @@ class Global(FamedStar):
                 post = np.loadtxt(self.star_dir/self.cp.as_subdir/(run_names[k]+'/peakbagging_posteriorDistribution.txt'))
                 post /= np.max(post)
                 radial_freq_reference = np.sum(par_nu0*post)
+
                 if self.cp.input_radial_freq_reference > 0:
                     radial_freq_reference = self.cp.input_radial_freq_reference
 
@@ -693,7 +699,8 @@ class Global(FamedStar):
 
         median_index = np.where(echelle_epsi_array == median_echelle_epsi)[0]
         radial_freq_reference = radial_freq_reference_array[median_index]
-        
+        radial_freq_reference = radial_freq_reference[0]
+
         if not flag_evolved_star:
             fit_d01 = median_high(d01_array)
         else:
