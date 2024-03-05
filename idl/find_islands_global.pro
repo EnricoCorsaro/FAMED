@@ -733,10 +733,10 @@ if cp.force_epsilon_dnu_value eq 1 then begin
     endif
 endif
 
-; Control check on epsilon for F-type stars
+; Control check on epsilon for stars falling in the Teff-epsilon relation regime
 
-if teff ge cp.teff_sg then begin
-    ; Due to the confusion arising from the strong blending of the modes for F-type stars, the sliding pattern fit may be unreliable.
+if fit_dnu ge cp.dnu_threshold then begin
+    ; Due to the confusion arising from the potential blending of the l=2,0 modes for these stars, the sliding pattern fit may sometimes not be reliable.
     ; In this case check the obtained mode identification against the one using the epsilon-Teff relation 
     
     radial_freq_reference2 = freq1(closest(radial_freq_reference,freq1))
@@ -1168,7 +1168,7 @@ endif
 
 if info.save_eps eq 1 then begin
     device,/close
-    spawn,'pstopdf ' + filename_star  + '.eps'
+    spawn,'epstopdf ' + filename_star  + '.eps'
     spawn,'open ' + filename_star  + '.pdf'
     set_plot,'x'
 endif

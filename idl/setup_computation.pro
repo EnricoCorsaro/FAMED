@@ -132,20 +132,22 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        weight_freq_fraction:               (float(par_value(where(par_name eq 'weight_freq_fraction'))))[0],               $
        weight_freq_fraction_enhanced:      (float(par_value(where(par_name eq 'weight_freq_fraction_enhanced'))))[0],      $
        weight_asef_fraction:               (float(par_value(where(par_name eq 'weight_asef_fraction'))))[0],               $
+       weight_asef_integral_fraction:      (float(par_value(where(par_name eq 'weight_asef_integral_fraction'))))[0],      $
        weight_spsd_fraction:               (float(par_value(where(par_name eq 'weight_spsd_fraction'))))[0],               $
        weight_sampling_fraction:           (float(par_value(where(par_name eq 'weight_sampling_fraction'))))[0],           $
        upper_limit_freq_radial:            (float(par_value(where(par_name eq 'upper_limit_freq_radial'))))[0],            $
        plot_weights_radial:                (fix(par_value(where(par_name eq 'plot_weights_radial'))))[0],                  $
-       max_ratio_search_radial:            (float(par_value(where(par_name eq 'max_ratio_search_radial'))))[0],            $
+       threshold_search_radial_asef_integral:            (float(par_value(where(par_name eq 'threshold_search_radial_asef_integral'))))[0],            $
+       threshold_search_radial_asef_maximum:             (float(par_value(where(par_name eq 'threshold_search_radial_asef_maximum'))))[0],             $
        previous_radial_range_fraction:     (float(par_value(where(par_name eq 'previous_radial_range_fraction'))))[0],     $
        sampling_counts_fraction:           (float(par_value(where(par_name eq 'sampling_counts_fraction'))))[0],           $
-       asef_saturation_fraction:           (float(par_value(where(par_name eq 'asef_saturation_fraction'))))[0],           $
        asef_threshold_scaling_radial:      (float(par_value(where(par_name eq 'asef_threshold_scaling_radial'))))[0],      $
        dnu_lower_cut_fraction:             (float(par_value(where(par_name eq 'dnu_lower_cut_fraction'))))[0],             $
        low_cut_frequency:                  (float(par_value(where(par_name eq 'low_cut_frequency'))))[0],                  $
        d02_scaling_merge_mixed:            (float(par_value(where(par_name eq 'd02_scaling_merge_mixed'))))[0],            $
        d02_factor_search_range:            (float(par_value(where(par_name eq 'd02_factor_search_range'))))[0],            $
-       d02_prior_lower_duplet_fit:         (float(par_value(where(par_name eq 'd02_prior_lower_duplet_fit'))))[0],         $
+       d02_fraction_prior_lower_duplet_fit:         (float(par_value(where(par_name eq 'd02_fraction_prior_lower_duplet_fit'))))[0],         $
+       d02_fraction_prior_upper_duplet_fit:         (float(par_value(where(par_name eq 'd02_fraction_prior_upper_duplet_fit'))))[0],         $
        d02_prior_upper_duplet_fit:         (float(par_value(where(par_name eq 'd02_prior_upper_duplet_fit'))))[0],         $
        d03_upper_scaling_factor:           (float(par_value(where(par_name eq 'd03_upper_scaling_factor'))))[0],           $
        d03_lower_scaling_factor:           (float(par_value(where(par_name eq 'd03_lower_scaling_factor'))))[0],           $
@@ -219,6 +221,7 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        fwhm_magnification_factor_dipole:       (float(par_value(where(par_name eq 'fwhm_magnification_factor_dipole'))))[0],         $
        fwhm_magnification_factor_quadrupole:   (float(par_value(where(par_name eq 'fwhm_magnification_factor_quadrupole'))))[0],     $
        fwhm_magnification_factor_octupole:     (float(par_value(where(par_name eq 'fwhm_magnification_factor_octupole'))))[0],       $
+       asef_octupole_fraction:                 (float(par_value(where(par_name eq 'asef_octupole_fraction'))))[0],                   $
        fwhm_octupole_radial_fraction:          (float(par_value(where(par_name eq 'fwhm_octupole_radial_fraction'))))[0],            $
        dnu_mixed_modes_separation_scaling:     (float(par_value(where(par_name eq 'dnu_mixed_modes_separation_scaling'))))[0],       $
        ; Asteroseismic relations

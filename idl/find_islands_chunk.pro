@@ -108,7 +108,16 @@ format='I,I,F,F,x,F',comment='#',skipline=3+n_chunks,/silent
 ; Select only global frequencies relevant for the chunk
 
 tmp_chunk = where(freq_global le right_bound and freq_global ge left_bound)
+tmp_previous_chunk = where(freq_global lt left_bound)
 if tmp_chunk(0) ne -1 then begin
+    if tmp_previous_chunk(0) ne -1 then begin
+        freq_previous_global = freq_global(tmp_previous_chunk)
+        freq_sig_previous_global = freq_sig_global(tmp_previous_chunk)
+        ell_previous_global = ell_global(tmp_previous_chunk)
+    endif else begin
+        ell_previous_global = -1
+    endelse
+
     freq_global = freq_global(tmp_chunk)
     freq_sig_global = freq_sig_global(tmp_chunk)
     enn_global = enn_global(tmp_chunk)
@@ -121,9 +130,21 @@ endelse
 
 ; Select the radial mode. If the global modality was ran correctly, there should be only one radial mode, but there could be none as well.
 ; If more than one radial mode is present, then pick up the one closest to the right frequency bound of the chunk.
+; Select, if possible, the global radial mode frequency of the previous chunk.
 
 tmp_radial = where(ell_global eq 0)
-if tmp_radial(0) ne -1 then begin
+tmp_previous_radial = where(ell_previous_global eq 0)
+if tmp_previous_radial(0) ne -1 then begin
+    freq_previous_radial_global = freq_previous_global(tmp_previous_radial)
+    freq_sig_previous_radial_global = freq_sig_previous_global(tmp_previous_radial)
+    freq_previous_radial_global = max(freq_previous_radial_global,index)
+    freq_sig_previous_radial_global = freq_sig_previous_radial_global(index)
+endif else begin
+    freq_previous_radial_global = 0
+    freq_sig_previous_radial_global = 0
+endelse
+
+if tmp_radial(0) ne -1 then begin   
     if n_elements(tmp_radial) eq 1 then begin
         enn_radial = enn_global(tmp_radial)
         enn_radial = enn_radial(0)
@@ -323,6 +344,18 @@ endif
 sampling_weights = sampling_counts/total(sampling_counts)
 spsd_weights = spsd_maximum/total(spsd_maximum)
 asef_weights = asef_maximum/total(asef_maximum)
+asef_integral = fltarr(n_elements(index_maximum))
+
+; Evaluate the integral of the ASEF within each maximum range found and use it as a weight
+
+for i=0,n_elements(index_maximum)-1 do begin
+    lower_range = range_maximum(0,i)
+    upper_range = range_maximum(1,i)
+    par_hist_index_range = where(par_hist ge lower_range and par_hist le upper_range)
+    asef_integral(i) = total(asef_hist(par_hist_index_range))
+endfor
+
+asef_integral_weights = asef_integral/total(asef_integral)
 
 if info.print_on_screen eq 1 then begin
    print,' Total number of local maxima found: ',n_maxima
@@ -414,7 +447,6 @@ if reference_central_freq ge numax then begin
                
                 
                 ; Set new global radial mode frequency
-                 
                 freq_radial = freq_previous_radial + best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu))
                 fwhm_radial = get_linewidth(freq_radial,teff,numax)
                
@@ -571,6 +603,12 @@ endif else begin
     endif
 endelse
 
+if info.print_on_screen eq 1 then begin
+    if n_radial_chunk ne 0 then begin
+        oplot,[freq_radial,freq_radial],[0,max(asef_hist)*1.4],linestyle=2,color=160,thick=3
+    endif
+endif
+
 flag_quadrupole_found = 0
 
 if n_radial_chunk ne 0 then begin
@@ -595,10 +633,6 @@ if n_radial_chunk ne 0 then begin
     freq_diff = abs(freq1 - freq_radial)
     freq_weights = 1.d0/freq_diff
     freq_weights /= total(freq_weights)
-    freq_ww = freq_weights/max(freq_weights)
-    asef_ww = asef_weights/max(asef_weights)
-    spsd_ww = spsd_weights/max(spsd_weights)
-    sampling_ww = alog(sampling_counts)/max(alog(sampling_counts))
 
     ; If we have a radial mode solution from previous (or next) chunks, then make the frequency position of the global radial mode a much stronger constraint
     
@@ -607,8 +641,8 @@ if n_radial_chunk ne 0 then begin
         weight_freq_fraction = cp.weight_freq_fraction_enhanced
     endif
 
-    total_ww = weight_freq_fraction*freq_ww + cp.weight_asef_fraction*asef_ww + cp.weight_spsd_fraction*spsd_ww + cp.weight_sampling_fraction*sampling_ww
-    total_ww /= total(total_ww)
+    total_weights = weight_freq_fraction*freq_weights + cp.weight_asef_fraction*asef_weights + cp.weight_spsd_fraction*spsd_weights + cp.weight_sampling_fraction*sampling_weights + cp.weight_asef_integral_fraction*asef_integral_weights
+    total_weights /= total(total_weights)
 
     upper_limit_freq_radial = freq_radial + max_d02*cp.d02_factor_search_range
 
@@ -644,47 +678,62 @@ if n_radial_chunk ne 0 then begin
     endelse
     
     if tmp_radial(0) ne -1 then begin
-        total_ww_radial = total_ww(tmp_radial)
-        max_ww = max(total_ww_radial,index)
+        ; Start by considering as radial mode the one with the highest total weight
+        total_weights_radial = total_weights(tmp_radial)
+        max_weight = max(total_weights_radial,index)
         radial_index = index + min(tmp_radial)
-        min_ww = min(total_ww)
     endif else begin
         print,' The l=0 mode could not be located based on the position from the global fit. '
         print,' This could be caused by the low SNR of the chunk.'
         return
     endelse
-    
+  
     ; Control check for assessing radial mode frequency peak identification
     if cp.plot_weights_radial eq 1 then begin
         loadct,39
         !p.multi=[0,2,1]
         window,2
-        plot,freq1,sampling_ww,psym=-6,yr=[0,1],xr=[min(par_hist),max(par_hist)],xtitle='!3Frequency ('+ sp.freq_unit_str + ')',ytitle='Weights',   $
+        plot,freq1,sampling_weights,psym=-6,yr=[0,max([asef_weights,freq_weights,spsd_weights,asef_integral_weights,sampling_weights])],xr=[min(par_hist),max(par_hist)],xtitle='!3Frequency ('+ sp.freq_unit_str + ')',ytitle='Weights',   $
             xticklen=0.02,yticklen=0.03,xthick=pp.xthick,ythick=pp.ythick,charthick=pp.charthick
-        oplot,freq1,asef_ww,color=200,psym=-6
-        oplot,freq1,freq_ww,color=250,psym=-6
-        oplot,freq1,spsd_ww,color=160,psym=-6
-        plot,freq1,total_ww,psym=-6,xr=[min(par_hist),max(par_hist)],yr=[0,max(total_ww)],/nodata,xtitle='!3Frequency ('+ sp.freq_unit_str + ')',   $
+        oplot,freq1,asef_weights,color=200,psym=-6
+        oplot,freq1,freq_weights,color=250,psym=-6
+        oplot,freq1,spsd_weights,color=160,psym=-6
+        oplot,freq1,asef_integral_weights,color=90,psym=-6
+        plot,freq1,total_weights,psym=-6,xr=[min(par_hist),max(par_hist)],yr=[0,max(total_weights)],/nodata,xtitle='!3Frequency ('+ sp.freq_unit_str + ')',   $
             ytitle='Total Weight',xticklen=0.02,yticklen=0.03,xthick=pp.xthick,ythick=pp.ythick,charthick=pp.charthick
-        oplot,freq1,total_ww,psym=-6,color=90
-        oplot,[freq1(radial_index),freq1(radial_index)],[0,max(total_ww)*1.2],color=205,thick=3,linestyle=2
+        oplot,freq1,total_weights,psym=-6,color=90
+        oplot,freq1,asef_integral_weights,psym=-6,color=250
+        oplot,[freq1(radial_index),freq1(radial_index)],[0,max(total_weights)*1.2],color=205,thick=3,linestyle=2
         return
     endif
-    
+ 
     ; Check if the selected peak is not the adjacent l=2 by assessing the total weight of the subsequent modes.
-    
+
     if radial_index lt n_freq-1 then begin
         candidate_radial_index = where(freq1 gt freq1(radial_index) and freq1 lt upper_limit_freq_radial)
         if candidate_radial_index(0) ne -1 then begin
+            asef_integral_weights_radial = asef_integral_weights(candidate_radial_index)
+            asef_weights_radial = asef_weights(candidate_radial_index)
+            max_asef_integral_weights = asef_integral_weights(radial_index)
+            max_asef_weights = asef_weights(radial_index)
+            
             for kk=0, n_elements(candidate_radial_index)-1 do begin
                 local_index = candidate_radial_index(kk)
-                if total_ww(local_index) gt (abs(max_ww - min_ww)*cp.max_ratio_search_radial + min_ww) then begin
-                    radial_index = local_index
+                if (asef_integral_weights_radial(kk) gt max_asef_integral_weights*cp.threshold_search_radial_asef_integral) and (asef_weights_radial(kk) gt max_asef_weights*cp.threshold_search_radial_asef_maximum) then begin
+                    if kk gt 0 then begin
+                        if asef_integral_weights_radial(kk) gt asef_integral_weights_radial(kk-1) then begin
+                            radial_index = local_index
+                        endif else begin
+                            break
+                        endelse
+                    endif else begin
+                        radial_index = local_index
+                    endelse
                 endif
             endfor
         endif
     endif
-    
+
     freq_radial_chunk = freq1(radial_index)
     freq_sig_radial_chunk = freq_sig1(radial_index)
     low_cut_frequency = freq_radial_chunk - best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)) + freq_sig_radial/2.0 
@@ -703,56 +752,14 @@ if n_radial_chunk ne 0 then begin
             low_cut_frequency = freq_previous_radial + best_dnu*(1.0 + best_alpha*(enn_radial-1 - 0.5 - numax/best_dnu)) + freq_sig_radial/2.
         endif
     endif
-
-    ; However, the l=0 mode from the previous chunk may turnout to be wrong (e.g. if confused with an adjacent l=1 mixed mode). 
-    ; To verify this do some additional check to test whether the selected low cut frequency can be reliable. 
-
-    if freq_radial_chunk gt numax then begin
-        first_chunk_indices = where(freq1 lt min(par_hist) + (max(par_hist) - min(par_hist))/cp.previous_radial_range_fraction)
-        
-        if first_chunk_indices(0) ne -1 then begin
-            first_chunk_sampling_counts = sampling_counts(first_chunk_indices)
-            first_chunk_asef = asef_maximum(first_chunk_indices)
-            
-            ; Do a first check on the sampling counts
+ 
+    ; Apply a check on the upper bound for the low cut frequency
     
-            max_first_chunk_sampling_counts = max(first_chunk_sampling_counts,previous_radial_mode_index)
-            if sampling_counts(radial_index) lt max_first_chunk_sampling_counts*cp.sampling_counts_fraction then begin
-                ; Here update the lower cutting frequency of the chunk, as well as the radial mode index
-    
-                low_cut_frequency2 = freq1(previous_radial_mode_index) + freq_sig_radial_chunk
-                if low_cut_frequency2 gt low_cut_frequency then low_cut_frequency = low_cut_frequency2
-
-                radial_index_new = closest(freq1(previous_radial_mode_index) + best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)),freq1)
-                if sampling_counts(radial_index_new) ge sampling_counts(radial_index) then begin
-                    radial_index = radial_index_new
-                    freq_radial_chunk = freq1(radial_index)
-                endif
-            endif
-
-            ; Do a second check on the ASEF maximum
-    
-            max_first_chunk_asef = max(first_chunk_asef,previous_radial_mode_index)
-            if max_first_chunk_asef*cp.asef_saturation_fraction ge asef_maximum(radial_index) then begin
-                ; Here update the lower cutting frequency of the chunk, as well as the radial mode index, if adequate.
-    
-                low_cut_frequency2 = freq1(previous_radial_mode_index) + freq_sig_radial_chunk
-                if low_cut_frequency2 gt low_cut_frequency then low_cut_frequency = low_cut_frequency2
-
-                radial_index_new = closest(freq1(previous_radial_mode_index) + best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)),freq1)
-                asef_threshold = (dp.isla.max_nested_it + dp.isla.n_live)/cp.asef_threshold_scaling_radial 
-                
-                if asef_maximum(radial_index_new) gt asef_threshold then begin
-                    radial_index = radial_index_new
-                    freq_radial_chunk = freq1(radial_index)
-                endif
-            endif
-        endif
-    endif
-
-    ; Apply a final check on the upper bound for the low cut frequency
-
     if low_cut_frequency gt freq_radial_chunk - best_dnu*cp.dnu_lower_cut_fraction then low_cut_frequency = freq_radial_chunk - best_dnu*cp.dnu_lower_cut_fraction
+
+    ; Finally, control the radial mode soolution from GLOBAL for the previous chunk. This is to avoid that the same radial mode is identified twice in two different chunks.
+    
+    if low_cut_frequency le freq_previous_radial_global + freq_sig_previous_radial_global then low_cut_frequency = freq_previous_radial_global + freq_sig_previous_radial_global
 
     angular_degree(radial_index) = 0
     order_number(radial_index) = enn_radial
@@ -772,20 +779,18 @@ if n_radial_chunk ne 0 then begin
     freq_sig_radial_chunk_org = freq_sig_radial_chunk
 
     flag_quadrupole_found = 1
-    flag_duplet_fit = 0
 
     if best_dnu lt cp.dnu_rg then begin
         ; ---------------------------------
         ; Evolutionary stage: RG
         ; ---------------------------------
-        quadrupole_freq_asymp = freq_radial_chunk - d02
+        quadrupole_freq_asymp = freq_radial_chunk - median_d02
         quadrupole_index = closest(quadrupole_freq_asymp,freq1)
+
         if quadrupole_index ne radial_index then begin
             freq_quadrupole_chunk = freq1(quadrupole_index)
             freq_sig_quadrupole_chunk = freq_sig1(quadrupole_index)
-           
-            ;freq_quadrupole_chunk_org = freq_quadrupole_chunk
-            ;freq_sig_quadrupole_chunk_org = freq_sig_quadrupole_chunk
+          
             range_maximum_quadrupole = range_maximum(*,quadrupole_index)
             range_maximum_radial = range_maximum(*,radial_index)
 
@@ -842,6 +847,8 @@ if n_radial_chunk ne 0 then begin
                     spsd_maximum = spsd_maximum(good_freq)
                     spsd_weights = spsd_maximum/total(spsd_maximum)
                     asef_weights = asef_maximum/total(asef_maximum)
+                    asef_integral = asef_integral(good_freq)
+                    asef_integral_weights = asef_integral/total(asef_integral)
                     n_freq = n_elements(freq1)
                 endif
                 
@@ -858,7 +865,6 @@ if n_radial_chunk ne 0 then begin
                 freq1(quadrupole_index) = freq_quadrupole_chunk
                 freq_sig1(quadrupole_index) = freq_sig_quadrupole_chunk
             endif
-
         endif else begin 
             ; No quadrupole has been found.
     
@@ -874,7 +880,7 @@ if n_radial_chunk ne 0 then begin
         ; For MS stars, take as an upper limit for d02 the value Dnu/4 in order to incorporate also cases with very large d02.
         
         if flag_median_d02_active eq 1 then begin 
-            max_local_d02 = median_d02*cp.d02_factor_search_range
+            max_local_d02 = median_d02*cp.d02_fraction_prior_upper_duplet_fit
         endif else begin
             if best_dnu le cp.dnu_sg then begin
                 ; Here the star is considered a SG
@@ -890,8 +896,7 @@ if n_radial_chunk ne 0 then begin
         ; Set up and run the multi-modal fit for the double peak, after checking whether the run already exists
 
         run_subdir = run + 'A'
-        flag_duplet_fit = 1 
-       
+        
         if (file_test(star_dir + info.isla_subdir + '/' + run_subdir + '/peakbagging_computationParameters.txt') eq 0 or keyword_set(force)) then begin
             ; Set up prior boundaries
         
@@ -902,7 +907,7 @@ if n_radial_chunk ne 0 then begin
                 max_local_d02 = cp.d02_prior_upper_duplet_fit
             endif
 
-            d02_prior = [cp.d02_prior_lower_duplet_fit,max_local_d02]
+            d02_prior = [median_d02*cp.d02_fraction_prior_lower_duplet_fit,max_local_d02]
             boundaries = [freq_prior,height_prior,d02_prior]
 
             filename = star_dir + info.isla_subdir + '/' + info.prior_filename + '_' + run_subdir + '.txt'
@@ -999,6 +1004,7 @@ if n_radial_chunk ne 0 then begin
         spsd_range = spsd(tmp_freq_range)
         spsd_maximum_quadrupole = max(spsd_range)
         asef_maximum_quadrupole = max(asef_hist(tmp_hist_range))
+        asef_integral_quadrupole = total(asef_hist(tmp_hist_range))
         sampling_counts_quadrupole = total(nest_iter(tmp_range))
         freq_sig_quadrupole_chunk = sqrt(total((par0_range-freq_quadrupole_chunk)^2*tmp_range^2)/total(tmp_range^2))
        
@@ -1033,6 +1039,7 @@ if n_radial_chunk ne 0 then begin
         spsd_range = spsd(tmp_freq_range)
         spsd_maximum_radial = max(spsd_range)
         asef_maximum_radial = max(asef_hist(tmp_hist_range))
+        asef_integral_radial = total(asef_hist(tmp_hist_range))
         sampling_counts_radial = total(nest_iter(tmp_range))
         freq_sig_radial_chunk = sqrt(total((par0_range-freq_radial_chunk)^2*tmp_range^2)/total(tmp_range^2))
 
@@ -1059,6 +1066,7 @@ if n_radial_chunk ne 0 then begin
             sampling_weights = sampling_counts/total(sampling_counts)
             asef_maximum = asef_maximum(tmp_outside)
             spsd_maximum = spsd_maximum(tmp_outside)
+            asef_integral = asef_integral(tmp_outside)
         endif
 
         ; Then add up the new l=2,0 frequencies to the list
@@ -1077,6 +1085,7 @@ if n_radial_chunk ne 0 then begin
             sampling_weights = sampling_counts/total(sampling_counts)
             asef_maximum = [asef_maximum,asef_maximum_quadrupole,asef_maximum_radial]
             spsd_maximum = [spsd_maximum,spsd_maximum_quadrupole,spsd_maximum_radial]
+            asef_integral = [asef_integral,asef_integral_quadrupole,asef_integral_radial]
 
             ; Resort by increasing frequency order (useful if there are frequencies above l=0)
             
@@ -1094,6 +1103,8 @@ if n_radial_chunk ne 0 then begin
             spsd_maximum = spsd_maximum(tmp_sort)
             spsd_weights = spsd_maximum/total(spsd_maximum)
             asef_weights = asef_maximum/total(asef_maximum)
+            asef_integral = asef_integral(tmp_sort)
+            asef_integral_weights = asef_integral/total(asef_integral)
             n_freq = n_elements(freq1)
         endif else begin
             ; Only the candidate l=2,0 mode frequencies are available
@@ -1111,6 +1122,8 @@ if n_radial_chunk ne 0 then begin
             spsd_maximum = [spsd_maximum_quadrupole,spsd_maximum_radial]
             spsd_weights = spsd_maximum/total(spsd_maximum)
             asef_weights = asef_maximum/total(asef_maximum)
+            asef_integral = [asef_integral_quadrupole,asef_integral_radial]
+            asef_integral_weights = asef_integral/total(asef_integral)
             n_freq = n_elements(freq1)
         endelse
 
@@ -1147,9 +1160,6 @@ if n_radial_chunk ne 0 then begin
             low_cut_frequency = low_cut_frequency3
         endif
     endif
-
-;save,filename='PSM06550_2_duplet_fit.idl',par_hist,asef_hist,range_maximum,index_maximum,freq1,freq_sig1,freq_radial,freq_radial_chunk,freq_quadrupole_chunk,$
-;    freq,psd,spsd,bg_level_local,order_number,angular_degree,freq_radial_chunk_org,freq_sig_radial_chunk_org    
 endif else begin
      ; -------------------------------------------------------------------------------------------------------------------
      ; CASE 2: No radial mode is found in the chunk from the global modality
@@ -1170,6 +1180,31 @@ endif else begin
      low_cut_frequency = freq_radial_chunk - best_dnu + freq_sig_dipole
 endelse
 
+; Check whether the lower cut frequency of the chunk exceeds the position of a potential ocutpole mode
+; Start by defining the l=3 search region
+
+if best_dnu lt cp.dnu_rg then begin
+    octupole_freq_asymp = freq_radial_chunk - best_dnu/2. - d03
+    octupole_freq_lower = freq_radial_chunk - best_dnu/2. - d03*cp.d03_upper_scaling_factor
+    octupole_freq_upper = freq_radial_chunk - best_dnu/2. - d03*cp.d03_lower_scaling_factor
+endif else begin
+    ; Adopt approximated asymptotic relation by Bedding & Kjeldsen 2003 to locate l=3 region in less evolved stars.
+    
+    if (best_dnu lt cp.dnu_sg and teff lt cp.teff_sg) then begin
+        d02_upper_scaling_factor = cp.d02_upper_scaling_factor_sg
+        d02_lower_scaling_factor = cp.d02_lower_scaling_factor_sg
+    endif else begin
+        d02_upper_scaling_factor = cp.d02_upper_scaling_factor_ms
+        d02_lower_scaling_factor = cp.d02_lower_scaling_factor_ms
+    endelse
+    
+    octupole_freq_lower = freq_radial_chunk - best_dnu/2. - d02_upper_scaling_factor*actual_d02
+    octupole_freq_upper = freq_radial_chunk - best_dnu/2. - d02_lower_scaling_factor*actual_d02
+    octupole_freq_asymp = (octupole_freq_lower + octupole_freq_upper)/2.
+endelse
+
+if low_cut_frequency gt octupole_freq_lower then low_cut_frequency = octupole_freq_lower
+
 ; Force input value for lower limit frequency if required
 
 if cp.low_cut_frequency ne 0 then begin
@@ -1180,7 +1215,6 @@ if info.print_on_screen eq 1 then begin
     print,' Lower limit for chunk frequency range: '+strcompress(string(low_cut_frequency,format='(F0.3)'),/remove_all)+ ' muHz'
     print,''
 endif
-
 
 ; Now check that the previous order l=0 frequency was not selected as a potential dipole mode by the ASEF.
 ; If it is selected, then remove it from the sample of identified frequencies.
@@ -1194,6 +1228,8 @@ if tmp_below_radial_double(0) ne -1 then begin
     spsd_maximum = spsd_maximum(good_freq1_indices)
     spsd_weights = spsd_maximum/total(spsd_maximum)
     asef_weights = asef_maximum/total(asef_maximum)
+    asef_integral = asef_integral(good_freq1_indices)
+    asef_integral_weights = asef_integral/total(asef_integral) 
     sampling_counts = sampling_counts(good_freq1_indices)
     sampling_weights = sampling_counts/total(sampling_counts)
     angular_degree = angular_degree(good_freq1_indices)
@@ -1213,6 +1249,8 @@ if tmp_above_radial(0) ne -1 then begin
     spsd_maximum = spsd_maximum(good_freq1_indices)
     spsd_weights = spsd_maximum/total(spsd_maximum)
     asef_weights = asef_maximum/total(asef_maximum)
+    asef_integral = asef_integral(good_freq1_indices)
+    asef_integral_weights = asef_integral/total(asef_integral) 
     sampling_counts = sampling_counts(good_freq1_indices)
     sampling_weights = sampling_counts/total(sampling_counts)
     angular_degree = angular_degree(good_freq1_indices)
@@ -1232,7 +1270,7 @@ if n_radial_chunk ne 0 then begin
     quadrupole_index = closest(freq_quadrupole_chunk,freq1)
     run_subdir = run + '_radial_fwhm'
     run_names = run_subdir + strcompress(string(indgen(cp.n_fwhm_fit)),/remove_all) 
-    
+  
     if (file_test(star_dir + info.pb_subdir + '/' + run_subdir + '0/peakbagging_computationParameters.txt') eq 0 or keyword_set(force)) then begin
         left_bound = min([range_maximum(0,radial_index),divisions_maximum(0,radial_index)])
         right_bound = max([range_maximum(1,radial_index),divisions_maximum(1,radial_index)])
@@ -1780,27 +1818,6 @@ endif
 ; For this reason, also incorporate cooler stars with higher Dnu as possible subgiants (see e.g. Appourchaux et al. 2012).
 ; If no dipole modes were identified from the global fit, still give it a try in the chunk modality
 ; and check whether there could be a potential dipole mode. This is assuming that l=0 was found!
-; Start by defining the l=3 search region
-
-if best_dnu lt cp.dnu_rg then begin
-    octupole_freq_asymp = freq_radial_chunk - best_dnu/2. - d03
-    octupole_freq_lower = freq_radial_chunk - best_dnu/2. - d03*cp.d03_upper_scaling_factor
-    octupole_freq_upper = freq_radial_chunk - best_dnu/2. - d03*cp.d03_lower_scaling_factor
-endif else begin
-    ; Adopt approximated asymptotic relation by Bedding & Kjeldsen 2003 to locate l=3 region in less evolved stars.
-    
-    if (best_dnu lt cp.dnu_sg and teff lt cp.teff_sg) then begin
-        d02_upper_scaling_factor = cp.d02_upper_scaling_factor_sg
-        d02_lower_scaling_factor = cp.d02_lower_scaling_factor_sg
-    endif else begin
-        d02_upper_scaling_factor = cp.d02_upper_scaling_factor_ms
-        d02_lower_scaling_factor = cp.d02_lower_scaling_factor_ms
-    endelse
-    
-    octupole_freq_lower = freq_radial_chunk - best_dnu/2. - d02_upper_scaling_factor*actual_d02
-    octupole_freq_upper = freq_radial_chunk - best_dnu/2. - d02_lower_scaling_factor*actual_d02
-    octupole_freq_asymp = (octupole_freq_lower + octupole_freq_upper)/2.
-endelse
 
 if (best_dnu lt cp.dnu_sg and teff lt cp.teff_sg) then begin
     dipole_indices = where(angular_degree eq 1)
@@ -2618,7 +2635,7 @@ if n_dipole_chunk ne 0 then begin
            
             flag_octupole_fwhm_test = 0
 
-            if cp.rotation_test_activated eq 1 then begin 
+            if cp.rotation_test_activated eq 1 then begin
                 rotation_probability_filename = star_dir + info.pb_subdir + '/rotationProbability_' + test_name + '.txt'
                 
                 if file_test(rotation_probability_filename) eq 1 then begin
@@ -2690,10 +2707,10 @@ if n_dipole_chunk ne 0 then begin
       
             ; If required, assess the FWHM and ASEF of the l=3 candidate against those of the l=0 mode. 
 
-            if flag_octupole_fwhm_test eq 1 then begin 
+            if flag_octupole_fwhm_test eq 1 then begin
                 ; Impose that l=3, if present, has a low ASEF value (< 3/4 ASEF maximum)
 
-                asef_threshold = (dp.isla.max_nested_it + dp.isla.n_live) * cp.asef_threshold_fraction
+                asef_threshold = (dp.isla.max_nested_it + dp.isla.n_live) * cp.asef_octupole_fraction
                 
                 if asef_maximum(best_octupole_index) lt asef_threshold then begin
                     if largest_octupole_fwhm ge fwhm_radial_fit*cp.fwhm_octupole_radial_fraction then begin 
@@ -2738,15 +2755,14 @@ if n_dipole_chunk ne 0 then begin
         
         if n_elements(detected_dipole_indices) gt 1 then begin
             freq_diff = abs(freq1(detected_dipole_indices) - freq_dipole)
-            freq_weights = 1.d0/freq_diff
-            freq_weights /= total(freq_weights)
-            freq_ww = freq_weights/max(freq_weights)
-            asef_ww = asef_weights(detected_dipole_indices)/max(asef_weights(detected_dipole_indices))
-            spsd_ww = spsd_weights(detected_dipole_indices)/max(spsd_weights(detected_dipole_indices))
-            sampling_ww = alog(sampling_counts(detected_dipole_indices))/max(alog(sampling_counts(detected_dipole_indices)))
-            total_ww = cp.weight_freq_fraction*freq_ww + cp.weight_asef_fraction*asef_ww + cp.weight_spsd_fraction*spsd_ww + cp.weight_sampling_fraction*sampling_ww
-            total_ww /= total(total_ww)
-            max_ww = max(total_ww,index)
+            freq_weights_dipole = 1.d0/freq_diff
+            freq_weights_dipole /= total(freq_weights_dipole)
+            asef_weights_dipole = asef_weights(detected_dipole_indices)
+            asef_integral_weights_dipole = asef_integral_weights(detected_dipole_indices)
+            spsd_weights_dipole = spsd_weights(detected_dipole_indices)
+            sampling_weights_dipole = sampling_weights(detected_dipole_indices)
+            total_weights_dipole = cp.weight_freq_fraction*freq_weights_dipole + cp.weight_asef_fraction*asef_weights_dipole + cp.weight_spsd_fraction*spsd_weights_dipole + cp.weight_sampling_fraction*sampling_weights_dipole + cp.weight_asef_integral_fraction*asef_integral_weights_dipole
+            max_weight = max(total_weights_dipole,index)
             dipole_index = detected_dipole_indices(index)
             freq_dipole_chunk = freq1(dipole_index)
             bad_dipole_indices = where(detected_dipole_indices ne dipole_index)
@@ -3353,25 +3369,28 @@ parameters = { catalog_id:     catalog_id,     $
                n_radial_chunk: n_radial_chunk  $
              }
 
-plot_summary,parameters,0
+if info.print_on_screen eq 1 then begin 
+    plot_summary,parameters,0
 
-if info.save_eps eq 0 then begin
-    read_jpeg,info.logo_filename,image
-    TV, image, 0.855,0.865,TRUE = 1,/normal
-endif else begin
-    xyouts,0.987,0.2,sp.copyright_str+' FAMED',orientation=-90,charsize=lp.summary_charsize,charthick=lp.summary_charthick,/normal,color=250
-endelse
+    if info.save_eps eq 0 then begin
+        read_jpeg,info.logo_filename,image
+        TV, image, 0.855,0.865,TRUE = 1,/normal
+    endif else begin
+        xyouts,0.987,0.2,sp.copyright_str+' FAMED',orientation=-90,charsize=lp.summary_charsize,charthick=lp.summary_charthick,/normal,color=250
+    endelse
 
-if info.save_eps eq 1 then begin
-    device,/close
-    spawn,'pstopdf ' + filename_star  + '.eps'
-    spawn,'open ' + filename_star  + '.pdf'
-    set_plot,'x'
-endif
+    if info.save_eps eq 1 then begin
+        device,/close
+        spawn,'epstopdf ' + filename_star  + '.eps'
+        spawn,'open ' + filename_star  + '.pdf'
+        set_plot,'x'
+    endif
    
-if info.save_png eq 1 then begin
-    write_png, star_dir + info.figs_subdir + '/' + catalog_id + star_id + '_' + info.isla_subdir + '_' + run + '_' + modality + '.PNG', TVRD(/TRUE)
+    if info.save_png eq 1 then begin
+        write_png, star_dir + info.figs_subdir + '/' + catalog_id + star_id + '_' + info.isla_subdir + '_' + run + '_' + modality + '.PNG', TVRD(/TRUE)
+    endif
 endif
+
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; Save final outputs
