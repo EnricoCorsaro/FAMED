@@ -415,6 +415,7 @@ def asef_histogram(famed_obj,ax=None,chunk=None):
     ax.set_xlabel(r'Frequency ($\mu$Hz)')
 
     # Plot histogram.
+
     patches = ax.bar(par_hist,asef_hist,width=np.diff(par_hist)[0],color=famed_obj.cp.asef_bar,zorder=1)
     upper_edge = plt.step(par_hist,asef_hist,color=famed_obj.cp.asef_edge,where='mid',zorder=4,lw=2)
     step_interp = interp1d(par_hist,asef_hist,'nearest')
@@ -434,15 +435,20 @@ def asef_histogram(famed_obj,ax=None,chunk=None):
     plt.ylim(y1,y2*1.2)
     
     # Errorbars and modes.
+
     for mode,err,degree in zip(modes,errs,degrees):
         plt.errorbar(mode,.86,xerr=err,capthick=2,capsize=7,marker='o',ms=5,mfc=famed_obj.cp.asef_mark,mec=famed_obj.cp.asef_mec,ecolor=famed_obj.cp.asef_err,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes))
         plt.text(mode,.92,'%i'%degree,fontweight='heavy',size='small',color=famed_obj.cp.asef_degree,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),zorder=4,clip_on=True)
 
     if chunk is not None:
         for mode in famed_obj.freqs_global[chunk]:
-            plt.axvline(mode,ls='dashed',color=famed_obj.cp.psd_spsd)
+            plt.axvline(mode,ls='dashed',color=famed_obj.cp.vline1)
 
+        update_freq_radial_global = famed_obj.freqs_radial_global[chunk]
+        plt.axvline(update_freq_radial_global,ls='dashed',color=famed_obj.cp.vline2)
+        
         # Bracket showing location of octupole modes
+
         octu,octu_lower,octu_upper = famed_obj.octupole_freq_asymp[chunk],famed_obj.octupole_freq_lower[chunk],famed_obj.octupole_freq_upper[chunk]
         plt.axvline(octu_lower,.5,.55,zorder=5,color=famed_obj.cp.text4,lw=2)
         plt.axvline(octu_upper,.5,.55,zorder=5,color=famed_obj.cp.text4,lw=2)
@@ -490,7 +496,7 @@ def text_panel(famed_obj,ax=None,chunk=None):
             ax.text(0.14,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz \, $\alpha$ = %.3f''\n'r' $\Delta\nu_{\mathrm{ACF}}$ = %.3f $\mu$Hz''\n'r' SNR = %.1f\, $\epsilon_{\mathrm{ech}}$ = %.3f'%(famed_obj.numax,famed_obj.dnu,famed_obj.alpha,famed_obj.acf_dnu,famed_obj.snr,famed_obj.epsilon),fontsize='small',color=famed_obj.cp.text2)
 
         # Text 3 global
-        ax.text(0.38,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{\nu\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' H$_{\mathrm{max,prior}}$ = %.1e ppm$^2/\mu$Hz''\n'r'  $\alpha$ = %.3f\, $T_{\mathrm{eff}}$ = %i K'%(famed_obj.linewidth_numax,famed_obj.linewidth_numax,famed_obj.hmax_prior,famed_obj.alpha,famed_obj.teff),fontsize='small',color=famed_obj.cp.text3)
+        ax.text(0.38,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{\nu\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' H$_{\mathrm{max,prior}}$ = %.1e ppm$^2/\mu$Hz''\n'r' $T_{\mathrm{eff}}$ = %i K'%(famed_obj.linewidth_numax,famed_obj.linewidth_numax,famed_obj.hmax_prior,famed_obj.teff),fontsize='small',color=famed_obj.cp.text3)
 
         # Text 4
         ax.text(0.61,.05,r' ASEF$_{\mathrm{threshold}}$ = %.2f \%%''\n'r' ASEF$_{\mathrm{bins}}$ = %i''\n'r' $\Delta\nu_{\mathrm{tolerance}}$ = %.2f \%%''\n'r' N$_{\mathrm{freq}}$ = %i \,\,\,  N$_{\mathrm{orders}}$ = %i'%(100*famed_obj.cp.threshold_asef_global,famed_obj.asef_bins,100*famed_obj.dnu_tol,famed_obj.n_freq,famed_obj.n_chunks),fontsize='small',color=famed_obj.cp.text4)

@@ -38,8 +38,10 @@ class Chunk(FamedStar):
         if load_islands and self.cp.save_progress_pickle:
             if self.cp.print_on_screen:
                 print('Loading saved information from the pickled object.')
+
             # Load any variables into attributes that should haven been
             # loaded or created during make_islands. Will ignore new config
+
             temp = pickle.load(open(self.star_dir/(self.catalog_id+self.star_id+'_chunk.pickle'),'rb'))
             self.__dict__ = temp.__dict__.copy()
         else:
@@ -57,6 +59,7 @@ class Chunk(FamedStar):
         peakbagging_filename_global = self.star_dir/self.cp.summary_subdir/(self.catalog_id + self.star_id + self.cp.peakbagging_filename_label + self.cp.isla_subdir + '_' + self.cp.global_subdir + '_GLOBAL.txt')
         
         # Read input PSD and global asteroseismic parameters
+
         peakbagging_data_dir = self.cp.diamonds_path/'PeakBagging'/'data'
         freq, psd = np.loadtxt(peakbagging_data_dir/(self.catalog_id + self.star_id + '.txt'), unpack=True)
         gauss_par = np.loadtxt(self.star_dir/'gaussianEnvelopeParameters.txt')
@@ -67,11 +70,13 @@ class Chunk(FamedStar):
         maxpower *= 1.1
 
         # Run DIAMONDS to perform the multi-modal fit in the different chunks indicated by the global fit.
+
         if not os.path.isfile(peakbagging_filename_global):
             print('Cannot perform multi-modal fit for individual chunks. Missing global fit peakbagging summary file.')
             return False
         else:
             # Load global parameters
+
             acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks = np.loadtxt(peakbagging_filename_global,max_rows=1,skiprows=1,usecols=(1,2,3,5,6,7))
             n_chunks = int(n_chunks)
 
@@ -83,6 +88,7 @@ class Chunk(FamedStar):
             self.teff = teff
             
             # Load the frequency positions for each chunk
+
             chunk_number,freq_left,freq_right,snr = np.loadtxt(peakbagging_filename_global,max_rows=n_chunks,skiprows=3,unpack=True)
             chunk_number = np.array(chunk_number,dtype=int)
             min_linewidths = np.zeros(n_chunks)
@@ -93,6 +99,7 @@ class Chunk(FamedStar):
             self.freq_right = freq_right
 
             # Load the background level of the star
+
             bg_level = np.loadtxt(self.star_dir/'backgroundLevel.txt', usecols=(1,))
             
             self.freq = [None]*n_chunks
@@ -111,6 +118,7 @@ class Chunk(FamedStar):
                 run_subdir = str(i)
    
                 # Evaluate maximum PSD in the given chunk
+
                 freq_index = np.where((freq <= freq_right[i]) & (freq >= freq_left[i]))[0]
                 psd_chunk = psd[freq_index]
                 freq_chunk = freq[freq_index]
@@ -119,6 +127,7 @@ class Chunk(FamedStar):
 
                 if best_dnu <= self.cp.dnu_rg:
                     # In case the star is classified as a RG, distinguish among RGB, clump and RGB-tip
+
                     if best_dnu <= self.cp.dnu_tip:
                         min_linewidths[i] = astero.get_linewidth(min_freq,self.teff,numax)/self.cp.fwhm_chunk_scaling_tip
                         avg_fwhm = freqbin
@@ -138,6 +147,7 @@ class Chunk(FamedStar):
                 bg_names[i] = self.bgp['name']
        
                 # Evaluate smoothed PSD to obtain more accurate prior height
+
                 smth_bins = int(avg_fwhm/freqbin)
                 spsd = smooth(psd,window_len=smth_bins,window='flat')
                 spsd_chunk = spsd[freq_index]
@@ -150,6 +160,7 @@ class Chunk(FamedStar):
                     # Apply overlapping chunks if the star is a subgiant or redgiant.
                     # This should solve the problem of having mixed modes that happen to fall very close to the
                     # radial mode of the previous chunk.
+
                     if i != 0:
                         if (best_dnu < self.cp.dnu_rg) or ((best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg)):
                             f_left = freq_left[i] - best_dnu*self.cp.dnu_overlap_fraction_rg
@@ -164,6 +175,7 @@ class Chunk(FamedStar):
                     f.write('{:.5f}  \t{:.5f}\n'.format(0,max(spsd_chunk)-np.mean(bg_level_chunk)))
 
                 # Saving locally the full range that is used for the sampling. Not just the limits of the separations. Useful for plotting the right range
+
                 f_temp_index = np.where((freq <= freq_right[i]) & (freq >= f_left))[0]
                 self.freq[i] = freq[f_temp_index]
                 self.psd[i] = psd[f_temp_index]
@@ -186,6 +198,7 @@ class Chunk(FamedStar):
 
 
         # Give as input the minimum number of adjacent bins required to consider two local maxima separated. Don't need to calculate for each chunk. Just save number now.
+
         if best_dnu < self.cp.dnu_rg:
             threshold_asef = self.cp.threshold_asef_chunk_rg
         else:
@@ -195,6 +208,7 @@ class Chunk(FamedStar):
                 threshold_asef = self.cp.threshold_asef_chunk_ms
 
         # Save some attributes to keep around
+
         self.numax = numax
         self.scaling_dnu = dnu
 
@@ -205,6 +219,7 @@ class Chunk(FamedStar):
         self.threshold_asef = threshold_asef
 
         # Possibly useful later?
+
         self.maxima = [None]*n_chunks
         self.ranges = [None]*n_chunks
         self.divisions = [None]*n_chunks
@@ -214,6 +229,7 @@ class Chunk(FamedStar):
         self.degrees = [None]*n_chunks
         self.orders = [None]*n_chunks
         self.freqs_global = [None]*n_chunks
+        self.freqs_radial_global = [None]*n_chunks
         
         self.nested_iters = [None]*n_chunks
         self.par_hist = [None]*n_chunks 
@@ -237,6 +253,7 @@ class Chunk(FamedStar):
         self.fit_linewidth = [None]*n_chunks
         
         # pickle to save stuff
+
         if self.cp.save_progress_pickle:
             pickle.dump(self,open(self.star_dir/(self.catalog_id+self.star_id+'_chunk.pickle'),'wb'))
 
@@ -250,30 +267,34 @@ class Chunk(FamedStar):
         peakbagging_filename_chunk = self.star_dir/self.cp.summary_subdir/(self.catalog_id + self.star_id + self.cp.peakbagging_filename_label + self.cp.isla_subdir + '_')
         
         # Copy FAMED configuring parameters used in this run. JM: Do this here? or in init?
+
         target_dir = self.star_dir/self.cp.summary_subdir
         if self.cp.local_config:
                 shutil.copy('famed_config.yml',target_dir/('famed_config_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + '_' + run +'_CHUNK.yml'))
         else:
             shutil.copy(self.cp.famed_path/'famed_config.yml',target_dir/('famed_config_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + '_' + run +'_CHUNK.yml'))
         shutil.copy(self.cp.configuring_parameters_file,target_dir/('famed_configuring_parameters_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + '_' + run +'_CHUNK.txt'))
-
             
         # Read sampled frequency from DIAMONDS multi-modal fit
+
         par0 = np.loadtxt(self.star_dir/self.cp.isla_subdir/run/'peakbagging_parameter000.txt')
         self.nested_iters[run_number] = par0
         
         # Read prior height (upper limit) and frequency range
+
         prior_down,prior_up = np.loadtxt(self.star_dir/self.cp.isla_subdir/run/'peakbagging_hyperParametersUniform.txt',unpack=True)
         freq_left_chunk = prior_down[0]
         freq_right_chunk = prior_up[0]
         upper_height = prior_up[1]
 
         # Read input linewidth and background name of the run
+
         config = np.loadtxt(self.star_dir/self.cp.isla_subdir/run/'peakbagging_computationParameters.txt',dtype=str)
         fit_linewidth = float(config[len(config)-1])
         background_name = config[len(config)-2]
 
         # Read star PSD
+
         peakbagging_data_dir = self.cp.diamonds_path/'PeakBagging'/'data'
         freq,psd = np.loadtxt(peakbagging_data_dir/(self.catalog_id + self.star_id + '.txt'), unpack=True)
         freqbin = freq[1]-freq[0]
@@ -292,24 +313,36 @@ class Chunk(FamedStar):
 
         # Load the information available from the global fit
         # Load asymptotic parameters
+
         acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole = np.loadtxt(peakbagging_filename_global, max_rows=1, skiprows=1, usecols=(1,2,3,5,6,7,8))
         n_chunks = int(n_chunks)
         flag_depressed_dipole = int(flag_depressed_dipole)
 
         # Load the SNR for the given chunk
+
         chunk_number,freq_left,freq_right,snr_chunks = np.loadtxt(peakbagging_filename_global, max_rows=n_chunks, skiprows=3, unpack=True)
         snr = snr_chunks[run_number]
         left_bound = freq_left[run_number]
         right_bound = freq_right[run_number]
 
         # Load global frequencies
+
         enn_global,ell_global,freq_global,freq_sig_global,fwhm_global = np.loadtxt(peakbagging_filename_global,skiprows=3+n_chunks,usecols=(0,1,2,3,5), unpack=True)
         enn_global = np.array(enn_global,dtype=int)
         ell_global = np.array(ell_global,dtype=int)
 
         # Select only global frequencies relevant for the chunk
+
         tmp_chunk = np.where((freq_global <= right_bound) & (freq_global >= left_bound))[0]
+        tmp_previous_chunk = np.where(freq_global < left_bound)[0]
         if len(tmp_chunk) > 0:
+            if len(tmp_previous_chunk) > 0:
+                freq_previous_global = freq_global[tmp_previous_chunk]
+                freq_sig_previous_global = freq_sig_global[tmp_previous_chunk]
+                ell_previous_global = ell_global[tmp_previous_chunk]
+            else:
+                ell_previous_global = -1
+
             freq_global = freq_global[tmp_chunk]
             freq_sig_global = freq_sig_global[tmp_chunk]
             enn_global = enn_global[tmp_chunk]
@@ -323,8 +356,20 @@ class Chunk(FamedStar):
 
         # Select the radial mode. If the global modality was ran correctly, there should be only one radial mode, but there could be none as well.
         # If more than one radial mode is present, then pick up the one closest to the right frequency bound of the chunk.
+        # Select, if possible, the global radial mode frequency of the previous chunk.
 
-        tmp_radial = np.where(ell_global==0)[0]
+        tmp_radial = np.where(ell_global == 0)[0]
+        tmp_previous_radial = np.where(ell_previous_global == 0)[0]
+        if len(tmp_previous_radial) > 0:
+            freq_previous_radial_global_array = freq_previous_global[tmp_previous_radial]
+            freq_sig_previous_radial_global_array = freq_sig_previous_global[tmp_previous_radial]
+            index = np.argmax(freq_previous_radial_global_array)
+            freq_previous_radial_global = freq_previous_radial_global_array[index]
+            freq_sig_previous_radial_global = freq_sig_previous_radial_global_array[index]
+        else:
+            freq_previous_radial_global = 0
+            freq_sig_previous_radial_global = 0 
+
         if len(tmp_radial) > 0:
             if len(tmp_radial) == 1:
                 enn_radial = enn_global[tmp_radial][0]
@@ -345,14 +390,17 @@ class Chunk(FamedStar):
 
 
         # Select the dipole mode(s). There might be none as well, depending if it was selected during the global fit.
+
         tmp_dipole = np.where(ell_global==1)[0]
         if len(tmp_dipole) > 0:
             # If more than one dipole mode frequency is selected, take the one closest to nu0 - best_dnu/2.
+
             if len(tmp_dipole) > 1:
                 freq_dipole = freq_global[tmp_dipole]
 
                 if n_radial_chunk==0:
                     # If the radial mode is not present, take the dipole frequency closest to the central frequency of the chunk
+
                     dipole_global_index = closest((left_bound + right_bound)/2.,freq_dipole,index=True)
                 else:
                     dipole_global_index = closest(freq_radial - best_dnu/2.,freq_dipole,index=True)
@@ -375,12 +423,14 @@ class Chunk(FamedStar):
             n_dipole_chunk = 0
 
         # Load the nuMax information as obtained from a previous background fit
+
         gauss_par = np.loadtxt(self.star_dir/'gaussianEnvelopeParameters.txt')
         numax = gauss_par[1]
         scaling_dnu = astero.compute_scaling_dnu(numax)
 
         # Set a binwidth proportional to the expected separation between adjacent peaks (normally taken as d02/2) if MS
         # or smaller if RG star.
+
         par_range = max(par0) - min(par0)
         min_separation = self.get_minimum_freq_separation(best_dnu,global_flag=False)
         binwidth = 1.0*min_separation/self.cp.min_n_bins
@@ -389,9 +439,11 @@ class Chunk(FamedStar):
 
         # Compute an Average Shifted Histogram (ASH) of the distribution of nested iterations
         # Compute the ASEF with input resolution for extracting the local maxima
+
         par_hist, asef_hist = self.compute_asef(par0,nest_iter,n_bins)
         
-        # Find the local maxima using a hill-climbing algorithm on the envelope function        
+        # Find the local maxima using a hill-climbing algorithm on the envelope function
+
         threshold = self.threshold_asef*np.max(asef_hist)
         index_maximum = self.hill_climbing(par_hist,asef_hist,threshold,self.cp.min_bin_separation)
         maximum = par_hist[index_maximum]
@@ -402,6 +454,7 @@ class Chunk(FamedStar):
         # Also compute ranges for each maximum such that an ASEF peak is considered up to the points of its tails, i.e. 
         # the last ones in the decreasing phase off the peak. Ranges are used to compute the actual frequency estimates
         # from the sampling.
+
         n_maxima = len(maximum)
         range_maximum, divisions_maximum = self.get_range_divisions(par_hist,asef_hist,index_maximum,chunk=True)
 
@@ -411,6 +464,7 @@ class Chunk(FamedStar):
         
         # Based on the identified frequency ranges, estimate the oscillation frequencies using the sampling information 
         # obtained by DIAMONDS.
+
         n_freq = n_maxima
 
         # Compute a smoothed PSD by some average FWHM to evaluate its values at each local maxima of the ASEF.
@@ -441,14 +495,27 @@ class Chunk(FamedStar):
         spsd_maximum = sampled_estimates['spsd_maximum']
 
         # Define some weights useful for identification of proper frequency peaks during mode identification
+        
         sampling_weights = sampling_counts/np.sum(sampling_counts)
         spsd_weights = spsd_maximum/np.sum(spsd_maximum)
         asef_weights = asef_maximum/np.sum(asef_maximum)
+        asef_integral = np.zeros(len(index_maximum))
+
+        # Evaluate the integral of the ASEF within each maximum range found and use it as a weight
+        
+        for jj in range(0,len(index_maximum)):
+            lower_range = range_maximum[0,jj]
+            upper_range = range_maximum[1,jj]
+            par_hist_index_range = np.where((par_hist >= lower_range) & (par_hist <= upper_range))[0]
+            asef_integral[jj] = np.sum(asef_hist[par_hist_index_range])
+
+        asef_integral_weights = asef_integral/np.sum(asef_integral)
 
         if self.cp.print_on_screen:
             print(' Total number of local maxima found: ',n_maxima)
 
         # Define some average asymptotic frequency spacings useful for the computation
+        
         ap = astero.get_asymptotic_parameters(numax, best_dnu, self.teff, self.cp.d01_mass_offset, self.cp.d01_mass_slope, self.cp.d01_offset, self.cp.d02_mass_offset, self.cp.d02_mass_slope, self.cp.d02_offset, self.cp.d03_slope,self.cp.d03_offset, self.cp.numax_sun, self.cp.dnu_sun, self.cp.teff_sun)
 
         angular_degree = np.ones(n_freq,dtype=int)
@@ -457,6 +524,7 @@ class Chunk(FamedStar):
         d03 = ap['d03']
 
         # If possible, update the d02 spacing from existing chunk outputs
+
         filename_summary = np.sort(glob.glob(str(peakbagging_filename_chunk) + '*' + self.modality + '.txt'))
         
         flag_median_d02_active = 0
@@ -467,6 +535,7 @@ class Chunk(FamedStar):
                 d02_array[jj] = d02_chunk
     
             # Remove zeros from possible solutions (e.g. if a chunk had no l=2 mode detected)
+
             d02_array = d02_array[np.where(d02_array>0)[0]]
 
             median_d02 = np.median(d02_array)
@@ -511,6 +580,7 @@ class Chunk(FamedStar):
                     tmp_previous_radial = np.where(ell_previous_chunk==0)[0]
            
                     # Check whether the selected chunk contains a l=0 mode, otherwise move to the one before it.
+
                     if len(tmp_previous_radial) > 0:
                         if self.cp.print_on_screen:
                             print('\n Resuming l=0 frequency from previous chunk...\n')
@@ -605,6 +675,7 @@ class Chunk(FamedStar):
                         flag_next_radial_mode_found = 1
                
                         # Set new global radial mode frequency
+
                         freq_radial = freq_next_radial - best_dnu*(1.0 + best_alpha*(enn_next_radial - 0.5 - numax/best_dnu))
                         fwhm_radial = astero.get_linewidth(freq_radial,self.teff,numax)
                 
@@ -644,6 +715,7 @@ class Chunk(FamedStar):
                                     flag_next_radial_mode_found = 2
                            
                                     # Set new global radial mode frequency
+
                                     freq_radial = freq_next_radial - 2*best_dnu*(1.0 + best_alpha*((2*enn_next_radial-1)/2. - 0.5 - numax/best_dnu))
                                     fwhm_radial = astero.get_linewidth(freq_radial,self.teff,numax)
                             
@@ -656,7 +728,8 @@ class Chunk(FamedStar):
                                         freq_dipole = freq_radial - best_dnu/2. - d01
                                         freq_sig_dipole = freq_sig_radial
                                         n_dipole_chunk = 1
-                            
+                           
+        self.freqs_radial_global[run_number] = freq_radial
         flag_quadrupole_found = 0
 
         if n_radial_chunk != 0:
@@ -680,26 +753,25 @@ class Chunk(FamedStar):
             freq_diff = np.abs(freq1 - freq_radial)
             freq_weights = 1.0/freq_diff
             freq_weights /= np.sum(freq_weights)
-            freq_ww = freq_weights/max(freq_weights)
-            asef_ww = asef_weights/max(asef_weights)
-            spsd_ww = spsd_weights/max(spsd_weights)
-            sampling_ww = np.log(sampling_counts)/max(np.log(sampling_counts))
 
             # If we have a radial mode solution from previous (or next) chunks, then make the frequency position of the global radial mode a much stronger constraint
+
             weight_freq_fraction = self.cp.weight_freq_fraction
             if (flag_previous_radial_mode_found != 0) or (flag_next_radial_mode_found != 0):
                 weight_freq_fraction = self.cp.weight_freq_fraction_enhanced
 
-            total_ww = weight_freq_fraction*freq_ww + self.cp.weight_asef_fraction*asef_ww + self.cp.weight_spsd_fraction*spsd_ww + self.cp.weight_sampling_fraction*sampling_ww
-            total_ww /= np.sum(total_ww)
+            total_weights = weight_freq_fraction*freq_weights + self.cp.weight_asef_fraction*asef_weights + self.cp.weight_spsd_fraction*spsd_weights + self.cp.weight_sampling_fraction*sampling_weights + self.cp.weight_asef_integral_fraction*asef_integral_weights
+            total_weights /= np.sum(total_weights)
 
             upper_limit_freq_radial = freq_radial + max_d02*self.cp.d02_factor_search_range
 
             # Make sure that the upper limit frequency for radial mode search is not larger than chunk upper limit frequency
+
             if upper_limit_freq_radial > right_bound:
                 upper_limit_freq_radial = right_bound
 
-            # Force input value if required 
+            # Force input value if required
+
             if self.cp.upper_limit_freq_radial != 0:
                 upper_limit_freq_radial = self.cp.upper_limit_freq_radial
     
@@ -718,84 +790,65 @@ class Chunk(FamedStar):
                 tmp_radial = np.where((freq1 >= (freq_radial - freq_sig_radial - additional_freq_sig_radial - d02)) & (freq1 < upper_limit_freq_radial))[0]
                 
             if len(tmp_radial) > 0:
-                total_ww_radial = total_ww[tmp_radial]
-                max_ww = max(total_ww_radial)
-                index = np.where(total_ww_radial == max_ww)[0][0]
+                total_weights_radial = total_weights[tmp_radial]
+                index = np.argmax(total_weights_radial)
                 radial_index = index + min(tmp_radial)
-                min_ww = min(total_ww)
             else:
                 print(' The l=0 mode could not be located based on the position from the global fit. ')
                 print(' This could be caused by the low SNR of the chunk.')
                 return False   
     
             # Check if the selected peak is not the adjacent l=2 by assessing the total weight of the subsequent modes.
+
             if radial_index < n_freq-1:
                 candidate_radial_index = np.where((freq1 > freq1[radial_index]) & (freq1 < upper_limit_freq_radial))[0]
                 if len(candidate_radial_index) > 0:
+                    asef_integral_weights_radial = asef_integral_weights[candidate_radial_index]
+                    asef_weights_radial = asef_weights[candidate_radial_index]
+                    max_asef_integral_weights = asef_integral_weights[radial_index]
+                    max_asef_weights = asef_weights[radial_index]
+                    
                     for kk in range(0,len(candidate_radial_index)):
                         local_index = candidate_radial_index[kk]
-                        if total_ww[local_index] > (abs(max_ww - min_ww)*self.cp.max_ratio_search_radial + min_ww):
-                            radial_index = local_index
-                            
+                        if ((asef_integral_weights_radial[kk] > max_asef_integral_weights*self.cp.threshold_search_radial_asef_integral) & (asef_weights_radial[kk] > max_asef_weights*self.cp.threshold_search_radial_asef_maximum)):
+                            if kk > 0:
+                                if asef_integral_weights_radial[kk] > asef_integral_weights_radial[kk-1]:
+                                    radial_index = local_index
+                                else:
+                                    break
+                            else: 
+                                radial_index = local_index
+                        
             freq_radial_chunk = freq1[radial_index]
             freq_sig_radial_chunk = freq_sig1[radial_index]
             low_cut_frequency = freq_radial_chunk - best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)) + freq_sig_radial/2.0 
   
             # Make sure that the previous l=0 mode is not included, in case the chunk belongs to the right-end tail of the oscillation envelope.
             # First verify that if a radial mode has been found from previous chunks (to the left side), the low cut frequency is not including it.
-            if flag_previous_radial_mode_found==1:
+            
+            if flag_previous_radial_mode_found == 1:
                 if low_cut_frequency < freq_previous_radial + freq_sig_radial/2.:
                     low_cut_frequency = freq_previous_radial + freq_sig_radial/2.
-            if flag_previous_radial_mode_found==2:
+            
+            if flag_previous_radial_mode_found == 2:
                 if low_cut_frequency < freq_previous_radial + best_dnu*(1.0 + best_alpha*(enn_radial-1 - 0.5 - numax/best_dnu)) + freq_sig_radial/2.:
                     low_cut_frequency = freq_previous_radial + best_dnu*(1.0 + best_alpha*(enn_radial-1 - 0.5 - numax/best_dnu)) + freq_sig_radial/2.
-    
-            # However, the l=0 mode from the previous chunk may turnout to be wrong (e.g. if confused with an adjacent l=1 mixed mode). 
-            # To verify this do some additional check to test whether the selected low cut frequency can be reliable. 
-            if freq_radial_chunk > numax:
-                first_chunk_indices = np.where(freq1 < min(par_hist) + (max(par_hist) - min(par_hist))/self.cp.previous_radial_range_fraction)[0]
-        
-                if len(first_chunk_indices) > 0:
-                    first_chunk_sampling_counts = sampling_counts[first_chunk_indices]
-                    first_chunk_asef = asef_maximum[first_chunk_indices]
-            
-                    # Do a first check on the sampling counts
-                    previous_radial_mode_index = np.argmax(first_chunk_sampling_counts)
-                    max_first_chunk_sampling_counts = first_chunk_sampling_counts[previous_radial_mode_index]
-                    if sampling_counts[radial_index] < max_first_chunk_sampling_counts*self.cp.sampling_counts_fraction:
-                        # Here update the lower cutting frequency of the chunk, as well as the radial mode index
-                        low_cut_frequency2 = freq1[previous_radial_mode_index] + freq_sig_radial_chunk
-                        if low_cut_frequency2 > low_cut_frequency:
-                            low_cut_frequency = low_cut_frequency2
-
-                        radial_index_new = closest(freq1[previous_radial_mode_index] + best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)),freq1,index=True)
-                        if sampling_counts[radial_index_new] >= sampling_counts[radial_index]:
-                            radial_index = radial_index_new
-                            freq_radial_chunk = freq1[radial_index]
-                
-                    # Do a second check on the ASEF maximum
-                    previous_radial_mode_index = np.argmax(first_chunk_asef)
-                    max_first_chunk_asef = first_chunk_asef[previous_radial_mode_index]
-                    if max_first_chunk_asef*self.cp.asef_saturation_fraction >= asef_maximum[radial_index]:
-                        # Here update the lower cutting frequency of the chunk, as well as the radial mode index, if adequate.
-                        low_cut_frequency2 = freq1[previous_radial_mode_index] + freq_sig_radial_chunk
-                        if low_cut_frequency2 > low_cut_frequency:
-                            low_cut_frequency = low_cut_frequency2
-
-                        radial_index_new = closest(freq1[previous_radial_mode_index] + best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)),freq1,index=True)
-                        asef_threshold = (self.cp.dp_isla['max_nested_it'] + self.cp.dp_isla['n_live'])/self.cp.asef_threshold_scaling_radial 
-                        if asef_maximum[radial_index_new] > asef_threshold:
-                            radial_index = radial_index_new
-                            freq_radial_chunk = freq1[radial_index]
                        
-            # Apply a final check on the upper bound for the low cut frequency
+            # Apply a check on the upper bound for the low cut frequency
+            
             if low_cut_frequency > freq_radial_chunk - best_dnu*self.cp.dnu_lower_cut_fraction:
                 low_cut_frequency = freq_radial_chunk - best_dnu*self.cp.dnu_lower_cut_fraction
+
+            # Finally, control the radial mode soolution from GLOBAL for the previous chunk. This is to avoid that the same radial mode is identified twice in two different chunks.
+    
+            if low_cut_frequency <= freq_previous_radial_global + freq_sig_previous_radial_global:
+                low_cut_frequency = freq_previous_radial_global + freq_sig_previous_radial_global
 
             angular_degree[radial_index] = 0
             order_number[radial_index] = enn_radial
 
             # Compute a local value for epsilon
+
             local_epsi = (freq_radial_chunk - best_dnu * enn_radial)/best_dnu
 
 
@@ -804,15 +857,16 @@ class Chunk(FamedStar):
             # Identify the quadrupole mode by assuming a small spacing d02.
             # Compute more reliable values for d02 from high SNR chunks, if available.
             # Mostly useful for the case of MS stars.
+
             freq_radial_chunk_org = freq_radial_chunk
             freq_sig_radial_chunk_org = freq_sig_radial_chunk
 
             flag_quadrupole_found = 1
-            flag_duplet_fit = 0
 
             if best_dnu < self.cp.dnu_rg:
                 # Evolutionary stage: RG
-                quadrupole_freq_asymp = freq_radial_chunk - d02
+                
+                quadrupole_freq_asymp = freq_radial_chunk - median_d02
                 quadrupole_index = closest(quadrupole_freq_asymp,freq1,index=True)
                 if quadrupole_index != radial_index:
                     freq_quadrupole_chunk = freq1[quadrupole_index]
@@ -881,6 +935,7 @@ class Chunk(FamedStar):
 
                 else: 
                     # No quadrupole has been found.
+
                     flag_quadrupole_found = 0
                         
             else:
@@ -890,8 +945,9 @@ class Chunk(FamedStar):
                 # Consider as an upper limit for d02 given by the d02 from RG scaling in the case of stars in the subgiant regime. 
                 # This is because here d02_RG  constitutes an upper limit for the actual d02 (see White et al. 2011). 
                 # For MS stars, take as an upper limit for d02 the value Dnu/4 in order to incorporate also cases with very large d02.
-                if flag_median_d02_active==1: 
-                    max_local_d02 = median_d02*self.cp.d02_factor_search_range
+
+                if flag_median_d02_active == 1:
+                    max_local_d02 = median_d02*self.cp.d02_fraction_prior_upper_duplet_fit 
                 else:
                     if best_dnu <= self.cp.dnu_sg:
                         # Here the star is considered a SG
@@ -903,7 +959,6 @@ class Chunk(FamedStar):
     
                 # Set up and run the multi-modal fit for the double peak, after checking whether the run already exists
                 run_subdir = run + 'A'
-                flag_duplet_fit = 1 
        
                 if not os.path.isfile(self.star_dir/self.cp.isla_subdir/run_subdir/'peakbagging_computationParameters.txt') or force:
                     # Set up prior
@@ -912,8 +967,8 @@ class Chunk(FamedStar):
 
                     if self.cp.d02_prior_upper_duplet_fit != 0:
                         max_local_d02 = self.cp.d02_prior_upper_duplet_fit
-            
-                    d02_prior = [self.cp.d02_prior_lower_duplet_fit,max_local_d02]
+           
+                    d02_prior = [median_d02*self.cp.d02_fraction_prior_lower_duplet_fit,max_local_d02] 
                     boundaries = [freq_prior,height_prior,d02_prior]
 
                     filename = self.star_dir/self.cp.isla_subdir/(self.cp.prior_filename + '_' + run_subdir + '.txt')
@@ -1132,6 +1187,7 @@ class Chunk(FamedStar):
             
             # Compute the estimated radial mode frequency from the asymptotic relation for radial modes.
             # Assume no quadrupole mode in this case.
+
             enn_radial = enn_dipole + 1
             
             freq_radial_chunk = astero.asymptotic_relation_radial(enn_radial,numax,[best_dnu,best_epsi,best_alpha])
@@ -1145,7 +1201,31 @@ class Chunk(FamedStar):
             freq_quadrupole_chunk = freq_radial_chunk - d02
             low_cut_frequency = freq_radial_chunk - best_dnu + freq_sig_dipole
 
+        # Check whether the lower cut frequency of the chunk exceeds the position of a potential ocutpole mode
+        # Start by defining the l=3 search region
+
+        if best_dnu < self.cp.dnu_rg:
+            octupole_freq_asymp = freq_radial_chunk - best_dnu/2. - d03
+            octupole_freq_lower = freq_radial_chunk - best_dnu/2. - d03*self.cp.d03_upper_scaling_factor
+            octupole_freq_upper = freq_radial_chunk - best_dnu/2. - d03*self.cp.d03_lower_scaling_factor
+        else:
+            # Adopt approximated asymptotic relation by Bedding & Kjeldsen 2003 to locate l=3 region in less evolved stars.
+            if (best_dnu < self.cp.dnu_sg and teff < self.cp.teff_sg):
+                d02_upper_scaling_factor = self.cp.d02_upper_scaling_factor_sg
+                d02_lower_scaling_factor = self.cp.d02_lower_scaling_factor_sg
+            else:
+                d02_upper_scaling_factor = self.cp.d02_upper_scaling_factor_ms
+                d02_lower_scaling_factor = self.cp.d02_lower_scaling_factor_ms
+    
+            octupole_freq_lower = freq_radial_chunk - best_dnu/2. - d02_upper_scaling_factor*actual_d02
+            octupole_freq_upper = freq_radial_chunk - best_dnu/2. - d02_lower_scaling_factor*actual_d02
+            octupole_freq_asymp = (octupole_freq_lower + octupole_freq_upper)/2.
+
+        if low_cut_frequency > octupole_freq_lower:
+            low_cut_frequency = octupole_freq_lower
+
         # Force input value for lower limit frequency if required
+
         if self.cp.low_cut_frequency != 0:
             low_cut_frequency = self.cp.low_cut_frequency
 
@@ -1645,29 +1725,13 @@ class Chunk(FamedStar):
         # For this reason, also incorporate cooler stars with higher Dnu as possible subgiants (see e.g. Appourchaux et al. 2012).
         # If no dipole modes were identified from the global fit, still give it a try in the chunk modality
         # and check whether there could be a potential dipole mode. This is assuming that l=0 was found!
-        # Start by defining the l=3 search region
-        if best_dnu < self.cp.dnu_rg:
-            octupole_freq_asymp = freq_radial_chunk - best_dnu/2. - d03
-            octupole_freq_lower = freq_radial_chunk - best_dnu/2. - d03*self.cp.d03_upper_scaling_factor
-            octupole_freq_upper = freq_radial_chunk - best_dnu/2. - d03*self.cp.d03_lower_scaling_factor
-        else:
-            # Adopt approximated asymptotic relation by Bedding & Kjeldsen 2003 to locate l=3 region in less evolved stars.
-            if (best_dnu < self.cp.dnu_sg and teff < self.cp.teff_sg):
-                d02_upper_scaling_factor = self.cp.d02_upper_scaling_factor_sg
-                d02_lower_scaling_factor = self.cp.d02_lower_scaling_factor_sg
-            else:
-                d02_upper_scaling_factor = self.cp.d02_upper_scaling_factor_ms
-                d02_lower_scaling_factor = self.cp.d02_lower_scaling_factor_ms
-    
-            octupole_freq_lower = freq_radial_chunk - best_dnu/2. - d02_upper_scaling_factor*actual_d02
-            octupole_freq_upper = freq_radial_chunk - best_dnu/2. - d02_lower_scaling_factor*actual_d02
-            octupole_freq_asymp = (octupole_freq_lower + octupole_freq_upper)/2.
 
         if (best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg):
             dipole_indices = np.where(angular_degree==1)[0]
         else:
             # For MS stars, only check the modes below nu0 - Dnu/2 + freq_dipole_sig, and above the lower limit of the l=3 region. 
             # All remaining ones are flagged as undetected. This will speed up the mode identification process.
+
             if n_radial_chunk != 0:
                 upper_dipole_limit = freq_radial_chunk - best_dnu/2.0 + freq_sig_radial
             else:
@@ -1687,6 +1751,7 @@ class Chunk(FamedStar):
             
             # Perform a peak significance test in order to identify all the significant peaks marked as l=1.
             # If the star is a RG, add up the test for sinc^2 profile to account for possible unresolved mixed modes.
+
             height_ratio_array = np.zeros(len(dipole_indices))
             test_dirs = np.zeros((3,len(dipole_indices)),dtype='U200')
             prior_filenames = np.zeros((3,len(dipole_indices)),dtype='U200')
@@ -2360,7 +2425,7 @@ class Chunk(FamedStar):
                     # If required, assess the FWHM and ASEF of the l=3 candidate against those of the l=0 mode.
                     if flag_octupole_fwhm_test: 
                         # Impose that l=3, if present, has a low ASEF value (< 3/4 ASEF maximum)
-                        asef_threshold = (self.cp.dp_isla['max_nested_it'] + self.cp.dp_isla['n_live']) * self.cp.asef_threshold_fraction
+                        asef_threshold = (self.cp.dp_isla['max_nested_it'] + self.cp.dp_isla['n_live']) * self.cp.asef_octupole_fraction
                 
                         if asef_maximum[best_octupole_index] < asef_threshold:
                             if largest_octupole_fwhm >= fwhm_radial_fit*self.cp.fwhm_octupole_radial_fraction: 
@@ -2374,38 +2439,41 @@ class Chunk(FamedStar):
             if best_dnu > self.cp.dnu_rg and (len(detected_dipole_indices) > 1):
                 for k in range(0, len(detected_dipole_indices)-1):
                     # Check the separation between two consecutive l=1 candidate mixed modes
+                    
                     freq_left_dipole = freq1[detected_dipole_indices[k]]
                     freq_right_dipole = freq1[detected_dipole_indices[k+1]]
 
                     if abs(freq_left_dipole - freq_right_dipole) < best_dnu**2/self.cp.dnu_mixed_modes_separation_scaling/self.cp.dnu_rg:
                         # Since the two peaks are too close, these peaks are likely to originate from a single multiplet. 
                         # Hence take as detected only the one with the largest sampling counts
+                        
                         worst_peak_index = np.argmin([sampling_counts[detected_dipole_indices[k]],sampling_counts[detected_dipole_indices[k+1]]])
                         worst_peak_index = detected_dipole_indices[k + worst_peak_index]
                         detection_probability[worst_peak_index] = 0.0
             
             # If the star is a MS or a high-luminosity RGB star, make sure that there is only one dipole mode for this chunk.
             if (((best_dnu >= self.cp.dnu_rg) & (best_dnu < self.cp.dnu_sg) & (teff >= self.cp.teff_sg)) or (best_dnu >= self.cp.dnu_sg) or (best_dnu <= self.cp.dnu_tip)):
-                detected_dipole_indices = np.where((angular_degree==1) & ((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0)))[0]
+                detected_dipole_indices = np.where((angular_degree==1) & ((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0)))[0] 
                 # If more than one dipole mode is found, then pick up the one with the best combination of SPSD maximum, ASEF maximum, sampling counts and 
                 # frequency position with respect to the global frequency of the dipole mode.
+                
                 if len(detected_dipole_indices) > 1:
                     freq_diff = abs(freq1[detected_dipole_indices] - freq_dipole)
-                    freq_weights = 1/freq_diff
-                    freq_weights /= np.sum(freq_weights)
-                    freq_ww = freq_weights/max(freq_weights)
-                    asef_ww = asef_weights[detected_dipole_indices]/max(asef_weights[detected_dipole_indices])
-                    spsd_ww = spsd_weights[detected_dipole_indices]/max(spsd_weights[detected_dipole_indices])
-                    sampling_ww = np.log(sampling_counts[detected_dipole_indices])/max(np.log(sampling_counts[detected_dipole_indices]))
-                    total_ww = self.cp.weight_freq_fraction*freq_ww + self.cp.weight_asef_fraction*asef_ww + self.cp.weight_spsd_fraction*spsd_ww + self.cp.weight_sampling_fraction*sampling_ww
-                    total_ww /= np.sum(total_ww)
-                    max_ww = max(total_ww)
-                    index = np.argmax(total_ww)
+                    freq_weights_dipole = 1/freq_diff
+                    freq_weights_dipole /= np.sum(freq_weights_dipole)
+                    asef_weights_dipole = asef_weights[detected_dipole_indices]
+                    asef_integral_weights_dipole = asef_integral_weights[detected_dipole_indices]
+                    spsd_weights_dipole = spsd_weights[detected_dipole_indices]
+                    sampling_weights_dipole = sampling_weights[detected_dipole_indices]
+                    total_weights_dipole = self.cp.weight_freq_fraction*freq_weights_dipole + self.cp.weight_asef_fraction*asef_weights_dipole + self.cp.weight_spsd_fraction*spsd_weights_dipole + self.cp.weight_sampling_fraction*ampling_weights_dipole + self.cp.weight_asef_integral_fraction*asef_integral_weights_dipole
+                    total_weights_dipole /= np.sum(total_weights_dipole)
+                    index = np.argmax(total_weights_dipole)
                     dipole_index = detected_dipole_indices[index]
                     freq_dipole_chunk = freq1[dipole_index]
                     bad_dipole_indices = np.where(detected_dipole_indices != dipole_index)[0]
 
                     # Flag the bad modes as undetected to remove them from the list of good frequencies.
+                    
                     detection_probability[detected_dipole_indices[bad_dipole_indices]] = 0.0
 
                     
@@ -2413,6 +2481,7 @@ class Chunk(FamedStar):
         # overplotted on the PSD of the star.
 
         # First, select only modes that are significant with respect to noise.
+        
         detected_indices = np.where((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0))[0]
         local_dp = 0.
 

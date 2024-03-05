@@ -350,7 +350,7 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
     os.chdir(diamonds_path/'PeakBagging'/'build')
 
     if n_runs > 1:
-        n_chunks = np.int(np.ceil(n_runs*1.0/n_threads))
+        n_chunks = int(np.ceil(n_runs*1.0/n_threads))
         start_indices = np.zeros(n_chunks,dtype='int')
         end_indices = np.zeros(n_chunks,dtype='int')
         start_index = 0

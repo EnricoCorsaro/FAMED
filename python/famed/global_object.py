@@ -44,6 +44,7 @@ class Global(FamedStar):
             print('-------------------------------------------------')
 
         # Create output directories if not already present
+
         if not os.path.isdir(self.star_dir/self.cp.isla_subdir):
             os.makedirs(self.star_dir/self.cp.isla_subdir,exist_ok=True)
         if not os.path.isdir(self.star_dir/self.cp.pb_subdir):
@@ -62,12 +63,14 @@ class Global(FamedStar):
                 print('Loading saved information from the pickled object.')
             # Load any variables into attributes that should haven been
             # loaded or created during make_islands. Will ignore new config
+
             temp = pickle.load(open(self.star_dir/(self.catalog_id+self.star_id+'.pickle'),'rb'))
             self.__dict__ = temp.__dict__.copy()
 
         else:
             self.modality='GLOBAL'
             # Copy the configuring parameters to the summary/ directory
+
             target_dir = self.star_dir/self.cp.summary_subdir
             if self.cp.local_config:
                 shutil.copy('famed_config.yml',target_dir/('famed_config_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + '_' + self.cp.global_subdir+'_GLOBAL.yml'))
@@ -87,6 +90,7 @@ class Global(FamedStar):
         diamonds.set_peakbagging(self.catalog_id, self.star_id, self.bgp, self.cp.diamonds_path, self.cp.background_data_dir, self.cp.background_results_dir, self.cp.external_background_results_dir, self.cp.dnu_cl, self.cp.dnu_tip, self.cp.n_dnu_envelope, self.cp.n_sigma_envelope, self.cp.n_sigma_envelope_cl, self.cp.n_sigma_envelope_tip, self.cp.numax_threshold, self.cp.numax_coeff_low, self.cp.numax_coeff_high, self.cp.numax_exponent_low, self.cp.numax_exponent_high,force=force)
         
         # Read input PSD and global asteroseismic parameters
+
         peakbagging_data_dir = self.cp.diamonds_path/'PeakBagging'/'data'
         freq, psd = np.loadtxt(peakbagging_data_dir/(self.catalog_id + self.star_id + '.txt'), unpack=True)
         gauss_par = np.loadtxt(self.star_dir/'gaussianEnvelopeParameters.txt')
@@ -96,15 +100,18 @@ class Global(FamedStar):
 
         # Run DIAMONDS in a global multi-modal fit in order to identify the
         # chunks and estimate global frequencies and the value of DeltaNu
+
         avg_fwhm = np.mean(astero.get_linewidth(np.array([np.min(freq),np.max(freq)]), self.teff,numax, self.cp.numax_threshold))
         smth_bins = int(avg_fwhm/freqbin)
         spsd = smooth(psd, window_len=smth_bins, window='flat')
 
         # Write the prior file for the global multi-modal fit
+
         with open(self.star_dir/self.cp.isla_subdir/(self.cp.prior_filename + '_' + self.cp.global_subdir + '.txt'),'w') as f:
             f.write('{}    {}\n{}    {}\n'.format(np.min(freq),np.max(freq),0,np.mean(spsd)))
             
         # Evaluate linewidth at nuMax and use it for the global multi-modal fit
+
         if dnu <= self.cp.dnu_threshold:
             if dnu <= self.cp.dnu_tip:
                 linewidth = astero.get_linewidth(numax, self.teff, numax, self.cp.numax_threshold)/self.cp.fwhm_global_scaling_tip
@@ -117,6 +124,7 @@ class Global(FamedStar):
         
         # Perform the multi-modal fit. When performing the global fit, also
         # save the background level as an output file
+
         peakbagging_parameters = {'subdir':     self.cp.isla_subdir,
                                   'run':        self.cp.global_subdir,
                                   'background': self.bgp['name'], 
@@ -126,6 +134,7 @@ class Global(FamedStar):
         flag_computation_completed = diamonds.run_peakbagging(self.catalog_id, self.star_id, peakbagging_parameters,0,0,1, self.cp.dp_isla, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename)
 
         # Set some attributes to keep around
+
         self.freq = freq
         self.psd = psd
         self.numax = numax
@@ -133,6 +142,7 @@ class Global(FamedStar):
         self.linewidth_numax = linewidth
 
         # pickle to save stuff
+
         if self.cp.save_progress_pickle:
             pickle.dump(self,open(self.star_dir/(self.catalog_id+self.star_id+'.pickle'),'wb'))
 
@@ -156,27 +166,32 @@ class Global(FamedStar):
         peakbagging_filename_global = self.star_dir/self.cp.summary_subdir/(self.catalog_id + self.star_id + self.cp.peakbagging_filename_label + self.cp.isla_subdir + '_' + self.cp.global_subdir + '_GLOBAL.txt')
 
         # Read sampled frequency from DIAMONDS multi-modal fit
+
         par0 = np.loadtxt(self.star_dir/self.cp.isla_subdir/run/'peakbagging_parameter000.txt')
 
         self.nested_iters = par0
         self.run = run
         
         # Read prior height (upper limit)
+
         prior_down, prior_up = np.loadtxt(self.star_dir/self.cp.isla_subdir/run/'peakbagging_hyperParametersUniform.txt', unpack=True)
         left_bound = prior_down[0]
         right_bound = prior_up[0]
         upper_height = prior_up[1]
 
         # Read input linewidth and background name of the run
+
         config = np.loadtxt(self.star_dir/self.cp.isla_subdir/run/'peakbagging_computationParameters.txt',dtype='str')    
         fit_linewidth = float(config[-1])
         background_name = config[-2]
 
         # Read star PSD
+
         freq, psd = self.freq,self.psd
         freqbin = freq[1]-freq[0]
 
         # Read Nyquist frequency
+
         nyq = np.loadtxt(self.star_dir/'NyquistFrequency.txt')
 
         if self.cp.print_on_screen:
@@ -188,48 +203,51 @@ class Global(FamedStar):
             print(' Maximum PSD frequency: ',str(np.max(freq)),' muHz')
             print(' -------------------------------------------------\n')
 
-
         # Load the nuMax information
+
         numax = self.numax
         scaling_dnu = self.scaling_dnu
         teff = self.teff
-        
 
         # Set a binwidth proportional to the expected separation between
         # adjacent peaks (normally taken as d02/2) if MS or smaller if RG star.
+
         par_range = np.max(par0) - np.min(par0)
         min_separation = self.get_minimum_freq_separation(scaling_dnu)
         binwidth = 1.0*min_separation/self.cp.min_n_bins
         n_bins = int(np.ceil(par_range/binwidth))
         nest_iter = np.arange(len(par0))
 
-
-        
         # Compute an Average Shifted Histogram (ASH) of the distribution of
         # nested iterations. Compute the ASEF with high resolution first in
         # order to determine dnu with high accuracy
+
         n_bins_acf = round(len(nest_iter)/self.cp.n_bins_acf_scaling)
         par_hist, asef_hist = self.compute_asef(par0,nest_iter,n_bins_acf)
-
         acf_dnu, interpolated_dnu, interpolated_acf = self.compute_acf_dnu(scaling_dnu,par_hist,asef_hist)
 
         # Save some attributes
+
         self.acf_dnu = acf_dnu
         self.interpolated_dnu = interpolated_dnu
         self.interpolated_acf = interpolated_acf
         
         # Compute the ASEF with input resolution for extracting the local maxima
+
         par_hist, asef_hist = self.compute_asef(par0,nest_iter,n_bins)
 
         # Save some attributes
+
         self.par_hist = par_hist
         self.asef_hist = asef_hist
         self.asef_bins = n_bins
         
         # Find an appropriate epsilon based on the input temperature.
+
         interp_epsi, dnu_array, epsi_array, teff_array, epsi_fit_array  = astero.interpolate_epsilon(teff, acf_dnu, self.cp.dnu_threshold, self.cp.epsilon_offset, self.cp.epsilon_slope)
 
         # Save stuff for plotting later
+
         self.epsi_fit = interp_epsi
         self.epsi_fit_dnu_arr = dnu_array
         self.epsi_fit_epsi_arr = epsi_array
@@ -239,6 +257,7 @@ class Global(FamedStar):
         # Find the local maxima using a hill-climbing algorithm on the ASEF.
         # Give as input the minimum number of adjacent bins required to consider
         # two local maxima separated.
+
         threshold = self.cp.threshold_asef_global*np.max(asef_hist)
         index_maximum = self.hill_climbing(par_hist,asef_hist,threshold,self.cp.min_bin_separation)
         maximum = par_hist[index_maximum]
@@ -250,6 +269,7 @@ class Global(FamedStar):
         # maximum such that an ASEF peak is considered up to the points of its
         # tails, i.e. the last ones in the decreasing phase of the peak. Ranges
         # are used to compute the actual frequency estimatse from the sampling.
+
         n_maxima = len(maximum)
         range_maximum, divisions_maximum = self.get_range_divisions(par_hist, asef_hist, index_maximum)
 
@@ -259,11 +279,13 @@ class Global(FamedStar):
 
         # Based on the identified frequency ranges, estimate the oscillation
         # frequencies using the sampling information obtained by DIAMONDS.
+
         n_freq = n_maxima
 
         # Compute a smoothed PSD by some average FWHM to evaluate its values at
         # each local maxima of the ASEF. In case of RG, adopt a finer smoothing
         # window to overcome the problem of very narrow mixed modes.
+
         avg_fwhm = np.mean(astero.get_linewidth(maximum,teff,numax,self.cp.numax_threshold))
         if acf_dnu <= self.cp.dnu_tip:
             avg_fwhm = fit_linewidth*self.cp.smoothing_fwhm_factor_rg
@@ -276,10 +298,12 @@ class Global(FamedStar):
         spsd = spsd[tmp_good]
         
         # Load the background level of the star
+
         bg_level = np.loadtxt(self.star_dir/'backgroundLevel.txt', usecols=(1,))
         bg_level_local = bg_level[tmp_good]
 
         # Evaluate SNR of the dataset in the case of global modality
+
         snr = np.max(spsd)/np.mean(bg_level_local)
 
         sampled_estimates = self.evaluate_sampling_frequencies(par0, par_hist ,freq, spsd, maximum, range_maximum)
@@ -289,11 +313,13 @@ class Global(FamedStar):
         spsd_maximum = sampled_estimates['spsd_maximum']
 
         # Define some weights useful for identification of proper frequency peaks during mode identification
+
         sampling_weights = sampling_counts/np.sum(sampling_counts)
         spsd_weights = spsd_maximum/np.sum(spsd_maximum)
         asef_weights = asef_maximum/np.sum(asef_maximum)
 
         # Save some attributes to our object
+
         self.snr = snr
         self.psd = psd
         self.freq = freq
@@ -305,6 +331,7 @@ class Global(FamedStar):
         
         # Save the total list of frequencies, uncertainties, ASEF maxima and
         # sampling counts for reference.
+
         if self.cp.save_complete_lists:
             with open(self.star_dir/self.cp.summary_subdir/(self.catalog_id + self.star_id + self.cp.peakbagging_filename_label + 'global.all.txt'),'w') as f:
                 f.write('# Frequency (microHz), 1-sigma frequency (microHz), ASEF maximum (iterations), sampling counts\n')
@@ -318,6 +345,7 @@ class Global(FamedStar):
         
         # Obtain epsilon from an échelle value of the l=0 ridge échelle
         # frequency position.
+
         self.bad_epsi = False
         fit_dnu = acf_dnu
         central_freq = numax
@@ -331,6 +359,7 @@ class Global(FamedStar):
         ap = astero.get_asymptotic_parameters(numax, acf_dnu, teff, self.cp.d01_mass_offset, self.cp.d01_mass_slope, self.cp.d01_offset, self.cp.d02_mass_offset, self.cp.d02_mass_slope, self.cp.d02_offset, self.cp.d03_slope,self.cp.d03_offset, self.cp.numax_sun, self.cp.dnu_sun, self.cp.teff_sun)
 
         # Start by veryfying whether the stars has depressed dipole modes
+
         asef_depressed_modes_threshold = (self.cp.dp_isla['max_nested_it']+self.cp.dp_isla['n_live'])*self.cp.asef_threshold_fraction
 
         if fit_dnu <= self.cp.dnu_threshold:
@@ -348,6 +377,7 @@ class Global(FamedStar):
                 print('\nThe star is likely to have depressed dipole modes.\n')
 
         # Set up priors for the sliding pattern fit
+
         if fit_dnu <= self.cp.dnu_threshold:
             flag_evolved_star = True
             dipole_radial_height_ratio = self.cp.dipole_radial_height_ratio_rg
@@ -358,6 +388,7 @@ class Global(FamedStar):
 
             # Set the range of the dataset and frequency prior for the sliding
             # pattern fit.
+
             data_freq_boundaries = [numax - n_orders_side_data*fit_dnu, numax + n_orders_side_data*fit_dnu]
             tmp_central = np.where((freq <= numax + n_orders_side_prior*fit_dnu) & (freq >= numax - n_orders_side_prior*fit_dnu))[0]
             spsd_central = spsd[tmp_central]
@@ -395,6 +426,7 @@ class Global(FamedStar):
                 n_orders_side_data = n_orders_side_prior*1.33333
 
                 #Set the range of the dataset and frequency prior forthe sliding pattern fit
+
                 right_freq_bound = central_freq + n_orders_side_data*fit_dnu
                 left_freq_bound = central_freq - n_orders_side_data*fit_dnu
                 data_freq_boundaries = [left_freq_bound,right_freq_bound]
@@ -411,12 +443,14 @@ class Global(FamedStar):
                 # median value. If such deviation for any of the two ridges is
                 # larger than a given threshold, then consider that mixed modes
                 # are present and classify the star as a subgiant.
+
                 central_indices = np.where((freq1 > central_freq - fit_dnu*self.cp.n_central_orders_side) & (freq1 < central_freq + fit_dnu*self.cp.n_central_orders_side) & (asef_maximum >= asef_depressed_modes_threshold))[0]
                 freq1_right = freq1[central_indices[1::2]]     # Odd frequencies
                 freq1_left = freq1[central_indices[0::2]]      # Even frequencies
 
                 # Check that extracted frequencies are approximately varying in
                 # steps of dnu
+
                 flag_double_step = False
 
                 if len(freq1_right) >= 2:
@@ -431,6 +465,7 @@ class Global(FamedStar):
                                                 
                 # If a double step is required then consider three ridges
                 # (left, central, and right).
+
                 if flag_double_step:
                     freq1_left = freq1[central_indicies[::3]]
                     freq1_right = freq1[central_indicies[2::3]]
@@ -491,6 +526,7 @@ class Global(FamedStar):
                     # Now find the ridge with the smallest maximum spread and
                     # from its modulo median value find epsilon and the value of
                     # radial mode frequency.
+
                     if flag_double_step:
                         freq1_median = np.r_[freq1_left_median,freq1_central_median,freq1_right_median]
                         freq1_modulo_median = np.r_[freq1_left_modulo_median,feq1_central_modulo_median,freq1_right_modulo_median]
@@ -511,6 +547,7 @@ class Global(FamedStar):
 
                     # Set the range of the dataset and frequency prior for the
                     # sliding pattern fit
+
                     right_freq_bound = freq_radial_echelle + n_orders_side_data*fit_dnu
                     left_freq_bound = freq_radial_echelle - n_orders_side_data*fit_dnu
                     data_freq_boundaries = [left_freq_bound,right_freq_bound]
@@ -536,6 +573,7 @@ class Global(FamedStar):
 
                     # Set the range of the dataset and frequency prior for the
                     # sliding pattern fit
+
                     data_freq_boundaries = [numax - n_orders_side_data*fit_dnu, numax + n_orders_side_data*fit_dnu]
                     tmp_central = np.where((freq <= numax + n_orders_side_prior*fit_dnu) & (freq >= numax - n_orders_side_prior*fit_dnu))[0]
                     spsd_central = spsd[tmp_central]
@@ -572,6 +610,7 @@ class Global(FamedStar):
         while flag_repeat_sliding_fit & (sliding_iteration <= 1):
 
             # Check if run already exists
+
             if not os.path.isfile(self.star_dir/self.cp.as_subdir/(run_subdir+'0')/'peakbagging_parameter000.txt') or force or (sliding_iteration > 0):
                 # Make sure that the number of orders to compute the sliding
                 # pattern model is an odd number. This will make sure that the
@@ -600,7 +639,9 @@ class Global(FamedStar):
                 boundaries = [freq_prior, height_prior, dnu_prior, d02_prior, d01_prior, d13_prior, rot_split_prior, cosi_prior]
 
                 self.bb = boundaries
+
                 # Prepare frequency range and prior filenames for each run
+
                 prior_filenames = []
                 data_range_filenames = []
 
@@ -636,9 +677,11 @@ class Global(FamedStar):
 
             for k in range(0, self.cp.n_sliding_test):
                 # Read sampled frequency from multi-modal fit for nu0 central
+
                 par_nu0 = np.loadtxt(self.star_dir/self.cp.as_subdir/(run_names[k]+'/peakbagging_parameter000.txt'))
 
                 # Read sampled posterior distribution from multi-modal fit
+                
                 post = np.loadtxt(self.star_dir/self.cp.as_subdir/(run_names[k]+'/peakbagging_posteriorDistribution.txt'))
                 post /= np.max(post)
                 radial_freq_reference = np.sum(par_nu0*post)
@@ -656,6 +699,7 @@ class Global(FamedStar):
 
                 # if star is flagged as MS, then also retrieve the value of
                 # the small spacing d01
+
                 if not flag_evolved_star:
                     par_d01 = np.loadtxt(self.star_dir/self.cp.as_subdir/(run_names[k]+'/peakbagging_parameter004.txt'))
                     d01_array[k] = np.sum(par_d01*post)/np.sum(post)
@@ -671,6 +715,7 @@ class Global(FamedStar):
                 # and the dipole peak was removed by configuration, 
                 # repeat the fit by including a l=1 mode peak, having the position fixed
                 # to the p-mode frequency of the asymptotic relation
+
                 if (median_echelle_epsi >= epsilon_upper_limit) or ((median_echelle_epsi <= epsilon_lower_limit) & (fit_dnu >= self.cp.dnu_cl2)):
                     if sliding_iteration>0:
                         if self.cp.print_on_screen:
@@ -690,10 +735,12 @@ class Global(FamedStar):
                 else:
                     # Epsilon from the sliding-pattern fit has been validated.
                     # Therefore exit the while loop.
+
                     flag_repeat_sliding_fit = False
             else:
                 # No need to repeat the sliding pattern fit because the star is
                 # not a red giant.
+
                 flag_repeat_sliding_fit = False
             sliding_iteration +=1
 
@@ -710,12 +757,14 @@ class Global(FamedStar):
                 fit_d01 = 0
 
         # Control check on epsilon for late subgiants/early RGB
+
         flag_interp_epsi = False
 
         if self.cp.force_epsilon_dnu_value:
             if (fit_dnu <= self.cp.dnu_threshold) & (fit_dnu >= self.cp.dnu_cl):
                 # If the star is an evolved subgiant/early RGB check that
                 # epsilon is in agreement with the epsilon-dnu relation
+                
                 radial_freq_reference2 = closest(radial_freq_reference,freq1)
                 modeid_sliding = astero.get_modeid(radial_freq_reference,fit_dnu,median_echelle_epsi,0,numax,0)
                 modeid_epsi_dnu = astero.get_modeid(radial_freq_reference2,fit_dnu,interp_epsi,0,numax,0)
@@ -727,7 +776,7 @@ class Global(FamedStar):
                     self.bad_epsi = True
                     
                     if self.cp.print_on_screen:
-                        print(' Sliding fit mode identification did not match epsilon-Dnu relation.\n')
+                        print(' Sliding fit mode identification did not match epsilon-Dnu relation.')
                         print(' Applying correction to epsilon from epsilon-Dnu relation.\n')
                     
                     if modeid_epsi_dnu['degree'] == 1:
@@ -735,12 +784,14 @@ class Global(FamedStar):
                     else:
                         radial_freq_reference = radial_freq_reference2
 
-        # Control check on epsilon for F-type stars
-        if teff > self.cp.teff_sg:
+        # Control check on epsilon for stars falling in the Teff-epsilon relation regime
+
+        if fit_dnu >= self.cp.dnu_threshold:
             # Due to the confusion arising from the strong blending of the modes
             # for F-type stars, the sliding pattern fit may be unreliable.
             # In this case check the obtained mode identification against the
             # one using the epsilon-Teff relation 
+            
             radial_freq_reference2 = closest(radial_freq_reference,freq1)
             modeid_sliding = astero.get_modeid(radial_freq_reference,fit_dnu,median_echelle_epsi,fit_d01,numax,0)
             modeid_teff = astero.get_modeid(radial_freq_reference2,fit_dnu,interp_epsi,fit_d01,numax,0)
@@ -752,7 +803,7 @@ class Global(FamedStar):
                     self.bad_epsi = True
 
                     if self.cp.print_on_screen:
-                        print(' Sliding fit mode identification did not match epsilon-Teff relation.\n')
+                        print(' Sliding fit mode identification did not match epsilon-Teff relation.')
                         print(' Applying correction to epsilon from epsilon-Teff relation.\n')
                     
                     if modeid_teff['degree'] == 1:
@@ -773,6 +824,7 @@ class Global(FamedStar):
         # Find possible bad frequencies and remove them from the list. Then
         # compute a large frequency separation. Finally obtain a simple mode
         # identification (either l=0 or l=1) for the full set of frequencies.
+
         while (flag_dnu_fit) & (iterations < self.cp.max_skim_iterations_global):
             n_freq = n_maxima
             order_number = np.zeros(n_freq,dtype='int')
@@ -782,6 +834,7 @@ class Global(FamedStar):
                 print(' Iteration: %s' % iterations)
 
             # Perform a first mode identification based on the ACF value of dnu.
+
             mode_id = astero.get_modeid(freq1,fit_dnu,fit_epsi,fit_d01,numax,fit_alpha)
             enn = mode_id['order']
             ell = mode_id['degree']          
@@ -790,10 +843,12 @@ class Global(FamedStar):
 
             # Using the obtained mode identification, divide the frequency set
             # into dipole and radial modes.
+            
             tmp_radial = np.where(angular_degree == 0)[0]
             tmp_dipole = np.where(angular_degree == 1)[0]
 
             # Select only l=0 modes
+            
             if len(tmp_radial) > 0:
                 n_radial = len(tmp_radial)
                 freq1_radial = freq1[tmp_radial]
@@ -805,6 +860,7 @@ class Global(FamedStar):
                 n_radial = 0
 
             # Select only l=1 modes
+            
             if len(tmp_dipole) > 0:
                 n_dipole = len(tmp_dipole)
                 freq1_dipole = freq1[tmp_dipole]
@@ -819,6 +875,7 @@ class Global(FamedStar):
             # reference radial mode from the sliding pattern and the one
             # estimated from the ASEF. If the sliding-pattern fit was
             # unsuccesful, this difference will be 0.
+
             if self.cp.correct_radial_frequencies:
                 delta_nu0 = radial_freq_reference - closest(radial_freq_reference,freq1_radial)
                 ap = astero.get_asymptotic_parameters(numax,fit_dnu,teff, self.cp.d01_mass_offset, self.cp.d01_mass_slope, self.cp.d01_offset, self.cp.d02_mass_offset, self.cp.d02_mass_slope, self.cp.d02_offset, self.cp.d03_slope,self.cp.d03_offset, self.cp.numax_sun, self.cp.dnu_sun, self.cp.teff_sun)
@@ -829,6 +886,7 @@ class Global(FamedStar):
             # Verify the position of each frequency by comparing it to the
             # expected asymptotic value. Discard those frequencies that deviate
             # from their asymptotic value by more than a given tolerance in dnu.
+
             if (fit_dnu < self.cp.dnu_rg) or ((fit_dnu < self.cp.dnu_sg) & (self.teff < self.cp.teff_sg)):
                 if fit_dnu > self.cp.dnu_rg:
                     tolerance = self.cp.skim_frequency_tolerance_sg
@@ -842,6 +900,7 @@ class Global(FamedStar):
     
             if n_radial != 0:
                 # Select only good l=0 frequencies
+
                 good_freq_index_radial = astero.assess_freq_asymptotic(freq1_radial,order_radial,0,fit_dnu,fit_epsi,fit_alpha,fit_d01,numax,tolerance)
 
                 if self.cp.print_on_screen:
@@ -855,6 +914,7 @@ class Global(FamedStar):
                 asef_maximum_radial = asef_maximum_radial[good_freq_index_radial]
 
             # Collect all frequencies after removing the bad ones
+
             n_dipole = len(freq1_dipole)
             n_radial = len(freq1_radial)
             n_freq = n_dipole + n_radial
@@ -882,6 +942,7 @@ class Global(FamedStar):
             # Compute optimal value for dnu from individual frequencies only if
             # at least three modes are present. Otherwise, keep as best dnu and
             # epsilon, those from the ACF and dnu-epsilon diagram.
+
             flag_dnu_fit = False
 
             if n_radial >= 2:
@@ -890,10 +951,12 @@ class Global(FamedStar):
                 dnu_prior = [fit_dnu*self.cp.dnu_prior_lower_fraction_as,fit_dnu*self.cp.dnu_prior_upper_fraction_as]
 
                 # Use epsilon fixed from the sliding pattern fit, if successful
+
                 epsi_prior = [fit_epsi,fit_epsi]
                 if (n_radial == 2) or (n_radial == 3):
                     # Only DeltaNu can be estimated as a free parameter. Then fix alpha to 0 and epsilon to
                     # its former value.
+
                     alpha_prior = [0.0,0.0]
                 else:
                     alpha_prior = [self.cp.alpha_prior_lower_as,self.cp.alpha_prior_upper_as]
@@ -935,6 +998,7 @@ class Global(FamedStar):
                     best_alpha = np.sum(par*post)/np.sum(post)
                         
                 # Update local values for asymptotic parameters
+
                 fit_dnu = best_dnu
                 fit_epsi = best_epsi
                 fit_alpha = best_alpha
@@ -943,6 +1007,7 @@ class Global(FamedStar):
             else:
                 # Not enough radial mode frequencies were found to perform
                 # an asymptotic fit
+
                 best_dnu = acf_dnu
                 best_epsi = fit_epsi
                 best_alpha = self.cp.alpha_radial_universal
@@ -950,9 +1015,11 @@ class Global(FamedStar):
                     print(' Not enough radial mode frequencies to perform an asymptotic fit.\n')
                     
         # Save asymptotic radial mode frequencies
+
         freq_radial_asymptotic = best_dnu*(best_epsi + order_radial + best_alpha/2.*(order_radial - numax/best_dnu)**2)
 
         # Select only l=1 modes
+
         tmp_dipole = np.where(angular_degree==1)[0]
         if len(tmp_dipole)>0:
             n_dipole = len(tmp_dipole)
@@ -969,6 +1036,7 @@ class Global(FamedStar):
         
         # Check for an additional dipole frequency after the last radial mode.
         # If so, add one more chunk to include the last dipole separately.
+
         n_chunks = max(order_number) - min(order_number) + 1
         unique_order_number = np.arange(n_chunks) + min(order_number)
 
@@ -1010,14 +1078,17 @@ class Global(FamedStar):
         
         # Save final outputs
         # Evaluate empirical linewidth for each oscillation frequency
+
         linewidth = astero.get_linewidth(freq1_final,teff,numax)
 
         # Save the value of dnu from ACF and the value of epsilon from diagram
+
         with open(peakbagging_filename_global, 'w') as f:
             f.write('# nuMax (microHz), DeltaNu_ACF (microHz), DeltaNu_fit (microHz), epsilon, epsilon (interpolated), alpha, Teff (K), N_chunks, Flag depressed dipole\n')
             f.write('{:.4f}  {:.4f}  {:.4f}  {:.4f}  {:.4f}   {:.4f}  {:.1f}  {:d}  {:d}\n'.format(numax,acf_dnu,best_dnu,best_epsi,interp_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole))
 
             # Save the frequency positions of each chunk identified in GLOBAL.
+
             f.write('# Chunk index, start and end frequency values for each chunk (one per line), SNR\n')
             for i in range(0, n_separations-1):
                 tmp_chunk = np.where((freq <= separations[i+1]) & (freq >= separations[i]))[0]
@@ -1029,11 +1100,13 @@ class Global(FamedStar):
             # Save the individual oscillation frequencies from the global fit,
             # their uncertainties, mode identification and associated FWHM from
             # Ball+18.
+
             f.write('# n, l, frequency (microHz), 1-sigma frequency (microHz), ASEF maximum (iterations), FWHM from predictions (microHz)\n')
             for i in range(0,n_freq):
                 f.write('{:<3d} {:>2d} {:>12.5f} {:>12.5f} {:>7d} {:>12.5f}\n'.format(order_number[i],angular_degree[i],freq1_final[i],freq_sig1_final[i],int(asef_maximum_final[i]),linewidth[i]))
 
         # Save some quantities as object attributes.
+
         self.separations = separations
         self.n_freq = n_freq
         self.n_chunks = n_chunks
@@ -1051,6 +1124,7 @@ class Global(FamedStar):
         self.flag_depressed_dipole = flag_depressed_dipole
 
         # Save stuff into pickle for later steps...
+
         if self.cp.save_progress_pickle:
             pickle.dump(self,open(self.star_dir/(self.catalog_id+self.star_id+'.pickle'),'wb'))
 
