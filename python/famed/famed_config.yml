@@ -2,7 +2,7 @@
 
 # FILE PATHS
 PATHS:
-    configuring_parameters_file: '/Users/eco/asismology/github/FAMED/python/famed/famed_configuring_parameters.txt'
+    configuring_parameters_file: 'YOUR_LOCAL_ROOT_PATH_HERE/FAMED/python/famed/famed_configuring_parameters.txt'
 
 # PLOTTING CONFIGURATION
 PLOTTING:

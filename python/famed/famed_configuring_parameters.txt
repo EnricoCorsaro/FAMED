@@ -1,8 +1,8 @@
 # -----------------------------------------------------------------------------------------
 # global paths used in the computation
 # -----------------------------------------------------------------------------------------
-root_path /Users/eco/asismology/github/
-famed_path /Users/eco/asismology/github/FAMED/python/famed/
+root_path YOUR_LOCAL_ROOT_PATH_HERE/
+famed_path YOUR_LOCAL_ROOT_PATH_HERE/FAMED/python/famed/
 isla_subdir isla
 pb_subdir pb
 as_subdir as
@@ -12,13 +12,13 @@ global_subdir global
 save_complete_lists 0
 save_png 1
 save_eps 0
-plot_total_solution 1
+plot_total_solution 0
 print_on_screen 1
 save_progress_pickle 1
 prior_filename prior_hyperParameters
 background_run_number 00
 n_threads 12
-logo_filename /Users/eco/asismology/github/FAMED/docs/figures/FAMED_LOGO_BLACK_small.jpeg
+logo_filename YOUR_LOCAL_ROOT_PATH_HERE/FAMED/docs/figures/FAMED_LOGO_BLACK_small.jpeg
 background_data_dir -99
 background_results_dir -99
 external_background_results_dir -99
