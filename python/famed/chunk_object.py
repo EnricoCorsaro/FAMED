@@ -865,7 +865,7 @@ class Chunk(FamedStar):
 
             if best_dnu < self.cp.dnu_rg:
                 # Evolutionary stage: RG
-                
+
                 quadrupole_freq_asymp = freq_radial_chunk - median_d02
                 quadrupole_index = closest(quadrupole_freq_asymp,freq1,index=True)
                 if quadrupole_index != radial_index:
@@ -878,6 +878,7 @@ class Chunk(FamedStar):
 
                     # Find the l=1 mixed modes closest to l=2 on each side of the peak.
                     # If the mixed mode falls within d02/2 from the l=2 frequency position then merge it with the l=2
+
                     candidate_mixed = np.where((freq1 <= freq_quadrupole_chunk + d02/self.cp.d02_scaling_merge_mixed) & (freq1 >= freq_quadrupole_chunk - d02/self.cp.d02_scaling_merge_mixed) & (freq1 != freq_quadrupole_chunk) & (freq1 < freq_radial_chunk))[0]
                     tmp_mask = np.zeros(len(freq1),dtype=bool)
                     tmp_mask[candidate_mixed] = True 
@@ -885,6 +886,7 @@ class Chunk(FamedStar):
     
                     if len(candidate_mixed) > 0:
                         # Remove the merged l=1 frequencies from the frequency set
+                        
                         sampling_counts[quadrupole_index] = sampling_counts[quadrupole_index] + np.sum(sampling_counts[candidate_mixed])
                         merged_freq = freq1[candidate_mixed]
                    
@@ -906,6 +908,7 @@ class Chunk(FamedStar):
                 
                         if len(good_freq) > 0:
                             # Deprecate one range and division between the lowest and highest merged frequencies
+
                             range_maximum = range_maximum[:,good_freq]
                             divisions_maximum = divisions_maximum[:,good_freq]
                             freq1 = freq1[good_freq]
@@ -951,17 +954,21 @@ class Chunk(FamedStar):
                 else:
                     if best_dnu <= self.cp.dnu_sg:
                         # Here the star is considered a SG
+
                         max_local_d02 = max_d02
                     else:
                         # Here the star is considered a MS
+
                         max_local_d02 = best_dnu/4.
             
     
                 # Set up and run the multi-modal fit for the double peak, after checking whether the run already exists
+
                 run_subdir = run + 'A'
        
                 if not os.path.isfile(self.star_dir/self.cp.isla_subdir/run_subdir/'peakbagging_computationParameters.txt') or force:
                     # Set up prior
+
                     freq_prior = [freq_radial_chunk - d02,upper_limit_freq_radial]
                     height_prior = [prior_down[1],prior_up[1]]
 
@@ -990,15 +997,19 @@ class Chunk(FamedStar):
                         print(' Load information from l=2,0 duplet fit with DIAMONDS.')
 
                 # Read sampled frequency from DIAMONDS multi-modal fit for nu_0
+
                 par_nu0 = np.loadtxt(self.star_dir/self.cp.isla_subdir/run_subdir/'peakbagging_parameter000.txt')
      
                 # Read sampled frequency from DIAMONDS multi-modal fit for d02
+
                 par_d02 = np.loadtxt(self.star_dir/self.cp.isla_subdir/run_subdir/'peakbagging_parameter002.txt')
 
                 # Read posterior distribution from DIAMONDS multi-modal fit
+
                 post = np.loadtxt(self.star_dir/self.cp.isla_subdir/run_subdir/'peakbagging_posteriorDistribution.txt')
 
                 # Compute parameter estimates, using a weighted mean from the posterior
+
                 post /= max(post) 
                 nest_iter = np.arange(len(par_nu0)) 
                 nu0 = np.sum(post*par_nu0)/np.sum(post)
@@ -1012,6 +1023,7 @@ class Chunk(FamedStar):
                 freq_sig_radial_chunk = nu0_sig
 
                 # Now make frequency uncertainties consistent in definition with the remainder of the extracted set of frequencies
+
                 midpoint_02 = (freq_radial_chunk + freq_quadrupole_chunk)/2.
                 upper_bound_quadrupole = midpoint_02
                 best_quadrupole_index = max(np.where(range_maximum[0,:] <= freq_quadrupole_chunk)[0])
@@ -1019,6 +1031,7 @@ class Chunk(FamedStar):
                 #lower_bound_quadrupole = lower_bound_quadrupole[0]
        
                 # Put safe conditions on the lower bound for l=2
+
                 if lower_bound_quadrupole >= upper_bound_quadrupole:
                     print(' Adjusting lower frequency bound for l=2 due to swap with upper bound.')
                     lower_bound_quadrupole = freq_quadrupole_chunk - d02
@@ -1033,11 +1046,13 @@ class Chunk(FamedStar):
                 #upper_bound_radial = upper_bound_radial[0]
         
                 # Put safe conditions on the lower bound for l=0
+
                 if lower_bound_radial >= upper_bound_radial:
                     print(' Adjusting upper frequency bound for l=0 due to swap with lower bound.')
                     upper_bound_radial += abs(upper_bound_radial - lower_bound_radial)*2 
         
                 # Compute l=2 frequency uncertainty
+
                 tmp_range = np.where((par0 < upper_bound_quadrupole) & (par0 >= lower_bound_quadrupole))[0]
                 tmp_freq_range = np.where((freq < upper_bound_quadrupole) & (freq >= lower_bound_quadrupole))[0]
                 tmp_hist_range = np.where((par_hist < upper_bound_quadrupole) & (par_hist >= lower_bound_quadrupole))[0]
@@ -1053,6 +1068,7 @@ class Chunk(FamedStar):
                 freq_sig_quadrupole_chunk = np.sqrt(np.sum((par0_range-freq_quadrupole_chunk)**2*tmp_range**2)/np.sum(tmp_range**2))
        
                 # Compute l=0 frequency uncertainty
+
                 tmp_range = np.where((par0 < upper_bound_radial) & (par0 >= lower_bound_radial))[0]
                 tmp_freq_range = np.where((freq < upper_bound_radial) & (freq >= lower_bound_radial))[0]
                 tmp_hist_range = np.where((par_hist < upper_bound_radial) & (par_hist >= lower_bound_radial))[0]
@@ -1082,6 +1098,7 @@ class Chunk(FamedStar):
                 freq_sig_radial_chunk = np.sqrt(np.sum((par0_range-freq_radial_chunk)**2*tmp_range**2)/np.sum(tmp_range**2))
 
                 # Check whether there are old frequencies (from local maxima) inside this region of the l=2,0 duplet
+
                 tmp_inside = np.where((freq1 >= lower_bound_quadrupole) & (freq1 <= upper_bound_radial))[0]
                 tmp_mask = np.zeros(len(freq1),dtype=bool)
                 tmp_mask[tmp_inside] = True 
@@ -1094,6 +1111,7 @@ class Chunk(FamedStar):
         
                 if (len(tmp_inside) > 0) & (len(tmp_outside) > 0):
                     # If at least one frequency is found inside the l=2,0 range, first remove it (them) from the sample of frequencies
+
                     range_maximum = range_maximum[:,tmp_outside]
                     divisions_maximum = divisions_maximum[:,tmp_outside]
                
@@ -1107,8 +1125,10 @@ class Chunk(FamedStar):
                     spsd_maximum = spsd_maximum[tmp_outside]
 
                 # Then add up the new l=2,0 frequencies to the list
+
                 if len(tmp_outside) > 0:
                     # In this case there are other frequencies outside the l=2,0 range, so take them into account
+
                     range_maximum = np.hstack((range_maximum,[[lower_bound_quadrupole],[upper_bound_quadrupole]],[[lower_bound_radial],[upper_bound_radial]]))
                     divisions_maximum = np.hstack((divisions_maximum,[[lower_bound_quadrupole],[upper_bound_quadrupole]],[[lower_bound_radial],[upper_bound_radial]]))
                     
@@ -1122,6 +1142,7 @@ class Chunk(FamedStar):
                     spsd_maximum = np.append(spsd_maximum,[spsd_maximum_quadrupole,spsd_maximum_radial])
 
                     # Resort by increasing frequency order (useful if there are frequencies above l=0)
+
                     tmp_sort = np.argsort(freq1)
                     range_maximum = range_maximum[:,tmp_sort]
                     divisions_maximum = divisions_maximum[:,tmp_sort]
@@ -1139,6 +1160,7 @@ class Chunk(FamedStar):
                     n_freq = len(freq1)
                 else:
                     # Only the candidate l=2,0 mode frequencies are available
+
                     range_maximum = np.array([[lower_bound_quadrupole,upper_bound_quadrupole],[lower_bound_radial,upper_bound_radial]]).T
                     divisions_maximum = np.array([[lower_bound_quadrupole,upper_bound_quadrupole],[lower_bound_radial,upper_bound_radial]]).T
                     
@@ -1155,10 +1177,12 @@ class Chunk(FamedStar):
                     n_freq = len(freq1)
                     
                 # Obtain the radial and quadrupole mode indices from frequency array
+
                 quadrupole_index = np.where(angular_degree==2)[0][0]
                 radial_index = np.where(angular_degree==0)[0][0]
                     
             # Compute local small spacing d02 for this chunk.
+
             if flag_quadrupole_found != 0: 
                 local_d02 = freq_radial_chunk - freq_quadrupole_chunk
             else:
@@ -1171,6 +1195,7 @@ class Chunk(FamedStar):
                     actual_d02 = median_d02
     
             # Update the lower frequency limit for this chunk
+
             low_cut_frequency2 = freq_radial_chunk - best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)) + freq_sig_radial
             low_cut_frequency3 = freq_radial_chunk - best_dnu + freq_sig_radial
             if low_cut_frequency2 > low_cut_frequency:
@@ -1210,6 +1235,7 @@ class Chunk(FamedStar):
             octupole_freq_upper = freq_radial_chunk - best_dnu/2. - d03*self.cp.d03_lower_scaling_factor
         else:
             # Adopt approximated asymptotic relation by Bedding & Kjeldsen 2003 to locate l=3 region in less evolved stars.
+
             if (best_dnu < self.cp.dnu_sg and teff < self.cp.teff_sg):
                 d02_upper_scaling_factor = self.cp.d02_upper_scaling_factor_sg
                 d02_lower_scaling_factor = self.cp.d02_lower_scaling_factor_sg
@@ -1256,6 +1282,7 @@ class Chunk(FamedStar):
             n_freq = len(freq1)   
 
         # Finally remove any possible frequency identified above the actual l=0 mode.
+
         tmp_above_radial = np.where(freq1 > freq_radial_chunk)[0]
         tmp_mask = np.zeros(len(freq1),dtype=bool)
         tmp_mask[tmp_above_radial] = True 
@@ -1279,6 +1306,7 @@ class Chunk(FamedStar):
         # Perform a Lorentzian profile fit to the PSD to assess the FWHM of the radial peak.
         # Consider the largest range around the peak. If no radial peak is present, then
         # take as FWHM of the radial mode that of the adjacent dipole mode.
+
         if n_radial_chunk != 0:
             radial_index = closest(freq_radial_chunk,freq1,index=True)
             quadrupole_index = closest(freq_quadrupole_chunk,freq1,index=True)
@@ -1303,6 +1331,7 @@ class Chunk(FamedStar):
                 prior_filenames = np.zeros(self.cp.n_fwhm_fit,dtype='U200')
   
                 # Make sure to enlarge FWHM prior if fit fails.
+
                 flag_computation_completed = 0
                 iterations = 1
         
@@ -1313,6 +1342,7 @@ class Chunk(FamedStar):
 
                 while flag_computation_completed != 1:
                     # Allow for a very narrow FWHM
+
                     fwhm_prior = [left_fwhm,fwhm_radial*self.cp.fwhm_magnification_factor_radial*iterations]
                     if best_dnu < self.cp.dnu_threshold:
                         boundaries = [freq_prior_radial,amplitude_prior_radial,fwhm_prior]
@@ -1356,10 +1386,15 @@ class Chunk(FamedStar):
                     fwhm_parameter = '005'
         
                 # Read the sampled FWHM of the radial mode.
+
                 par_fwhm0 = np.loadtxt(self.star_dir/self.cp.pb_subdir/run_names[k]/('peakbagging_parameter' + fwhm_parameter + '.txt'))
+
                 # Load the posterior samples to compute Bayesian mean estimate for FWHM_0
+
                 post = np.loadtxt(self.star_dir/self.cp.pb_subdir/run_names[k]/'peakbagging_posteriorDistribution.txt')
+                
                 # Compute parameter estimate, using a weighted average
+
                 post /= max(post)
                 fwhm_radial_fit_array[k] = np.sum(par_fwhm0*post)/np.sum(post)
     
@@ -1396,12 +1431,14 @@ class Chunk(FamedStar):
                 tmp = [os.remove(delete_filename) for delete_filename in delete_filenames]
  
         # Skip this part if no radial mode is found
+        
         if n_radial_chunk != 0:
             # Peak significance and blending test for l=2,0
 
             # Perform the peak significance test on each frequency peak found to have a critical SNR
             # Evaluate SNR using an estimate for the amplitude of the peak
             # Clear previous peak detection probabilities if fit is forced
+            
             right_bound = range_maximum[1,radial_index]
             left_bound = range_maximum[0,quadrupole_index]
             tmp_freq_peak = np.where((freq <= right_bound) & (freq >= left_bound))[0]
@@ -1411,12 +1448,14 @@ class Chunk(FamedStar):
             height_ratio_radial = spsd_maximum[radial_index]/(bg_peak*self.cp.height_ratio_threshold)
 
             # Distinguish between RG + late SG stars, and MS + early SG stars (especially hot stars, where linewidths are larger).
+            
             if (best_dnu < self.cp.dnu_threshold):
                 # This is the case of either RG or late SG.
                 # Here perform a standard significance test only for the l=2,0 pair, but separately
                 # for each mode. Assume Lorentzian profiles only.
                 # For the quadrupole mode adopt a larger linewidth upper limit for the prior. This is because
                 # l=2 modes are generally affected by the presence of l=2 mixed modes in evolved stars.
+            
                 fwhm_quadrupole = fwhm_radial_fit*self.cp.fwhm_magnification_factor_quadrupole
                 fwhm_radial = fwhm_radial_fit*self.cp.fwhm_magnification_factor_radial
                 fwhm = [fwhm_quadrupole,fwhm_radial]
@@ -1428,6 +1467,7 @@ class Chunk(FamedStar):
                 height_ratio = [height_ratio_quadrupole,height_ratio_radial]
       
                 # For each peak consider the maximum data range between the range and the division    
+            
                 left_bound_quadrupole = min([range_maximum[0,quadrupole_index],divisions_maximum[0,quadrupole_index]]) 
                 right_bound_quadrupole = max([range_maximum[1,quadrupole_index],divisions_maximum[1,quadrupole_index]]) 
                 left_bound_radial = min([range_maximum[0,radial_index],divisions_maximum[0,radial_index]]) 
@@ -1466,6 +1506,7 @@ class Chunk(FamedStar):
 
                         if not os.path.isfile(probability_filename):
                             # Set up priors for the peak test profile
+            
                             data_freq_boundaries = [range_quadrupole_radial[i][0],range_quadrupole_radial[i][1]]
                             freq_prior = [freq_left[i],freq_right[i]]
                             amplitude_prior = [0.0,amplitude[i]]
@@ -1534,6 +1575,7 @@ class Chunk(FamedStar):
                     for i in range(0,len(tested_peak_indices)):
                         p_BA = np.loadtxt(probability_filenames[tested_peak_indices[i]])
                         # Consider the maximum probability among the different runs. Approximate up to third decimal digit.
+            
                         max_p_BA = round(max(p_BA),3)
 
                         if self.cp.print_on_screen:
@@ -1551,6 +1593,7 @@ class Chunk(FamedStar):
                 # Here perform a blending test on top of the peak significance test, only for the l=2,0 pair.
                 # This is because it is likely that the l=2,0 modes are blended due to the large linewidths in hotter stars.
                 # Testing l=2 and l=0 only separately from one another may not represent a realistic condition.
+            
                 fwhm_quadrupole = fwhm_radial_fit*self.cp.fwhm_magnification_factor_radial
                 fwhm_radial = fwhm_radial_fit*self.cp.fwhm_magnification_factor_radial
                 amplitude_quadrupole = np.sqrt((abs(spsd_maximum[quadrupole_index] - bg_peak)/response_peak)*np.pi*fwhm_quadrupole)
@@ -1582,6 +1625,7 @@ class Chunk(FamedStar):
                     if not os.path.isfile(probability_filename):
                         # Set up priors for the peak test profile
                         # For each peak consider the maximum data range between the range and the division 
+            
                         left_bound_quadrupole = min([range_maximum[0,quadrupole_index],divisions_maximum[0,quadrupole_index]])
                         right_bound_radial = max([range_maximum[1,radial_index],divisions_maximum[1,radial_index]]) 
                         data_freq_boundaries = [left_bound_quadrupole,right_bound_radial]
@@ -1651,10 +1695,15 @@ class Chunk(FamedStar):
                             p_DB[k] = np.exp(ln_evidD - ln_evidBD)
                     
                             # Read the estimated central frequency from model B.
+            
                             par_nu0 = np.loadtxt(self.star_dir/self.cp.pb_subdir/test_nameB/'peakbagging_parameter000.txt')                    
+            
                             # Load the posterior samples to compute Bayesian mean estimate for nu0                 
+            
                             post = np.loadtxt(self.star_dir/self.cp.pb_subdir/test_nameB/'peakbagging_posteriorDistribution.txt')      
+            
                             # Compute parameter estimate, using a weighted average           
+            
                             post /= max(post)
                             nu0[k] = np.sum(par_nu0*post)/np.sum(post)
                         
@@ -1667,6 +1716,7 @@ class Chunk(FamedStar):
                             
                         if self.cp.save_test_files==0:
                             # Remove test folders and prior files if required
+            
                             shutil.rmtree(test_dirA)
                             shutil.rmtree(test_dirB)
                             shutil.rmtree(test_dirD)
@@ -1679,7 +1729,8 @@ class Chunk(FamedStar):
                 
                     else:
                         p_BA,p_DA,p_DB,nu0 = np.loadtxt(probability_filename,unpack=True)
-                        # Consider the maximum probabilities among the different runs. Approximate up to third decimal digit.
+            
+                    # Consider the maximum probabilities among the different runs. Approximate up to third decimal digit.
                         
                     max_p_BA = round(max(p_BA),3)
                     max_p_DA = round(max(p_DA),3)
@@ -1694,6 +1745,7 @@ class Chunk(FamedStar):
                     if max_p_DB > 0.5:
                         # Here we have a peak blending. The two peaks are treated together and are considered
                         # detected only if their p_DA >= 0.993.
+                    
                         detection_probability[quadrupole_index] = max_p_DA
                         detection_probability[radial_index] = max_p_DA
                         blending_profile_flag[quadrupole_index] = 1
@@ -1705,6 +1757,7 @@ class Chunk(FamedStar):
                         if (max_p_BA >= self.cp.detection_probability_threshold):
                             # Here we have no peak blending, and only one peak can be considered. 
                             # Find which one between l=2 and l=0 has to be deeemd significant.
+                    
                             avg_nu0 = np.mean(nu0)
                             detected_index = closest(avg_nu0,[freq1[quadrupole_index],freq1[radial_index]],index=True)
                             detection_probability[detected_index+quadrupole_index] = max_p_BA
@@ -1764,6 +1817,7 @@ class Chunk(FamedStar):
                 # Take smallest range possible that is available to build the frequency prior of the given peak. This will avoid that the peak may result not
                 # significant if the parameter space is too large.
                 # For each peak consider the maximum data range between the range and the division  
+                
                 freq_index = dipole_indices[i]
                 left_bound = min([range_maximum[0,freq_index],divisions_maximum[0,freq_index]])
                 right_bound = max([range_maximum[1,freq_index],divisions_maximum[1,freq_index]])
@@ -1778,10 +1832,12 @@ class Chunk(FamedStar):
                     right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_radial
             
                     # Allow for a very narrow FWHM accounting for unresolved mixed modes
+                    
                     if (freq1[freq_index] >= octupole_freq_upper) or (freq1[freq_index] <= octupole_freq_lower):
                         right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_dipole
             
                     # Do not exceed the width given by the frequency range of the peak if the star is a RG, because l=1 modes are narrow. 
+                    
                     if best_dnu < self.cp.dnu_rg:
                         range_peak = abs(range_maximum[1,freq_index] - range_maximum[0,freq_index])
                         if right_fwhm > range_peak:
@@ -1818,6 +1874,7 @@ class Chunk(FamedStar):
                 if height_ratio < 1.0:
                     if not os.path.isfile(probability_filename):
                         # Set up priors for the peak test profile
+                        
                         data_freq_boundaries = [left_bound,right_bound] 
                         freq_prior = [freq1[freq_index] - freq_sig1[freq_index],freq1[freq_index] + freq_sig1[freq_index]]
                         amplitude_prior = [0.0,amplitude]
@@ -1874,6 +1931,7 @@ class Chunk(FamedStar):
  
                         for i in range (0, len(dipole_indices[tested_peak_indices])):
                             # Compute the estimate for FWHM from model B.
+                            
                             par_fwhm = np.loadtxt(test_dirs[1,tested_peak_indices[i]]+'/peakbagging_parameter002.txt')
                             post = np.loadtxt(test_dirs[1,tested_peak_indices[i]]+'/peakbagging_posteriorDistribution.txt')
                             post /= max(post)
@@ -1921,6 +1979,7 @@ class Chunk(FamedStar):
                                     
                         if self.cp.save_test_files==0:
                             # Remove test folders and prior files if required
+                            
                             shutil.rmtree(test_dirs[0,tested_peak_indices[i]])
                             shutil.rmtree(test_dirs[1,tested_peak_indices[i]])
                             os.remove(prior_filenames[0,tested_peak_indices[i]])
@@ -1939,6 +1998,7 @@ class Chunk(FamedStar):
                         p_BA = np.loadtxt(probability_filenames[tested_peak_indices[i]],usecols=(0,))
             
                     # Consider the maximum probabilities among the different runs. Approximate up to third decimal digit.
+                    
                     max_p_BA = round(max(p_BA),3)
                     detection_probability[dipole_indices[tested_peak_indices[i]]] = max_p_BA
             
@@ -1949,6 +2009,7 @@ class Chunk(FamedStar):
                         # For a RG star take the maximum probability between the two (Lorentzian and Sinc^2) to deem the peak as 
                         # detected. In this way one makes sure to incorporate the result from the best model possible,
                         # between the two tested.
+                        
                         if max_p_CB > 0.5:
                             detection_probability[dipole_indices[tested_peak_indices[i]]] = max_p_CA
                             sinc_profile_flag[dipole_indices[tested_peak_indices[i]]] = 1
@@ -1991,7 +2052,9 @@ class Chunk(FamedStar):
 
                     for j in range(0, len(detected_dipole_indices)):
                         dipole_index = detected_dipole_indices[j]
+                        
                         # For each peak consider the maximum data range between the range and the division
+                        
                         left_bound = min([range_maximum[0,dipole_index],divisions_maximum[0,dipole_index]])
                         right_bound = max([range_maximum[1,dipole_index],divisions_maximum[1,dipole_index]])
                         peak_number = str(int(dipole_index))
@@ -2020,6 +2083,7 @@ class Chunk(FamedStar):
                             # This will speed up the computation of the peak test and improve the actual fits of the 
                             # rotational multiplets.
                             # Also, if the star is a MS, make the prior on the frequency centroid as narrow as possible.                    
+                        
                             right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_radial
                             left_fwhm = self.cp.fwhm_lower_bound
 
@@ -2031,8 +2095,11 @@ class Chunk(FamedStar):
                                 if (freq1[dipole_index] >= octupole_freq_upper) or (freq1[dipole_index] <= octupole_freq_lower):
                                     if best_dnu < self.cp.dnu_threshold:
                                         right_fwhm = fwhm_radial_fit
+                        
                                         # Do not exceed the width given by the frequency range of the peak if the star is a RG or late SG, because l=1 modes are narrow. 
+                        
                                         range_peak = abs(range_maximum[1,freq_index] - range_maximum[0,freq_index])
+                        
                                         if right_fwhm > range_peak:
                                             right_fwhm = range_peak
                                     else:
@@ -2043,8 +2110,11 @@ class Chunk(FamedStar):
                             response_peak = np.mean((np.sin(np.pi/2. * freq[tmp_peak]/nyq) / (np.pi/2. * freq[tmp_peak]/nyq))**2)
 
                             # For the amplitude estimate of the rotational multiplet incorporate the np.sqrt(2) factor to take into account a case with i=90 degrees
+                        
                             amplitude = np.sqrt((abs(max(spsd[tmp_peak]) - bg_peak)/response_peak)*np.pi*right_fwhm)    
+                        
                             # Set up priors for the peak test profile
+                        
                             data_freq_boundaries = [left_bound,right_bound]
                             freq_duplet_prior = [range_maximum[0,dipole_index],range_maximum[1,dipole_index]]
                             duplet_split_prior = [freqbin*2,abs(freq_duplet_prior[1]-freq_duplet_prior[0])]
@@ -2052,10 +2122,12 @@ class Chunk(FamedStar):
                             fwhm_prior = [left_fwhm,right_fwhm]
 
                             # Divide the frequency prior range into nearly three parts
+                        
                             rot_split = abs(freq_prior[1] - freq_prior[0])/self.cp.rot_split_scaling
                             rot_split_prior = [freqbin*2,rot_split]
  
                             # If the frequency resolution is comparable to the expected separation among the fine-structure peaks, then skip the test. 
+                        
                             if duplet_split_prior[0] >= duplet_split_prior[1]*0.5:
                                 continue  
                             if rot_split_prior[0] >= rot_split_prior[1]*0.5:
@@ -2116,6 +2188,7 @@ class Chunk(FamedStar):
                                         
                             for j in range(0, len(detected_dipole_indices)):
                                 # Make sure that the given peak has been tested.
+                        
                                 if os.path.isfile(test_dirs[0,j]+'/peakbagging_evidenceInformation.txt'):
                                     ln_evidE = np.loadtxt(test_dirs[0,j]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
                                     ln_evidF = np.loadtxt(test_dirs[1,j]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
@@ -2127,6 +2200,7 @@ class Chunk(FamedStar):
                                     p_FE[k,j] = np.exp(ln_evidF - ln_evidEF)
 
                                     # Compute the estimate for FWHM from model E.
+                        
                                     par_fwhm = np.loadtxt(test_dirs[0,j]+'/peakbagging_parameter002.txt')
                                     post = np.loadtxt(test_dirs[0,j]+'/peakbagging_posteriorDistribution.txt')
                                     post /= max(post)
@@ -2144,6 +2218,7 @@ class Chunk(FamedStar):
                                     # Then recompute the parameter mean by using the sampling located only within 1-sigma of the first estimate.
                                     # This will improve the estimation of the frequency centroid and of the rotational splitting in case
                                     # multiple solutions have been found during the nested sampling process.
+                        
                                     post /= max(post)
                                     rot_split_fit[k,j] = np.sum(par_rot_split*post)/np.sum(post)
                                     cosi_fit[k,j] = np.sum(par_cosi*post)/np.sum(post)
@@ -2165,6 +2240,7 @@ class Chunk(FamedStar):
                                         p_GF[k,j] = np.exp(ln_evidG - ln_evidGF)
                             
                                         # Compute the estimates for the duplet frequencies and FWHM from model G
+                        
                                         par_left_freq = np.loadtxt(test_dirs[2,j]+'/peakbagging_parameter000.txt')
                                         par_duplet_split = np.loadtxt(test_dirs[2,j]+'/peakbagging_parameter003.txt')
                                         par_left_fwhm = np.loadtxt(test_dirs[2,j]+'/peakbagging_parameter002.txt')
@@ -2194,6 +2270,7 @@ class Chunk(FamedStar):
                     
                             if self.cp.save_test_files==0:
                                 # Remove test folders and prior files if required
+                        
                                 if os.path.isdir(test_dirs[0,j]):
                                     shutil.rmtree(test_dirs[0,j])
                                     shutil.rmtree(test_dirs[1,j])
@@ -2253,6 +2330,7 @@ class Chunk(FamedStar):
                 freq_dipole = freq_radial_chunk - best_dnu/2. - d01
         else:
             # If here, then no dipole peaks were found in the chunk from the multi-modal fit. 
+            
             n_dipole_chunk = 0
 
         largest_octupole_fwhm = 0.0
