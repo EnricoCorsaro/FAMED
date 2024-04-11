@@ -2543,7 +2543,7 @@ class Chunk(FamedStar):
                     asef_integral_weights_dipole = asef_integral_weights[detected_dipole_indices]
                     spsd_weights_dipole = spsd_weights[detected_dipole_indices]
                     sampling_weights_dipole = sampling_weights[detected_dipole_indices]
-                    total_weights_dipole = self.cp.weight_freq_fraction*freq_weights_dipole + self.cp.weight_asef_fraction*asef_weights_dipole + self.cp.weight_spsd_fraction*spsd_weights_dipole + self.cp.weight_sampling_fraction*ampling_weights_dipole + self.cp.weight_asef_integral_fraction*asef_integral_weights_dipole
+                    total_weights_dipole = self.cp.weight_freq_fraction*freq_weights_dipole + self.cp.weight_asef_fraction*asef_weights_dipole + self.cp.weight_spsd_fraction*spsd_weights_dipole + self.cp.weight_sampling_fraction*sampling_weights_dipole + self.cp.weight_asef_integral_fraction*asef_integral_weights_dipole
                     total_weights_dipole /= np.sum(total_weights_dipole)
                     index = np.argmax(total_weights_dipole)
                     dipole_index = detected_dipole_indices[index]
