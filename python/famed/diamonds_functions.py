@@ -116,7 +116,7 @@ def get_background(catalog_id, star_id, background_results_dir, background_run_n
     return bgp
 
 
-def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, background_data_dir, background_results_dir, external_background_results_dir, dnu_cl=9, dnu_tip=3.2, n_dnu_envelope=4.5, n_sigma_envelope=4.5, n_sigma_envelope_cl=2.5, n_sigma_envelope_tip=1.2, numax_threshold=300, numax_coeff_low=0.267, numax_coeff_high=0.22, numax_exponent_low=0.76, numax_exponent_high=0.797, force=False):
+def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, background_data_dir, background_results_dir, external_background_results_dir, dnu_cl2=9, dnu_agb=3.2, n_dnu_envelope=4.5, n_sigma_envelope=4.5, n_sigma_envelope_cl=2.5, n_sigma_envelope_tip=1.2, numax_threshold=300, numax_coeff_low=0.267, numax_coeff_high=0.22, numax_exponent_low=0.76, numax_exponent_high=0.797, force=False):
     """
     Verify or create the proper folder structure for DIAMONDS PeakBagging.
 
@@ -148,9 +148,9 @@ def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, background_data_dir
     external_background_results_dir : str
         Path to the folder that contains the dataset and results of the background fit as
         obtained by a code different than the DIAMONDS+Background code.    
-    dnu_cl : float, default: 9
-        Threshold value of `dnu` that identifies that stars are in the clump.
-    dnu_tip : float, default: 3.2
+    dnu_cl2 : float, default: 9
+        Threshold value of `dnu` that identifies that stars are in the red clump.
+    dnu_agb : float, default: 3.15
         Threshold value of `dnu` that separates clump stars from evolved RGB and
         early AGB stars.
     n_dnu_envelope : float, default: 4.5
@@ -197,7 +197,7 @@ def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, background_data_dir
         dnu = astero.compute_scaling_dnu(numax, numax_threshold, numax_coeff_low, numax_coeff_high, numax_exponent_low, numax_exponent_high)
 
         if dnu <= dnu_cl:
-            if dnu <= dnu_tip:
+            if dnu <= dnu_agb:
                 width_factor = n_sigma_envelope_tip
             else:
                 width_factor = n_sigma_envelope_cl

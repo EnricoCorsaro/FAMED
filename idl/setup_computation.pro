@@ -86,6 +86,7 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        n_sigma_envelope_tip:       (float(par_value(where(par_name eq 'n_sigma_envelope_tip'))))[0],               $
        n_dnu_envelope:             (float(par_value(where(par_name eq 'n_dnu_envelope'))))[0],                     $
        dnu_tip:                    (float(par_value(where(par_name eq 'dnu_tip'))))[0],                            $
+       dnu_agb:                    (float(par_value(where(par_name eq 'dnu_agb'))))[0],                            $
        dnu_cl:                     (float(par_value(where(par_name eq 'dnu_cl'))))[0],                             $
        dnu_cl2:                    (float(par_value(where(par_name eq 'dnu_cl2'))))[0],                            $
        dnu_rg:                     (float(par_value(where(par_name eq 'dnu_rg'))))[0],                             $

@@ -26,8 +26,9 @@ class Chunk(FamedStar):
         Catalogue ID of the star (e.g. 'KIC' for Kepler).
     star_id : str
         ID of the star as a string (e.g. '0012008916' or '7037405').
-    teff : float
-        Effective temperature of the star in Kelvin.
+    background_run_number : str or int
+        Number of the background subfolder that contains the results of
+        the background fit.
     load_islands : bool, default: False
         Flag to read the pickled object if `make_islands` or `find_islands` has 
         already been ran.
@@ -48,13 +49,19 @@ class Chunk(FamedStar):
             self.modality='CHUNK'
 
 
-    def make_islands(self,run,force=False,merge=False):
+    def make_islands(self,run,fit=True):
         """
         Compute a chunk multi-modal fit with DIAMONDS.
 
         This function computes a chunk multi-modal fit in order to retrieve the 
         frequencies, their uncertainties, and mode identification. This function
         cannot be executed if the GLOBAL modality was not previously performed.
+
+        Parameters
+        ----------
+        run : int
+            An integer specifying the number of the chunk for which the sampling must be evaluated. 
+            If a number < 0 is provided, all the chunks are take into account at the same time.
         """
         peakbagging_filename_global = self.star_dir/self.cp.summary_subdir/(self.catalog_id + self.star_id + self.cp.peakbagging_filename_label + self.cp.isla_subdir + '_' + self.cp.global_subdir + '_GLOBAL.txt')
         
@@ -128,11 +135,11 @@ class Chunk(FamedStar):
                 if best_dnu <= self.cp.dnu_rg:
                     # In case the star is classified as a RG, distinguish among RGB, clump and RGB-tip
 
-                    if best_dnu <= self.cp.dnu_tip:
+                    if best_dnu <= self.cp.dnu_agb:
                         min_linewidths[i] = astero.get_linewidth(min_freq,self.teff,numax)/self.cp.fwhm_chunk_scaling_tip
                         avg_fwhm = freqbin
                     else:
-                        if best_dnu <= self.cp.dnu_cl:
+                        if best_dnu <= self.cp.dnu_cl2:
                             min_linewidths[i] = astero.get_linewidth(min_freq,self.teff,numax)/self.cp.fwhm_chunk_scaling_cl
                         else:
                             min_linewidths[i] = astero.get_linewidth(min_freq,self.teff,numax)/self.cp.fwhm_chunk_scaling_rg                
@@ -188,14 +195,17 @@ class Chunk(FamedStar):
                 bg_names = bg_names[first_it]
                 min_linewidths = min_linewidths[first_it]
 
-            peakbagging_parameters = { 'subdir':     self.cp.isla_subdir,
-                                        'run':        run_labels,
-                                        'background': bg_names,
-                                        'fwhm':       min_linewidths,
-                                        'duplet':     0}
+            if fit:
+                peakbagging_parameters = { 'subdir':     self.cp.isla_subdir,
+                                            'run':        run_labels,
+                                            'background': bg_names,
+                                            'fwhm':       min_linewidths,
+                                            'duplet':     0}
 
-            flag_computation_completed = diamonds.run_peakbagging(self.catalog_id,self.star_id,peakbagging_parameters,0,0,0,self.cp.dp_isla,self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename,merge=True)
-
+                flag_computation_completed = diamonds.run_peakbagging(self.catalog_id,self.star_id,peakbagging_parameters,0,0,0,self.cp.dp_isla,self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename,merge=True)
+            else:
+                print(' The multi-modal fit is not performed.')
+                print(' Using the sampling already available from a previous attempt.\n')
 
         # Give as input the minimum number of adjacent bins required to consider two local maxima separated. Don't need to calculate for each chunk. Just save number now.
 
@@ -2529,8 +2539,8 @@ class Chunk(FamedStar):
                         worst_peak_index = detected_dipole_indices[k + worst_peak_index]
                         detection_probability[worst_peak_index] = 0.0
             
-            # If the star is a MS or a high-luminosity RGB star, make sure that there is only one dipole mode for this chunk.
-            if (((best_dnu >= self.cp.dnu_rg) & (best_dnu < self.cp.dnu_sg) & (teff >= self.cp.teff_sg)) or (best_dnu >= self.cp.dnu_sg) or (best_dnu <= self.cp.dnu_tip)):
+            # If the star is a MS, a high-luminosity RGB star, or an early AGB star, make sure that there is only one dipole mode for this chunk.
+            if (((best_dnu >= self.cp.dnu_rg) & (best_dnu < self.cp.dnu_sg) & (teff >= self.cp.teff_sg)) or (best_dnu >= self.cp.dnu_sg) or (best_dnu <= self.cp.dnu_agb)):
                 detected_dipole_indices = np.where((angular_degree==1) & ((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0)))[0] 
                 # If more than one dipole mode is found, then pick up the one with the best combination of SPSD maximum, ASEF maximum, sampling counts and 
                 # frequency position with respect to the global frequency of the dipole mode.

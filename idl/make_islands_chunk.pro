@@ -88,11 +88,11 @@ endif else begin
         if best_dnu le cp.dnu_rg then begin
             ; In case the star is classified as a RG, distinguish among RGB, clump and RGB-tip
             
-            if best_dnu le cp.dnu_tip then begin
+            if best_dnu le cp.dnu_agb then begin
                 min_linewidths(i) = get_linewidth(min_freq,teff,numax)/cp.fwhm_chunk_scaling_tip
                 avg_fwhm = freqbin
             endif else begin
-                if best_dnu le cp.dnu_cl then begin
+                if best_dnu le cp.dnu_cl2 then begin
                     min_linewidths(i) = get_linewidth(min_freq,teff,numax)/cp.fwhm_chunk_scaling_cl
                 endif else begin
                     min_linewidths(i) = get_linewidth(min_freq,teff,numax)/cp.fwhm_chunk_scaling_rg

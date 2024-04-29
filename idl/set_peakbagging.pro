@@ -40,8 +40,8 @@ if (file_test(info.peakbagging_data_dir + catalog_id + star_id + '.txt') eq 0 or
     sig_env = bg_par(n_elements(bg_par)-1)
     dnu = compute_scaling_dnu(numax)
     
-    if dnu le cp.dnu_cl then begin
-        if dnu le cp.dnu_tip then begin
+    if dnu le cp.dnu_cl2 then begin
+        if dnu le cp.dnu_agb then begin
             width_factor = cp.n_sigma_envelope_tip
         endif else begin
             width_factor = cp.n_sigma_envelope_cl

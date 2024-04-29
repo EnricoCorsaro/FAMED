@@ -2746,9 +2746,9 @@ if n_dipole_chunk ne 0 then begin
         endfor
     endif
 
-    ; If the star is a MS or a high-luminosity RGB star, make sure that there is only one dipole mode for this chunk.
+    ; If the star is a MS, a high-luminosity RGB star, or an early AGB star, make sure that there is only one dipole mode for this chunk.
    
-    if ((best_dnu ge cp.dnu_rg and best_dnu lt cp.dnu_sg and teff ge cp.teff_sg) or best_dnu ge cp.dnu_sg or best_dnu le cp.dnu_tip) then begin
+    if ((best_dnu ge cp.dnu_rg and best_dnu lt cp.dnu_sg and teff ge cp.teff_sg) or best_dnu ge cp.dnu_sg or best_dnu le cp.dnu_agb) then begin
         detected_dipole_indices = where(angular_degree eq 1 and (detection_probability ge cp.detection_probability_threshold or detection_probability eq -99.0))
         ; If more than one dipole mode is found, then pick up the one with the best combination of SPSD maximum, ASEF maximum, sampling counts and 
         ; frequency position with respect to the global frequency of the dipole mode.

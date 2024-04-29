@@ -8,7 +8,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 __all__ = ['GLOBAL','CHUNK','ECHELLE','COMPLETE']
 
-def GLOBAL(catalog_id, star_id, teff, background_run_number=None, force=True):
+def GLOBAL(catalog_id, star_id, teff, background_run_number=None, force=True, fit=True):
     """
     Helper function to run all steps, including plotting, of GLOBAL modality.
 
@@ -27,12 +27,13 @@ def GLOBAL(catalog_id, star_id, teff, background_run_number=None, force=True):
         Flag to force the computation of the sliding pattern fit.
     """
     famed_obj = Global(catalog_id,star_id,teff,background_run_number)
-    famed_obj.make_islands(force=force)
+
+    famed_obj.make_islands(force=force,fit=fit)
     famed_obj.find_islands(force=force)
     famed_obj.make_global_plots()
     return famed_obj
 
-def CHUNK(catalog_id, star_id, background_run_number=None, force=True):
+def CHUNK(catalog_id, star_id, background_run_number=None, force=True, fit=True):
     """
     Helper function to run all steps, including plotting, of CHUNK modality.
 
@@ -42,11 +43,13 @@ def CHUNK(catalog_id, star_id, background_run_number=None, force=True):
         Catalogue ID of the star (e.g. 'KIC' for Kepler).
     star_id : str
         ID of the star as a string (e.g. '0012008916' or '7037405').
-    teff : float
-        Effective temperature of the star in Kelvin.
+    background_run_number : str or int
+        Number of the background subfolder that contains the results of
+        the background fit.
     """
     famed_obj = Chunk(catalog_id,star_id,background_run_number=background_run_number)
-    result = famed_obj.make_islands(-1)
+    result = famed_obj.make_islands(-1,fit=fit)
+
     if result:
         snr,chunks=result
         chunks = chunks[np.argsort(snr)]

@@ -27,7 +27,9 @@ class FamedStar(object):
         ID of the star as a string (e.g. '0012008916' or '7037405').
     teff : float
         Effective temperature of the star in Kelvin.
- 
+    background_run_number : str or int
+        Number of the background subfolder that contains the results of
+        the background fit. 
 
     """
 

@@ -79,7 +79,7 @@ class Global(FamedStar):
             shutil.copy(self.cp.configuring_parameters_file,target_dir/('famed_configuring_parameters_'+self.catalog_id + self.star_id + '_' + self.cp.isla_subdir + '_' + self.cp.global_subdir+'_GLOBAL.txt'))
 
             
-    def make_islands(self,force=False):
+    def make_islands(self,force=False,fit=True):
         """ 
         Compute a global multi-modal fit with DIAMONDS.
 
@@ -87,7 +87,7 @@ class Global(FamedStar):
         modality of FAMED. It generates the directory structure to be used for 
         future steps as well.
         """
-        diamonds.set_peakbagging(self.catalog_id, self.star_id, self.bgp, self.cp.diamonds_path, self.cp.background_data_dir, self.cp.background_results_dir, self.cp.external_background_results_dir, self.cp.dnu_cl, self.cp.dnu_tip, self.cp.n_dnu_envelope, self.cp.n_sigma_envelope, self.cp.n_sigma_envelope_cl, self.cp.n_sigma_envelope_tip, self.cp.numax_threshold, self.cp.numax_coeff_low, self.cp.numax_coeff_high, self.cp.numax_exponent_low, self.cp.numax_exponent_high,force=force)
+        diamonds.set_peakbagging(self.catalog_id, self.star_id, self.bgp, self.cp.diamonds_path, self.cp.background_data_dir, self.cp.background_results_dir, self.cp.external_background_results_dir, self.cp.dnu_cl2, self.cp.dnu_agb, self.cp.n_dnu_envelope, self.cp.n_sigma_envelope, self.cp.n_sigma_envelope_cl, self.cp.n_sigma_envelope_tip, self.cp.numax_threshold, self.cp.numax_coeff_low, self.cp.numax_coeff_high, self.cp.numax_exponent_low, self.cp.numax_exponent_high,force=force)
         
         # Read input PSD and global asteroseismic parameters
 
@@ -113,7 +113,7 @@ class Global(FamedStar):
         # Evaluate linewidth at nuMax and use it for the global multi-modal fit
 
         if dnu <= self.cp.dnu_threshold:
-            if dnu <= self.cp.dnu_tip:
+            if dnu <= self.cp.dnu_agb:
                 linewidth = astero.get_linewidth(numax, self.teff, numax, self.cp.numax_threshold)/self.cp.fwhm_global_scaling_tip
             else:
                 linewidth = astero.get_linewidth(numax, self.teff, numax, self.cp.numax_threshold)/self.cp.fwhm_global_scaling
@@ -125,13 +125,17 @@ class Global(FamedStar):
         # Perform the multi-modal fit. When performing the global fit, also
         # save the background level as an output file
 
-        peakbagging_parameters = {'subdir':     self.cp.isla_subdir,
-                                  'run':        self.cp.global_subdir,
-                                  'background': self.bgp['name'], 
-                                  'fwhm':       linewidth,
-                                  'duplet':     False}
+        if fit:
+            peakbagging_parameters = {'subdir':     self.cp.isla_subdir,
+                                      'run':        self.cp.global_subdir,
+                                      'background': self.bgp['name'], 
+                                      'fwhm':       linewidth,
+                                      'duplet':     False}
 
-        flag_computation_completed = diamonds.run_peakbagging(self.catalog_id, self.star_id, peakbagging_parameters,0,0,1, self.cp.dp_isla, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename)
+            flag_computation_completed = diamonds.run_peakbagging(self.catalog_id, self.star_id, peakbagging_parameters,0,0,1, self.cp.dp_isla, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename)
+        else:
+            print(' The multi-modal fit is not performed.')
+            print(' Using the sampling already available from a previous attempt.\n')            
 
         # Set some attributes to keep around
 
@@ -287,7 +291,7 @@ class Global(FamedStar):
         # window to overcome the problem of very narrow mixed modes.
 
         avg_fwhm = np.mean(astero.get_linewidth(maximum,teff,numax,self.cp.numax_threshold))
-        if acf_dnu <= self.cp.dnu_tip:
+        if acf_dnu <= self.cp.dnu_agb:
             avg_fwhm = fit_linewidth*self.cp.smoothing_fwhm_factor_rg
 
         smth_bins = int(avg_fwhm/freqbin)
@@ -398,7 +402,10 @@ class Global(FamedStar):
             d02_prior = [ap['d02'],ap['d02']]
             d01_prior = [ap['d01'],ap['d01']]
 
-            if (fit_dnu >= self.cp.dnu_tip) & (self.cp.remove_dipole_peak == 1):
+            if (fit_dnu >= self.cp.dnu_agb) & (self.cp.remove_dipole_peak == 1):
+                if self.cp.print_on_screen:
+                    print('\nRemoving the dipole peak from the sliding-pattern model.\n')
+
                 d01_prior = [99.0,99.0]
 
             d13_prior = [99.0,99.0]
@@ -688,7 +695,9 @@ class Global(FamedStar):
 
                 if self.cp.input_radial_freq_reference > 0:
                     radial_freq_reference = self.cp.input_radial_freq_reference
-
+                    if self.cp.print_on_screen and k==0:
+                        print(' Forcing an input central radial mode frequency: {} muHz\n'.format(radial_freq_reference))
+                
                 radial_freq_reference_array[k] = radial_freq_reference
                 modulo_reference = radial_freq_reference%fit_dnu
                 echelle_epsi = modulo_reference/fit_dnu
@@ -716,7 +725,7 @@ class Global(FamedStar):
                 # repeat the fit by including a l=1 mode peak, having the position fixed
                 # to the p-mode frequency of the asymptotic relation
 
-                if (median_echelle_epsi >= epsilon_upper_limit) or ((median_echelle_epsi <= epsilon_lower_limit) & (fit_dnu >= self.cp.dnu_cl2)):
+                if (median_echelle_epsi >= epsilon_upper_limit) or ((median_echelle_epsi <= epsilon_lower_limit) & (fit_dnu >= self.cp.dnu_cl)):
                     if sliding_iteration>0:
                         if self.cp.print_on_screen:
                             print(' Repeating the sliding-pattern fit did not solve the issue. Epsilon is likely to be wrong for this star')
@@ -761,7 +770,7 @@ class Global(FamedStar):
         flag_interp_epsi = False
 
         if self.cp.force_epsilon_dnu_value:
-            if (fit_dnu <= self.cp.dnu_threshold) & (fit_dnu >= self.cp.dnu_cl):
+            if (fit_dnu <= self.cp.dnu_threshold) & (fit_dnu >= self.cp.dnu_cl2):
                 # If the star is an evolved subgiant/early RGB check that
                 # epsilon is in agreement with the epsilon-dnu relation
                 
@@ -891,7 +900,7 @@ class Global(FamedStar):
                 if fit_dnu > self.cp.dnu_rg:
                     tolerance = self.cp.skim_frequency_tolerance_sg
                 else:
-                    if fit_dnu <= self.cp.dnu_tip:
+                    if fit_dnu <= self.cp.dnu_agb:
                         tolerance = self.cp.skim_frequency_tolerance_tip
                     else:
                         tolerance = self.cp.skim_frequency_tolerance_rg

@@ -203,7 +203,7 @@ n_freq = n_maxima
 ; In case of RG, adopt a finer smoothing window to overcome the problem of very narrow mixed modes.
 
 avg_fwhm = mean(get_linewidth(maximum,teff,numax))
-if acf_dnu le cp.dnu_tip then begin
+if acf_dnu le cp.dnu_agb then begin
     avg_fwhm = fit_linewidth*cp.smoothing_fwhm_factor_rg
 endif
 
@@ -321,7 +321,13 @@ if fit_dnu le cp.dnu_threshold then begin
     d02_prior = [ap.d02,ap.d02]
     d01_prior = [ap.d01,ap.d01]
     
-    if (fit_dnu ge cp.dnu_tip) and (cp.remove_dipole_peak eq 1) then begin
+    if (fit_dnu ge cp.dnu_agb) and (cp.remove_dipole_peak eq 1) then begin
+        if info.print_on_screen eq 1 then begin
+           print,''
+           print,'Removing the dipole peak from the sliding-pattern model.'
+           print,'' 
+        endif
+        
         d01_prior = [99.0,99.0]
     endif
 
@@ -626,6 +632,9 @@ while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
 
         if cp.input_radial_freq_reference gt 0 then begin
             radial_freq_reference = cp.input_radial_freq_reference
+            if cp.print_on_screen then begin
+                print,'Forcing an input central radial mode frequency: ' + radial_freq_reference + ' muHz'
+            endif
         endif
 
         radial_freq_reference_array(k) = radial_freq_reference
@@ -653,7 +662,7 @@ while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
         ; If this is the case, and the dipole peak was removed by configuration, repeat the fit by including a l=1 mode peak, 
         ; having a position fixed to the p-mode frequency of the asymptotic relation.
 
-        if (median_echelle_epsi ge epsilon_upper_limit) or ((median_echelle_epsi le epsilon_lower_limit) and (fit_dnu ge cp.dnu_cl2)) then begin
+        if (median_echelle_epsi ge epsilon_upper_limit) or ((median_echelle_epsi le epsilon_lower_limit) and (fit_dnu ge cp.dnu_cl)) then begin
             if sliding_iteration gt 0 then begin
                 if info.print_on_screen eq 1 then begin
                     print,' Repeating the sliding-pattern-fit did not solve the issue. Epsilon is likely to be wrong for this star.'
@@ -705,7 +714,7 @@ endelse
 flag_interp_epsi = 0
 
 if cp.force_epsilon_dnu_value eq 1 then begin
-    if fit_dnu le cp.dnu_threshold and fit_dnu ge cp.dnu_cl then begin
+    if fit_dnu le cp.dnu_threshold and fit_dnu ge cp.dnu_cl2 then begin
         ; If the star is an evolved subgiant/early RGB check that epsilon is in agreement with the epsilon-DeltaNu relation
         
         radial_freq_reference2 = freq1(closest(radial_freq_reference,freq1))
@@ -843,7 +852,7 @@ while (flag_dnu_fit eq 1) and (iterations lt cp.max_skim_iterations_global) do b
         if fit_dnu gt cp.dnu_rg then begin
             tolerance = cp.skim_frequency_tolerance_sg
         endif else begin
-            if fit_dnu le cp.dnu_tip then begin
+            if fit_dnu le cp.dnu_agb then begin
                 tolerance = cp.skim_frequency_tolerance_tip
             endif else begin
                 tolerance = cp.skim_frequency_tolerance_rg

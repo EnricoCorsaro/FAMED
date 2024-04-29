@@ -69,7 +69,7 @@ free_lun,lun1
 ; Evaluate linewidth at nuMax and use it for the global multi-modal fit
 
 if dnu le cp.dnu_threshold then begin
-    if dnu le cp.dnu_tip then begin
+    if dnu le cp.dnu_agb then begin
         linewidth = get_linewidth(numax,teff,numax)/cp.fwhm_global_scaling_tip
     endif else begin
         linewidth = get_linewidth(numax,teff,numax)/cp.fwhm_global_scaling
