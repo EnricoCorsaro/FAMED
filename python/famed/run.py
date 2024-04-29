@@ -25,6 +25,8 @@ def GLOBAL(catalog_id, star_id, teff, background_run_number=None, force=True, fi
         the background fit.
     force : bool
         Flag to force the computation of the sliding pattern fit.
+    fit: bool
+        Flag to force execution of the multi-modal sampling done by DIAMONDS.
     """
     famed_obj = Global(catalog_id,star_id,teff,background_run_number)
 
@@ -46,6 +48,10 @@ def CHUNK(catalog_id, star_id, background_run_number=None, force=True, fit=True)
     background_run_number : str or int
         Number of the background subfolder that contains the results of
         the background fit.
+    force : bool
+        Flag to force the computation of the peak tests.
+    fit: bool
+        Flag to force execution of the multi-modal sampling done by DIAMONDS.
     """
     famed_obj = Chunk(catalog_id,star_id,background_run_number=background_run_number)
     result = famed_obj.make_islands(-1,fit=fit)
