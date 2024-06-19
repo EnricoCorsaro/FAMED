@@ -490,17 +490,18 @@ def text_panel(famed_obj,ax=None,chunk=None):
 
         # Text 2 global
         if famed_obj.bad_epsi:
-            ax.text(0.14,.05,r' SNR = %.1f\, $\epsilon_{\mathrm{ech}}$ = %.3f'%(famed_obj.snr,famed_obj.epsilon),fontsize='small',color='orange')
-            ax.text(0.14,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz \, $\alpha$ = %.3f''\n'r' $\Delta\nu_{\mathrm{ACF}}$ = %.3f $\mu$Hz''\n'%(famed_obj.numax,famed_obj.dnu,famed_obj.alpha,famed_obj.acf_dnu),fontsize='small',color=famed_obj.cp.text2)
+            ax.text(0.25,.05,r' $\epsilon_{\mathrm{ech}}$ = %.3f'%(famed_obj.epsilon),fontsize='small',color='orange')
+            ax.text(0.14,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz \, $\alpha$ = %.3f''\n'r' $\Delta\nu_{\mathrm{ACF}}$ = %.3f $\mu$Hz''\n'r' SNR = %.1f'%(famed_obj.numax,famed_obj.dnu,famed_obj.alpha,famed_obj.acf_dnu,famed_obj.snr),fontsize='small',color=famed_obj.cp.text2)
         else:
-            ax.text(0.14,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz \, $\alpha$ = %.3f''\n'r' $\Delta\nu_{\mathrm{ACF}}$ = %.3f $\mu$Hz''\n'r' SNR = %.1f\, $\epsilon_{\mathrm{ech}}$ = %.3f'%(famed_obj.numax,famed_obj.dnu,famed_obj.alpha,famed_obj.acf_dnu,famed_obj.snr,famed_obj.epsilon),fontsize='small',color=famed_obj.cp.text2)
+            ax.text(0.25,.05,r' $\epsilon_{\mathrm{ech}}$ = %.3f'%(famed_obj.epsilon),fontsize='small',color=famed_obj.cp.text2)
+            ax.text(0.14,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz \, $\alpha$ = %.3f''\n'r' $\Delta\nu_{\mathrm{ACF}}$ = %.3f $\mu$Hz''\n'r' SNR = %.1f'%(famed_obj.numax,famed_obj.dnu,famed_obj.alpha,famed_obj.acf_dnu,famed_obj.snr),fontsize='small',color=famed_obj.cp.text2)
 
         # Text 3 global
         if famed_obj.input_radial:
-            ax.text(0.38,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{\nu\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' Ref. Radial = %.2f $\mu$Hz''\n'r' $T_{\mathrm{eff}}$ = %i K'%(famed_obj.linewidth_numax,famed_obj.linewidth_numax,famed_obj.ref_radial,famed_obj.teff),fontsize='small',color=famed_obj.cp.text3)
-        else:
             ax.text(0.38,.05,'\n''\n'r' Ref. Radial = %.2f $\mu$Hz''\n'%(famed_obj.ref_radial),fontsize='small',color='orange')
-            ax.text(0.38,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{\nu\mathrm{max}}$ = %.3f $\mu$Hz''\n''\n'r' $T_{\mathrm{eff}}$ = %i K'%(famed_obj.linewidth_numax,famed_obj.linewidth_numax,famed_obj.teff),fontsize='small',color=famed_obj.cp.text3)
+            ax.text(0.38,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{\nu\mathrm{max}}$ = %.3f $\mu$Hz''\n''\n'r' $T_{\mathrm{eff}}$ = %i K\,\,\, ES$_{\mathrm{\epsilon}}$ = %s'%(famed_obj.linewidth_numax,famed_obj.linewidth_numax,famed_obj.teff,famed_obj.evolutionary_stage_label),fontsize='small',color=famed_obj.cp.text3)
+        else:
+            ax.text(0.38,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{\nu\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' Ref. Radial = %.2f $\mu$Hz''\n'r' $T_{\mathrm{eff}}$ = %i K\,\,\, ES$_{\mathrm{\epsilon}}$ = %s'%(famed_obj.linewidth_numax,famed_obj.linewidth_numax,famed_obj.ref_radial,famed_obj.teff,famed_obj.evolutionary_stage_label),fontsize='small',color=famed_obj.cp.text3)
 
         # Text 4
         ax.text(0.61,.05,r' ASEF$_{\mathrm{threshold}}$ = %.2f \%%''\n'r' ASEF$_{\mathrm{bins}}$ = %i''\n'r' $\Delta\nu_{\mathrm{tolerance}}$ = %.2f \%%''\n'r' N$_{\mathrm{freq}}$ = %i \,\,\,  N$_{\mathrm{orders}}$ = %i'%(100*famed_obj.cp.threshold_asef_global,famed_obj.asef_bins,100*famed_obj.dnu_tol,famed_obj.n_freq,famed_obj.n_chunks),fontsize='small',color=famed_obj.cp.text4)
