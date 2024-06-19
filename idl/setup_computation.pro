@@ -163,8 +163,6 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        depressed_dipole_fraction:             (float(par_value(where(par_name eq 'depressed_dipole_fraction'))))[0],             $
        dnu_ridge_threshold:                   (float(par_value(where(par_name eq 'dnu_ridge_threshold'))))[0],                   $
        dnu_echelle_threshold:                 (float(par_value(where(par_name eq 'dnu_echelle_threshold'))))[0],                 $
-       epsilon_threshold:                     (float(par_value(where(par_name eq 'epsilon_threshold'))))[0],                     $
-       dnu_lower_threshold_epsilon:           (float(par_value(where(par_name eq 'dnu_lower_threshold_epsilon'))))[0],           $
        n_sliding_test:                        (float(par_value(where(par_name eq 'n_sliding_test'))))[0],                        $
        input_radial_freq_reference:           (float(par_value(where(par_name eq 'input_radial_freq_reference'))))[0],           $
        force_epsilon_dnu_value:               (float(par_value(where(par_name eq 'force_epsilon_dnu_value'))))[0],               $
@@ -195,10 +193,18 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        dipole_radial_fwhm_ratio_ms:           (float(par_value(where(par_name eq 'dipole_radial_fwhm_ratio_ms'))))[0],           $
        dipole_radial_fwhm_ratio_sg:           (float(par_value(where(par_name eq 'dipole_radial_fwhm_ratio_sg'))))[0],           $
        dipole_radial_fwhm_ratio_rg:           (float(par_value(where(par_name eq 'dipole_radial_fwhm_ratio_rg'))))[0],           $
-       upper_epsilon_rg_slope:                (float(par_value(where(par_name eq 'upper_epsilon_rg_slope'))))[0],                $
-       upper_epsilon_rg_offset:               (float(par_value(where(par_name eq 'upper_epsilon_rg_offset'))))[0],               $
-       lower_epsilon_rg_slope:                (float(par_value(where(par_name eq 'lower_epsilon_rg_slope'))))[0],                $
-       lower_epsilon_rg_offset:               (float(par_value(where(par_name eq 'lower_epsilon_rg_offset'))))[0],               $
+       dipole_radial_fwhm_ratio_agb:          (float(par_value(where(par_name eq 'dipole_radial_fwhm_ratio_agb'))))[0],          $
+       upper_epsilon_rgb_slope:               (float(par_value(where(par_name eq 'upper_epsilon_rgb_slope'))))[0],               $
+       upper_epsilon_rgb_offset:              (float(par_value(where(par_name eq 'upper_epsilon_rgb_offset'))))[0],              $
+       lower_epsilon_cl_slope:                (float(par_value(where(par_name eq 'lower_epsilon_cl_slope'))))[0],                $
+       lower_epsilon_cl_offset:               (float(par_value(where(par_name eq 'lower_epsilon_cl_offset'))))[0],               $
+       upper_epsilon_evolved_rgb_slope:       (float(par_value(where(par_name eq 'upper_epsilon_evolved_rgb_slope'))))[0],       $
+       upper_epsilon_evolved_rgb_offset:      (float(par_value(where(par_name eq 'upper_epsilon_evolved_rgb_offset'))))[0],      $
+       lower_epsilon_evolved_rgb_slope:       (float(par_value(where(par_name eq 'lower_epsilon_evolved_rgb_slope'))))[0],       $
+       lower_epsilon_evolved_rgb_offset:      (float(par_value(where(par_name eq 'lower_epsilon_evolved_rgb_offset'))))[0],      $
+       epsilon_division_rgb_cl_slope:         (float(par_value(where(par_name eq 'epsilon_division_rgb_cl_slope'))))[0],         $
+       epsilon_division_rgb_cl_offset:        (float(par_value(where(par_name eq 'epsilon_division_rgb_cl_offset'))))[0],        $
+       lower_epsilon_agb:                     (float(par_value(where(par_name eq 'lower_epsilon_agb'))))[0],                     $
        ; Asymptotic fit
        dnu_prior_lower_fraction_as:           (float(par_value(where(par_name eq 'dnu_prior_lower_fraction_as'))))[0],           $
        dnu_prior_upper_fraction_as:           (float(par_value(where(par_name eq 'dnu_prior_upper_fraction_as'))))[0],           $
@@ -623,12 +629,13 @@ if info.save_eps eq 0 then begin
     block2_3 = [0.425,0.91]
     block2_4 = [0.425,0.885]
     block2_5 = [0.475,0.91]
-    block2_6 = [0.495,0.885]
+    block2_6 = [0.50,0.885]
     block2_7 = [0.53,0.935]
     block3_1 = [0.59,0.96]
     block3_2 = [0.59,0.935]
     block3_3 = [0.59,0.91]
     block3_4 = [0.59,0.885]
+    block3_5 = [0.66,0.885]
     block4_1 = [0.74,0.96]
     block4_2 = [0.74,0.935]
     block4_3 = [0.74,0.91]
@@ -657,6 +664,7 @@ endif else begin
     block3_2 = [0.66,0.935]
     block3_3 = [0.66,0.91]
     block3_4 = [0.66,0.885]
+    block3_5 = [0.73,0.885]
     block4_1 = [0.85,0.96]
     block4_2 = [0.85,0.935]
     block4_3 = [0.85,0.91]
@@ -686,6 +694,7 @@ lp = {  block1_1:                  block1_1,                   $
         block3_2:                  block3_2,                   $
         block3_3:                  block3_3,                   $
         block3_4:                  block3_4,                   $
+        block3_5:                  block3_5,                   $
         block4_1:                  block4_1,                   $
         block4_2:                  block4_2,                   $
         block4_3:                  block4_3,                   $

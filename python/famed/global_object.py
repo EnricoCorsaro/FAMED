@@ -359,6 +359,7 @@ class Global(FamedStar):
 
         flag_evolved_star = False
         flag_depressed_dipole = False
+        evolutionary_stage_index = 0
 
         ap = astero.get_asymptotic_parameters(numax, acf_dnu, teff, self.cp.d01_mass_offset, self.cp.d01_mass_slope, self.cp.d01_offset, self.cp.d02_mass_offset, self.cp.d02_mass_slope, self.cp.d02_offset, self.cp.d03_slope,self.cp.d03_offset, self.cp.numax_sun, self.cp.dnu_sun, self.cp.teff_sun)
 
@@ -384,27 +385,33 @@ class Global(FamedStar):
 
         if fit_dnu <= self.cp.dnu_threshold:
             flag_evolved_star = True
+            evolutionary_stage_index = 2
             dipole_radial_height_ratio = self.cp.dipole_radial_height_ratio_rg
             quadrupole_radial_height_ratio = self.cp.quadrupole_radial_height_ratio_rg
-            dipole_radial_fwhm_ratio = self.cp.dipole_radial_fwhm_ratio_rg
+            
+            if fit_dnu <= self.cp.dnu_agb:
+                dipole_radial_fwhm_ratio = self.cp.dipole_radial_fwhm_ratio_agb
+            else:
+                dipole_radial_fwhm_ratio = self.cp.dipole_radial_fwhm_ratio_rg
+
             n_orders_side_prior = self.cp.n_orders_side_prior_rg
             n_orders_side_data = n_orders_side_prior
 
             # Set the range of the dataset and frequency prior for the sliding
             # pattern fit.
 
-            data_freq_boundaries = [numax - n_orders_side_data*fit_dnu, numax + n_orders_side_data*fit_dnu]
-            tmp_central = np.where((freq <= numax + n_orders_side_prior*fit_dnu) & (freq >= numax - n_orders_side_prior*fit_dnu))[0]
+            data_freq_boundaries = [central_freq - n_orders_side_data*fit_dnu, central_freq + n_orders_side_data*fit_dnu]
+            tmp_central = np.where((freq <= central_freq + n_orders_side_prior*fit_dnu) & (freq >= central_freq - n_orders_side_prior*fit_dnu))[0]
             spsd_central = spsd[tmp_central]
-            freq_prior = [numax - n_orders_side_prior*fit_dnu, numax + n_orders_side_prior*fit_dnu]
+            freq_prior = [central_freq - n_orders_side_prior*fit_dnu, central_freq + n_orders_side_prior*fit_dnu]
 
             dnu_prior = [fit_dnu*self.cp.dnu_prior_lower_fraction,fit_dnu*self.cp.dnu_prior_upper_fraction]
             d02_prior = [ap['d02'],ap['d02']]
             d01_prior = [ap['d01'],ap['d01']]
 
-            if (fit_dnu >= self.cp.dnu_agb) & (self.cp.remove_dipole_peak == 1):
+            if self.cp.remove_dipole_peak == 1:
                 if self.cp.print_on_screen:
-                    print('\nRemoving the dipole peak from the sliding-pattern model.\n')
+                    print('\n Removing the dipole peak from the sliding-pattern model.\n')
 
                 d01_prior = [99.0,99.0]
 
@@ -527,6 +534,8 @@ class Global(FamedStar):
                     flag_evolved_star = True
 
                 if flag_evolved_star:
+                    evolutionary_stage_index = 1
+
                     if self.cp.print_on_screen:
                         print('\n The star likely contains modes that have undergone avoided crossings, so it is classified as a subgiant.\n')
 
@@ -581,10 +590,10 @@ class Global(FamedStar):
                     # Set the range of the dataset and frequency prior for the
                     # sliding pattern fit
 
-                    data_freq_boundaries = [numax - n_orders_side_data*fit_dnu, numax + n_orders_side_data*fit_dnu]
-                    tmp_central = np.where((freq <= numax + n_orders_side_prior*fit_dnu) & (freq >= numax - n_orders_side_prior*fit_dnu))[0]
+                    data_freq_boundaries = [central_freq - n_orders_side_data*fit_dnu, central_freq + n_orders_side_data*fit_dnu]
+                    tmp_central = np.where((freq <= central_freq + n_orders_side_prior*fit_dnu) & (freq >= central_freq - n_orders_side_prior*fit_dnu))[0]
                     spsd_central = spsd[tmp_central]
-                    freq_prior = [numax - n_orders_side_prior*fit_dnu, numax + n_orders_side_prior*fit_dnu]
+                    freq_prior = [central_freq - n_orders_side_prior*fit_dnu, central_freq + n_orders_side_prior*fit_dnu]
 
                     dnu_prior = [fit_dnu*self.cp.dnu_prior_lower_fraction,fit_dnu*self.cp.dnu_prior_upper_fraction]
 
@@ -612,7 +621,9 @@ class Global(FamedStar):
                     n_orders_model += 1
 
         flag_repeat_sliding_fit = True
+        flag_interp_epsi = False
         sliding_iteration = 0
+        flag_low_luminosity_rgb = False
         
         while flag_repeat_sliding_fit & (sliding_iteration <= 1):
 
@@ -682,6 +693,29 @@ class Global(FamedStar):
             radial_freq_reference_array = np.zeros(self.cp.n_sliding_test)
             d01_array = np.zeros(self.cp.n_sliding_test)
 
+            # First, define some useful boundaries for epsilon
+            
+            if fit_dnu <= self.cp.dnu_threshold:
+                if fit_dnu <= self.cp.dnu_agb:
+
+                    if fit_dnu > self.cp.dnu_tip:
+                        epsilon_upper_limit = self.cp.upper_epsilon_evolved_rgb_slope * np.log(fit_dnu) + self.cp.upper_epsilon_evolved_rgb_offset
+                    else:
+                        # Set it to no upper limit for RGB-tip stars
+                        epsilon_upper_limit = 1.3
+            
+                    if fit_dnu <= self.cp.dnu_tip:
+                        epsilon_lower_limit = self.cp.lower_epsilon_evolved_rgb_slope * np.log(fit_dnu) + self.cp.lower_epsilon_evolved_rgb_offset
+                    else:
+                        epsilon_lower_limit = self.cp.lower_epsilon_agb
+                else:
+                    epsilon_upper_limit = self.cp.upper_epsilon_rgb_slope * np.log(fit_dnu) + self.cp.upper_epsilon_rgb_offset
+            
+                    if (fit_dnu <= self.cp.dnu_cl2) & (fit_dnu > self.cp.dnu_agb):
+                        epsilon_lower_limit = self.cp.lower_epsilon_cl_slope * np.log(fit_dnu) + self.cp.lower_epsilon_cl_offset
+                    else:
+                        flag_low_luminosity_rgb = True
+
             for k in range(0, self.cp.n_sliding_test):
                 # Read sampled frequency from multi-modal fit for nu0 central
 
@@ -691,10 +725,12 @@ class Global(FamedStar):
                 
                 post = np.loadtxt(self.star_dir/self.cp.as_subdir/(run_names[k]+'/peakbagging_posteriorDistribution.txt'))
                 post /= np.max(post)
-                radial_freq_reference = np.sum(par_nu0*post)
+                radial_freq_reference = np.sum(par_nu0*post)/np.sum(post)
 
                 if self.cp.input_radial_freq_reference > 0:
                     radial_freq_reference = self.cp.input_radial_freq_reference
+                    self.bad_epsi = True
+                    
                     if self.cp.print_on_screen and k==0:
                         print(' Forcing an input central radial mode frequency: {} muHz\n'.format(radial_freq_reference))
                 
@@ -702,8 +738,12 @@ class Global(FamedStar):
                 modulo_reference = radial_freq_reference%fit_dnu
                 echelle_epsi = modulo_reference/fit_dnu
 
-                if (echelle_epsi < self.cp.epsilon_threshold) & (fit_dnu > self.cp.dnu_lower_threshold_epsilon):
-                    echelle_epsi += 1
+                if (fit_dnu <= self.cp.dnu_threshold) & (echelle_epsi < epsilon_upper_limit - 1.0):
+                     echelle_epsi += 1
+
+                     if self.cp.print_on_screen and k==0:
+                        print(' Increasing epsilon by 1.')
+
                 echelle_epsi_array[k] = echelle_epsi
 
                 # if star is flagged as MS, then also retrieve the value of
@@ -715,35 +755,70 @@ class Global(FamedStar):
 
             median_echelle_epsi = median_high(echelle_epsi_array)
 
-            if fit_dnu <= self.cp.dnu_threshold:
-                epsilon_upper_limit  = self.cp.upper_epsilon_rg_slope * np.log(fit_dnu) + self.cp.upper_epsilon_rg_offset
-                epsilon_lower_limit  = self.cp.lower_epsilon_rg_slope * np.log(fit_dnu) + self.cp.lower_epsilon_rg_offset
+            if (fit_dnu <= self.cp.dnu_threshold) & (self.cp.input_radial_freq_reference == 0):
+                # The sliding-pattern fit for evolved stars may have failed in providing a reliable epsilon.
+                # If this is the case, and the dipole peak was removed by configuration, repeat the fit by including a l=1 mode peak, 
+                # having a position fixed to the p-mode frequency of the asymptotic relation. If the dipole peak was not removed instead, 
+                # repeat the fit by excluding the l=1 mode peak.
 
-                # The sliding pattern for evolved stars may have
-                # failed in providing a reliable epsilon. If this is the case, 
-                # and the dipole peak was removed by configuration, 
-                # repeat the fit by including a l=1 mode peak, having the position fixed
-                # to the p-mode frequency of the asymptotic relation
-
-                if (median_echelle_epsi >= epsilon_upper_limit) or ((median_echelle_epsi <= epsilon_lower_limit) & (fit_dnu >= self.cp.dnu_cl)):
-                    if sliding_iteration>0:
-                        if self.cp.print_on_screen:
-                            print(' Repeating the sliding-pattern fit did not solve the issue. Epsilon is likely to be wrong for this star')
-                        self.bad_epsi = True
-                    else:
-                        if self.cp.print_on_screen:
-                            if median_echelle_epsi >= epsilon_upper_limit: 
-                                print(' Repeating the sliding-pattern fit by including l=1 (if removed before) because epsilon exceeds the upper limit for RGs')
+                if not flag_low_luminosity_rgb:
+                    if (median_echelle_epsi >= epsilon_upper_limit) or (median_echelle_epsi <= epsilon_lower_limit):
+                
+                        if sliding_iteration > 0:
+                            if self.cp.print_on_screen:
+                                print(' Repeating the sliding-pattern fit did not solve the issue. Epsilon is likely to be wrong for this star')
+                            self.bad_epsi = True
+                            flag_repeat_sliding_fit = False
+                        else:
+                            if self.cp.remove_dipole_peak == 1:
+                                d01_prior = [ap['d01'],ap['d01']]
+                        
+                                if self.cp.print_on_screen:
+                                    if median_echelle_epsi >= epsilon_upper_limit:
+                                        print(' Repeating the sliding-pattern fit by including l=1 because epsilon exceeds the upper limit for RGs.')
+                                    else:
+                                        print(' Repeating the sliding-pattern fit by including l=1 because epsilon exceeds the lower limit for RGs.') 
                             else:
-                                print(' Repeating the sliding-pattern fit by including l=1 (if removed before) because epsilon exceeds the lower limit for RGs')
-                    
-                    if self.cp.remove_dipole_peak == 1:
-                        d01_prior = [ap['d01'],ap['d01']]
+                                d01_prior = [99.0,99.0]
+                        
+                                if self.cp.print_on_screen:
+                                    if median_echelle_epsi >= epsilon_upper_limit:
+                                        print(' Repeating the sliding-pattern fit by excluding l=1 because epsilon exceeds the upper limit for RGs.')
+                                    else:
+                                        print(' Repeating the sliding-pattern fit by excluding l=1 because epsilon exceeds the lower limit for RGs.')
+
+                            flag_repeat_sliding_fit = True
                     else:
-                        flag_repeat_sliding_fit = False
+                        # Epsilon from the sliding-pattern fit has been validated. Therefore exit the while loop.
+                
+                        flag_repeat_sliding_fit = 0
                 else:
-                    # Epsilon from the sliding-pattern fit has been validated.
-                    # Therefore exit the while loop.
+                    # Apply a control check on the mode id for low-luminosity RGB. If this is not matching the one from the epsilon-Dnu relation, 
+                    # then adopt epsilon from the epsilon-Dnu relation, instead. This only holds for stars that are considered low-luminosity RGB.
+                    # In this regime there is no need to repeat the sliding-pattern fit.
+
+                    median_index = np.where(echelle_epsi_array == median_echelle_epsi)[0]
+                    radial_freq_reference = radial_freq_reference_array[median_index]
+                    radial_freq_reference = radial_freq_reference[0]
+
+                    radial_freq_reference2 = closest(radial_freq_reference,freq1)
+                    modeid_sliding = astero.get_modeid(radial_freq_reference,fit_dnu,median_echelle_epsi,0,numax,0)
+                    modeid_epsi_dnu = astero.get_modeid(radial_freq_reference2,fit_dnu,interp_epsi,0,numax,0)
+                    diff_radial = abs(radial_freq_reference2 - radial_freq_reference)
+
+                    if (modeid_sliding['degree'] != modeid_epsi_dnu['degree']) or (diff_radial >= fit_dnu/4):
+                        median_echelle_epsi = interp_epsi
+                        flag_interp_epsi = True
+                        self.bad_epsi = True
+                    
+                        if self.cp.print_on_screen:
+                            print(' Sliding-pattern fit mode identification did not match epsilon-Dnu relation in the low-luminosity RGB regime.')
+                            print(' Applying correction to epsilon from epsilon-Dnu relation.\n')
+                    
+                        if modeid_epsi_dnu['degree'] == 1:
+                            radial_freq_reference = closest(radial_freq_reference2+fit_dnu/2,freq1)
+                        else:
+                            radial_freq_reference = radial_freq_reference2
 
                     flag_repeat_sliding_fit = False
             else:
@@ -752,6 +827,25 @@ class Global(FamedStar):
 
                 flag_repeat_sliding_fit = False
             sliding_iteration +=1
+
+        # Asses the potential evolutionary stage of the star based on the epsilon-Dnu diagram introduced by Kallinger et al. 2012, only for stars in the red giant regime.
+
+        if fit_dnu <= self.cp.dnu_threshold:
+            if fit_dnu <= self.cp.dnu_agb:
+                epsilon_division_rgb_agb = self.cp.lower_epsilon_evolved_rgb_slope * np.log(fit_dnu) + self.cp.lower_epsilon_evolved_rgb_offset
+
+                if (fit_dnu > self.cp.dnu_tip) & (median_echelle_epsi < epsilon_division_rgb_agb): 
+                    evolutionary_stage_index = 5   # The star is classified as an early AGB star
+            else:
+                epsilon_division_rgb_cl = self.cp.epsilon_division_rgb_cl_slope * np.log(fit_dnu) + self.cp.epsilon_division_rgb_cl_offset
+        
+                if (fit_dnu <= self.cp.dnu_cl2) & (fit_dnu > self.cp.dnu_cl):
+                    if median_echelle_epsi < epsilon_division_rgb_cl:
+                        evolutionary_stage_index = 4
+
+                if (fit_dnu <= self.cp.dnu_cl) & (fit_dnu > self.cp.dnu_agb):
+                    if median_echelle_epsi < epsilon_division_rgb_cl:
+                        evolutionary_stage_index = 3
 
         median_index = np.where(echelle_epsi_array == median_echelle_epsi)[0]
         radial_freq_reference = radial_freq_reference_array[median_index]
@@ -765,14 +859,11 @@ class Global(FamedStar):
             else:
                 fit_d01 = 0
 
-        # Control check on epsilon for late subgiants/early RGB
-
-        flag_interp_epsi = False
-
-        if self.cp.force_epsilon_dnu_value:
-            if (fit_dnu <= self.cp.dnu_threshold) & (fit_dnu >= self.cp.dnu_cl2):
-                # If the star is an evolved subgiant/early RGB check that
-                # epsilon is in agreement with the epsilon-dnu relation
+        if (self.cp.force_epsilon_dnu_value) & (self.cp.input_radial_freq_reference == 0):
+            if (fit_dnu <= self.cp.dnu_threshold):
+                # Force epsilon from the epsilon-Dnu relation of red giant stars independently of its Dnu value. 
+                # This assumes that the star is a RGB. Note that this may lead to a wrong mode identification if 
+                # adopted in a regime where stars in evolutionary stages different than RGB may be present. 
                 
                 radial_freq_reference2 = closest(radial_freq_reference,freq1)
                 modeid_sliding = astero.get_modeid(radial_freq_reference,fit_dnu,median_echelle_epsi,0,numax,0)
@@ -785,7 +876,7 @@ class Global(FamedStar):
                     self.bad_epsi = True
                     
                     if self.cp.print_on_screen:
-                        print(' Sliding fit mode identification did not match epsilon-Dnu relation.')
+                        print(' Sliding-pattern fit mode identification did not match epsilon-Dnu relation.')
                         print(' Applying correction to epsilon from epsilon-Dnu relation.\n')
                     
                     if modeid_epsi_dnu['degree'] == 1:
@@ -795,11 +886,11 @@ class Global(FamedStar):
 
         # Control check on epsilon for stars falling in the Teff-epsilon relation regime
 
-        if fit_dnu >= self.cp.dnu_threshold:
-            # Due to the confusion arising from the strong blending of the modes
-            # for F-type stars, the sliding pattern fit may be unreliable.
-            # In this case check the obtained mode identification against the
-            # one using the epsilon-Teff relation 
+        if (fit_dnu > self.cp.dnu_threshold) & (self.cp.input_radial_freq_reference == 0):
+            # Control check on epsilon for stars falling in the Teff-epsilon relation regime.
+            # Due to the confusion arising from the potential blending of the l=2,0 modes for these stars, 
+            # the sliding pattern fit may sometimes be not reliable. In this case check the obtained mode 
+            # identification against the one using the epsilon-Teff relation and apply the correction if needed. 
             
             radial_freq_reference2 = closest(radial_freq_reference,freq1)
             modeid_sliding = astero.get_modeid(radial_freq_reference,fit_dnu,median_echelle_epsi,fit_d01,numax,0)
@@ -812,7 +903,7 @@ class Global(FamedStar):
                     self.bad_epsi = True
 
                     if self.cp.print_on_screen:
-                        print(' Sliding fit mode identification did not match epsilon-Teff relation.')
+                        print(' Sliding-pattern fit mode identification did not match epsilon-Teff relation.')
                         print(' Applying correction to epsilon from epsilon-Teff relation.\n')
                     
                     if modeid_teff['degree'] == 1:
@@ -1093,8 +1184,8 @@ class Global(FamedStar):
         # Save the value of dnu from ACF and the value of epsilon from diagram
 
         with open(peakbagging_filename_global, 'w') as f:
-            f.write('# nuMax (microHz), DeltaNu_ACF (microHz), DeltaNu_fit (microHz), epsilon, epsilon (interpolated), alpha, Teff (K), N_chunks, Flag depressed dipole\n')
-            f.write('{:.4f}  {:.4f}  {:.4f}  {:.4f}  {:.4f}   {:.4f}  {:.1f}  {:d}  {:d}\n'.format(numax,acf_dnu,best_dnu,best_epsi,interp_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole))
+            f.write('# nuMax (microHz), DeltaNu_ACF (microHz), DeltaNu_fit (microHz), epsilon, epsilon (interpolated), alpha, Teff (K), N_chunks, Flag depressed dipole (0 = NO, 1 = YES), Evolutionary Stage (0 = MS, 1 = SG, 2 = RGB, 3 = RC1, 4 = RC2, 5 = AGB)\n')
+            f.write('{:.4f}  {:.4f}  {:.4f}  {:.4f}  {:.4f}   {:.4f}  {:.1f}  {:d}  {:d}  {:d}\n'.format(numax,acf_dnu,best_dnu,best_epsi,interp_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole,evolutionary_stage_index))
 
             # Save the frequency positions of each chunk identified in GLOBAL.
 
@@ -1131,6 +1222,14 @@ class Global(FamedStar):
         self.dnu = best_dnu
         self.epsilon = best_epsi
         self.flag_depressed_dipole = flag_depressed_dipole
+
+        evolutionary_stage_label_array = ['MS','SG','RGB','RC1','RC2','AGB']
+        evolutionary_stage_label = evolutionary_stage_label_array[evolutionary_stage_index]
+
+        self.evolutionary_stage_label = evolutionary_stage_label
+        self.input_radial = (self.cp.input_radial_freq_reference > 0)
+        self.ref_radial = radial_freq_reference
+
 
         # Save stuff into pickle for later steps...
 

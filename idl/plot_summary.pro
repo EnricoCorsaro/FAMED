@@ -46,7 +46,7 @@ if flag_global eq 1 then begin
    
     if parameters.flag_bad_epsi eq 1 then begin
         xyouts,lp.block2_6[0],lp.block2_6[1],'!3'+sp.epsi_str+'!D'+epsi_subscript+'!n = '+strcompress(string(parameters.best_epsi,format='(F0.3)'),/remove_all),    $
-        charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=245,/normal
+        charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=225,/normal
     endif else begin
         xyouts,lp.block2_6[0],lp.block2_6[1],'!3'+sp.epsi_str+'!D'+epsi_subscript+'!n = '+strcompress(string(parameters.best_epsi,format='(F0.3)'),/remove_all),    $
         charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=lp.block2_color,/normal
@@ -74,9 +74,22 @@ endif else begin
     endelse
 endelse
 
-xyouts,lp.block3_3[0],lp.block3_3[1],'!3H!Dmax,prior!n = '+strcompress(string(parameters.upper_height,format='(E0.1)'),/remove_all) + ' ' + sp.psd_unit_str,  $
-charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=lp.block3_color,/normal
+if flag_global eq 1 then begin
+    if parameters.flag_input_radial eq 1 then begin
+        xyouts,lp.block3_3[0],lp.block3_3[1],'!3Ref. Radial = '+strcompress(string(parameters.ref_radial,format='(F0.2)'),/remove_all) + ' ' + sp.freq_unit_str,  $
+        charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=225,/normal
+    endif else begin
+        xyouts,lp.block3_3[0],lp.block3_3[1],'!3Ref. Radial = '+strcompress(string(parameters.ref_radial,format='(F0.2)'),/remove_all) + ' ' + sp.freq_unit_str,  $
+        charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=lp.block3_color,/normal
+    endelse
+endif else begin
+    xyouts,lp.block3_3[0],lp.block3_3[1],'!3H!Dmax,prior!n = '+strcompress(string(parameters.upper_height,format='(E0.1)'),/remove_all) + ' ' + sp.psd_unit_str,  $
+    charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=lp.block3_color,/normal
+endelse
+
 xyouts,lp.block3_4[0],lp.block3_4[1],'!3T!Deff!n = '+strcompress(string(parameters.teff,format='(I0)'),/remove_all) + ' K',    $
+charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=lp.block3_color,/normal
+xyouts,lp.block3_5[0],lp.block3_5[1],'!3Ev. Stage!D'+ sp.epsi_str + '!n = ' + parameters.ev_stage,    $
 charsize=lp.summary_charsize,charthick=lp.summary_charthick,font=-1,color=lp.block3_color,/normal
 
 ; Analysis configuration

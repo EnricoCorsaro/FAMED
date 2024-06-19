@@ -61,7 +61,7 @@ class Chunk(FamedStar):
         ----------
         run : int
             An integer specifying the number of the chunk for which the sampling must be evaluated. 
-            If a number < 0 is provided, all the chunks are take into account at the same time.
+            If a number < 0 is provided, all the chunks are taken into account at the same time.
         """
         peakbagging_filename_global = self.star_dir/self.cp.summary_subdir/(self.catalog_id + self.star_id + self.cp.peakbagging_filename_label + self.cp.isla_subdir + '_' + self.cp.global_subdir + '_GLOBAL.txt')
         

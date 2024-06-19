@@ -15,7 +15,7 @@ COMMON STAR,info
 ; Evaluate percentage variation with respect to the interpolated value
 epsi_variation = (parameters.epsi_fit - parameters.epsi_int)/parameters.epsi_int*100
 
-if (parameters.dnu_fit gt cp.dnu_threshold) then begin
+if parameters.dnu_fit gt cp.dnu_threshold then begin
     ; Plot the epsilon-Teff diagram
 
     loadct,39,/silent

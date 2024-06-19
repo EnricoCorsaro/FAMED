@@ -196,7 +196,7 @@ def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, background_data_dir
         sig_env = bg_par[len(bg_par)-1]
         dnu = astero.compute_scaling_dnu(numax, numax_threshold, numax_coeff_low, numax_coeff_high, numax_exponent_low, numax_exponent_high)
 
-        if dnu <= dnu_cl:
+        if dnu <= dnu_cl2:
             if dnu <= dnu_agb:
                 width_factor = n_sigma_envelope_tip
             else:

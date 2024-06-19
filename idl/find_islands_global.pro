@@ -268,13 +268,14 @@ fit_dnu = acf_dnu
 central_freq = numax
 run_subdir = 'sliding'
 run_names = run_subdir + strcompress(string(indgen(cp.n_sliding_test)),/remove_all)
+
 flag_evolved_star = 0
 flag_depressed_dipole = 0
+evolutionary_stage_index = 0
 
 ; Obtain asymptotic parameters for evolved stars
 
 ap = get_asymptotic_parameters(numax,acf_dnu,teff)
-
 
 ; Start by verifying whether the star has depressed dipole modes
 
@@ -304,9 +305,16 @@ endif
 
 if fit_dnu le cp.dnu_threshold then begin
     flag_evolved_star = 1
+    evolutionary_stage_index = 2
     dipole_radial_height_ratio = cp.dipole_radial_height_ratio_rg
     quadrupole_radial_height_ratio = cp.quadrupole_radial_height_ratio_rg
-    dipole_radial_fwhm_ratio = cp.dipole_radial_fwhm_ratio_rg
+
+    if fit_dnu le cp.dnu_agb then begin
+        dipole_radial_fwhm_ratio = cp.dipole_radial_fwhm_ratio_agb
+    endif else begin
+        dipole_radial_fwhm_ratio = cp.dipole_radial_fwhm_ratio_rg
+    endelse
+
     n_orders_side_prior = cp.n_orders_side_prior_rg
     n_orders_side_data = n_orders_side_prior
 
@@ -321,10 +329,10 @@ if fit_dnu le cp.dnu_threshold then begin
     d02_prior = [ap.d02,ap.d02]
     d01_prior = [ap.d01,ap.d01]
     
-    if (fit_dnu ge cp.dnu_agb) and (cp.remove_dipole_peak eq 1) then begin
+    if cp.remove_dipole_peak eq 1 then begin
         if info.print_on_screen eq 1 then begin
            print,''
-           print,'Removing the dipole peak from the sliding-pattern model.'
+           print,' Removing the dipole peak from the sliding-pattern model.'
            print,'' 
         endif
         
@@ -458,6 +466,7 @@ endif else begin
         if max_dev ge cp.dnu_echelle_threshold then flag_evolved_star = 1
 
         if flag_evolved_star eq 1 then begin
+            evolutionary_stage_index = 1
             if info.print_on_screen eq 1 then begin
                 print,''
                 print,' The star likely contains modes that have undergone avoided crossings, so it is classified as a subgiant.'
@@ -542,7 +551,9 @@ endif else begin
 endelse
     
 flag_repeat_sliding_fit = 1
+flag_interp_epsi = 0
 sliding_iteration = 0
+flag_low_luminosity_rgb = 0
 
 while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
     ; Check if the run already exists
@@ -618,6 +629,34 @@ while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
     radial_freq_reference_array = fltarr(cp.n_sliding_test)
     d01_array = fltarr(cp.n_sliding_test)
 
+    ; First, define some useful boundaries for epsilon
+    
+    if fit_dnu le cp.dnu_threshold then begin
+        if fit_dnu le cp.dnu_agb then begin
+            
+            if fit_dnu gt cp.dnu_tip then begin
+                epsilon_upper_limit = cp.upper_epsilon_evolved_rgb_slope * alog(fit_dnu) + cp.upper_epsilon_evolved_rgb_offset
+            endif else begin
+                ; Set it to no upper limit for RGB-tip stars
+                epsilon_upper_limit = 1.3
+            endelse
+
+            if fit_dnu le cp.dnu_tip then begin
+                epsilon_lower_limit = cp.lower_epsilon_evolved_rgb_slope * alog(fit_dnu) + cp.lower_epsilon_evolved_rgb_offset
+            endif else begin
+                epsilon_lower_limit = cp.lower_epsilon_agb
+            endelse
+        endif else begin
+            epsilon_upper_limit = cp.upper_epsilon_rgb_slope * alog(fit_dnu) + cp.upper_epsilon_rgb_offset
+            
+            if fit_dnu le cp.dnu_cl2 and fit_dnu gt cp.dnu_agb then begin
+                epsilon_lower_limit = cp.lower_epsilon_cl_slope * alog(fit_dnu) + cp.lower_epsilon_cl_offset
+            endif else begin
+                flag_low_luminosity_rgb = 1
+            endelse
+        endelse
+    endif
+
     for k=0, cp.n_sliding_test-1 do begin
         ; Read sampled frequency from DIAMONDS multi-modal fit for nu0 central
         
@@ -632,16 +671,25 @@ while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
 
         if cp.input_radial_freq_reference gt 0 then begin
             radial_freq_reference = cp.input_radial_freq_reference
-            if cp.print_on_screen then begin
-                print,'Forcing an input central radial mode frequency: ' + radial_freq_reference + ' muHz'
+            flag_bad_epsi = 1
+        
+            if info.print_on_screen and (k eq 0) then begin
+                print,' Forcing an input central radial mode frequency: ' + strcompress(string(radial_freq_reference,format='(F0.3)'),/remove_all) + ' muHz'
             endif
         endif
 
         radial_freq_reference_array(k) = radial_freq_reference
         modulo_reference = radial_freq_reference mod fit_dnu
         echelle_epsi = modulo_reference/fit_dnu
-        
-        if echelle_epsi lt cp.epsilon_threshold and fit_dnu gt cp.dnu_lower_threshold_epsilon then echelle_epsi += 1
+
+        if (fit_dnu le cp.dnu_threshold) and (echelle_epsi lt epsilon_upper_limit - 1.0) then begin
+            echelle_epsi += 1
+            
+            if info.print_on_screen and (k eq 0) then begin
+                print,' Increasing epsilon by 1.'
+            endif
+        endif
+
         echelle_epsi_array(k) = echelle_epsi
 
         ; If the star is flagged as a MS star, then retrieve also the value of the small spacing d01 from the sliding fit
@@ -654,37 +702,84 @@ while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
 
     median_echelle_epsi = median(echelle_epsi_array)
 
-    if fit_dnu le cp.dnu_threshold then begin
-        epsilon_upper_limit = cp.upper_epsilon_rg_slope * alog(fit_dnu) + cp.upper_epsilon_rg_offset
-        epsilon_lower_limit = cp.lower_epsilon_rg_slope * alog(fit_dnu) + cp.lower_epsilon_rg_offset
-        
-        ; The sliding pattern for evolved stars may have failed in providing a reliable epsilon.
+    if (fit_dnu le cp.dnu_threshold) and (cp.input_radial_freq_reference eq 0) then begin
+        ; The sliding-pattern fit for evolved stars may have failed in providing a reliable epsilon.
         ; If this is the case, and the dipole peak was removed by configuration, repeat the fit by including a l=1 mode peak, 
-        ; having a position fixed to the p-mode frequency of the asymptotic relation.
+        ; having a position fixed to the p-mode frequency of the asymptotic relation. If the dipole peak was not removed instead, 
+        ; repeat the fit by excluding the l=1 mode peak.
 
-        if (median_echelle_epsi ge epsilon_upper_limit) or ((median_echelle_epsi le epsilon_lower_limit) and (fit_dnu ge cp.dnu_cl)) then begin
-            if sliding_iteration gt 0 then begin
-                if info.print_on_screen eq 1 then begin
-                    print,' Repeating the sliding-pattern-fit did not solve the issue. Epsilon is likely to be wrong for this star.'
-                endif
-                flag_bad_epsi = 1
-            endif else begin
-                if info.print_on_screen eq 1 then begin
-                    if median_echelle_epsi ge epsilon_upper_limit then begin
-                        print,' Repeating the sliding-pattern fit by including l=1 (if removed before) because epsilon exceeds the upper limit for RGs.'
+        if flag_low_luminosity_rgb ne 1 then begin
+            if (median_echelle_epsi ge epsilon_upper_limit) or (median_echelle_epsi le epsilon_lower_limit) then begin
+                
+                if sliding_iteration gt 0 then begin
+                    if info.print_on_screen eq 1 then begin
+                        print,' Repeating the sliding-pattern-fit did not solve the issue. Epsilon is likely to be wrong for this star.'
+                    endif
+
+                    flag_bad_epsi = 1
+                    flag_repeat_sliding_fit = 0
+                endif else begin
+                    if cp.remove_dipole_peak eq 1 then begin
+                        d01_prior = [ap.d01,ap.d01]
+                        
+                        if info.print_on_screen eq 1 then begin
+                            if median_echelle_epsi ge epsilon_upper_limit then begin
+                                print,' Repeating the sliding-pattern fit by including l=1 because epsilon exceeds the upper limit for RGs.'
+                            endif else begin
+                                print,' Repeating the sliding-pattern fit by including l=1 because epsilon exceeds the lower limit for RGs.'
+                            endelse
+                        endif
                     endif else begin
-                        print,' Repeating the sliding-pattern fit by including l=1 (if removed before) because epsilon exceeds the lower limit for RGs.'
+                        d01_prior = [99.0,99.0]
+                        
+                        if info.print_on_screen eq 1 then begin
+                            if median_echelle_epsi ge epsilon_upper_limit then begin
+                                print,' Repeating the sliding-pattern fit by excluding l=1 because epsilon exceeds the upper limit for RGs.'
+                            endif else begin
+                                print,' Repeating the sliding-pattern fit by excluding l=1 because epsilon exceeds the lower limit for RGs.'
+                            endelse
+                        endif
                     endelse
-                endif
-            endelse
 
-            if cp.remove_dipole_peak eq 1 then begin
-                d01_prior = [ap.d01,ap.d01]
+                    flag_repeat_sliding_fit = 1
+                endelse
             endif else begin
+                ; Epsilon from the sliding-pattern fit has been validated. Therefore exit the while loop.
+                
                 flag_repeat_sliding_fit = 0
             endelse
         endif else begin
-            ; Epsilon from the sliding-pattern fit has been validated. Therefore exit the while loop.
+            ; Apply a control check on the mode id for low-luminosity RGB stars. If this is not matching the one from the epsilon-Dnu relation, then adopt
+            ; epsilon from the epsilon-Dnu relation, instead. This only holds for stars that are considered low-luminosity RGB.
+            ; In this regime there is no need to repeat the sliding-pattern fit.
+
+            median_index = where(echelle_epsi_array eq median_echelle_epsi)
+            radial_freq_reference = radial_freq_reference_array(median_index)
+            radial_freq_reference = temporary(radial_freq_reference(0))
+
+            radial_freq_reference2 = freq1(closest(radial_freq_reference,freq1))
+            modeid_sliding = get_modeid(radial_freq_reference,fit_dnu,median_echelle_epsi,0,numax,0)
+            modeid_epsi_dnu = get_modeid(radial_freq_reference2,fit_dnu,interp_epsi,0,numax,0)
+            diff_radial = abs(radial_freq_reference2 - radial_freq_reference)
+           
+            if (modeid_sliding.degree ne modeid_epsi_dnu.degree) or (diff_radial ge fit_dnu/4.) then begin
+                median_echelle_epsi = interp_epsi
+                flag_interp_epsi = 1
+                flag_bad_epsi = 1
+
+                if info.print_on_screen eq 1 then begin
+                    print,' Sliding-pattern fit mode identification did not match epsilon-Dnu relation in the low-luminosity RGB regime.'
+                    print,' Applying correction to epsilon from epsilon-Dnu relation.'
+                    print,' '
+                endif
+
+                if modeid_epsi_dnu.degree eq 1 then begin
+                    radial_freq_reference = freq1(closest(radial_freq_reference2+fit_dnu/2.,freq1))
+                endif else begin
+                    radial_freq_reference = radial_freq_reference2
+                endelse
+            endif
+
             flag_repeat_sliding_fit = 0
         endelse
     endif else begin
@@ -694,6 +789,26 @@ while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
 
     sliding_iteration++
 endwhile
+
+; Asses the potential evolutionary stage of the star based on the epsilon-Dnu diagram introduced by Kallinger et al. 2012, only for stars in the red giant regime.
+
+if fit_dnu le cp.dnu_threshold then begin
+    if fit_dnu le cp.dnu_agb then begin
+        epsilon_division_rgb_agb = cp.lower_epsilon_evolved_rgb_slope * alog(fit_dnu) + cp.lower_epsilon_evolved_rgb_offset
+        
+        if fit_dnu gt cp.dnu_tip and median_echelle_epsi lt epsilon_division_rgb_agb then evolutionary_stage_index = 5   ; The star is classified as an early AGB star
+    endif else begin
+        epsilon_division_rgb_cl = cp.epsilon_division_rgb_cl_slope * alog(fit_dnu) + cp.epsilon_division_rgb_cl_offset
+        
+        if fit_dnu le cp.dnu_cl2 and fit_dnu gt cp.dnu_cl then begin
+            if median_echelle_epsi lt epsilon_division_rgb_cl then evolutionary_stage_index = 4
+        endif
+
+        if fit_dnu le cp.dnu_cl and fit_dnu gt cp.dnu_agb then begin
+            if median_echelle_epsi lt epsilon_division_rgb_cl then evolutionary_stage_index = 3
+        endif
+    endelse
+endif
 
 median_index = where(echelle_epsi_array eq median_echelle_epsi)
 radial_freq_reference = radial_freq_reference_array(median_index)
@@ -709,27 +824,25 @@ endif else begin
     endelse
 endelse
 
-; Control check on epsilon for late subgiants/early RGB
+if (cp.force_epsilon_dnu_value eq 1) and (cp.input_radial_freq_reference eq 0) then begin    
+    if fit_dnu le cp.dnu_threshold then begin
+        ; Force epsilon from the epsilon-Dnu relation of red giant stars independently of its Dnu value. This assumes that the star is a RGB.
+        ; Note that this may lead to a wrong mode identification if adopted in a regime where stars in evolutionary stages different than RGB
+        ; may be present. 
 
-flag_interp_epsi = 0
-
-if cp.force_epsilon_dnu_value eq 1 then begin
-    if fit_dnu le cp.dnu_threshold and fit_dnu ge cp.dnu_cl2 then begin
-        ; If the star is an evolved subgiant/early RGB check that epsilon is in agreement with the epsilon-DeltaNu relation
-        
         radial_freq_reference2 = freq1(closest(radial_freq_reference,freq1))
         modeid_sliding = get_modeid(radial_freq_reference,fit_dnu,median_echelle_epsi,0,numax,0)
         modeid_epsi_dnu = get_modeid(radial_freq_reference2,fit_dnu,interp_epsi,0,numax,0)
         diff_radial = abs(radial_freq_reference2 - radial_freq_reference)
         
         if (modeid_sliding.degree ne modeid_epsi_dnu.degree) or (diff_radial ge fit_dnu/4.) then begin
+            evolutionary_stage_index = 2
             median_echelle_epsi = interp_epsi
             flag_interp_epsi = 1
             flag_bad_epsi = 1
             
             if info.print_on_screen eq 1 then begin
-                print,' Sliding fit mode identification did not match epsilon-Dnu relation.'
-                print,' Applying correction to epsilon from epsilon-Dnu relation.'
+                print,' Forcing epsilon value from epsilon-Dnu relation for RGB stars.'
                 print,' '
             endif
 
@@ -742,11 +855,10 @@ if cp.force_epsilon_dnu_value eq 1 then begin
     endif
 endif
 
-; Control check on epsilon for stars falling in the Teff-epsilon relation regime
-
-if fit_dnu ge cp.dnu_threshold then begin
-    ; Due to the confusion arising from the potential blending of the l=2,0 modes for these stars, the sliding pattern fit may sometimes not be reliable.
-    ; In this case check the obtained mode identification against the one using the epsilon-Teff relation 
+if (fit_dnu gt cp.dnu_threshold) and (cp.input_radial_freq_reference eq 0) then begin
+    ; Control check on epsilon for stars falling in the Teff-epsilon relation regime.
+    ; Due to the confusion arising from the potential blending of the l=2,0 modes for these stars, the sliding pattern fit may sometimes be not reliable.
+    ; In this case check the obtained mode identification against the one using the epsilon-Teff relation and apply the correction if needed. 
     
     radial_freq_reference2 = freq1(closest(radial_freq_reference,freq1))
     modeid_sliding = get_modeid(radial_freq_reference,fit_dnu,median_echelle_epsi,fit_d01,numax,0)
@@ -759,7 +871,7 @@ if fit_dnu ge cp.dnu_threshold then begin
         flag_bad_epsi = 1
         
         if info.print_on_screen eq 1 then begin
-            print,' Sliding fit mode identification did not match epsilon-Teff relation.'
+            print,' Sliding-pattern fit mode identification did not match epsilon-Teff relation.'
             print,' Applying correction to epsilon from epsilon-Teff relation.'
             print,' '
         endif 
@@ -1140,33 +1252,36 @@ if info.print_on_screen eq 1 then begin
     print,' '
 endif
 
+evolutionary_stage_label_array = ['MS', 'SG', 'RGB', 'RC1', 'RC2', 'AGB']
+evolutionary_stage_label = evolutionary_stage_label_array(evolutionary_stage_index)
+
 if (info.save_eps ne 0) or (info.save_png ne 0) then begin
-    parameters = { catalog_id:     catalog_id,             $
-                   star_id:        star_id,                $
-                   run:            info.global_subdir,     $
-                   modality:       modality,               $
-                   numax:          numax,                  $
-                   teff:           teff,                   $
-                   best_dnu:       best_dnu,               $
-                   best_alpha:     best_alpha,             $
-                   best_epsi:      best_epsi,              $
-                   acf_dnu:        acf_dnu,                $
-                   snr:            snr,                    $
-                   fit_linewidth:  fit_linewidth,          $
-                   avg_fwhm:       avg_fwhm,               $
-                   upper_height:   upper_height,           $
-                   threshold_asef: threshold_asef,         $
-                   n_bins:         n_bins,                 $
-                   tolerance:      tolerance,              $
-                   n_freq:         n_freq,                 $
-                   n_chunks:       n_chunks,               $
-                   flag_bad_epsi:  flag_bad_epsi           $
+    parameters = { catalog_id:          catalog_id,                            $
+                   star_id:             star_id,                               $
+                   run:                 info.global_subdir,                    $
+                   modality:            modality,                              $
+                   numax:               numax,                                 $
+                   teff:                teff,                                  $
+                   best_dnu:            best_dnu,                              $
+                   best_alpha:          best_alpha,                            $
+                   best_epsi:           best_epsi,                             $
+                   acf_dnu:             acf_dnu,                               $
+                   snr:                 snr,                                   $
+                   fit_linewidth:       fit_linewidth,                         $
+                   avg_fwhm:            avg_fwhm,                              $
+                   ref_radial:          radial_freq_reference,                 $
+                   flag_input_radial:   (cp.input_radial_freq_reference gt 0), $
+                   threshold_asef:      threshold_asef/max(asef_hist),         $
+                   n_bins:              n_bins,                                $
+                   tolerance:           tolerance,                             $
+                   n_freq:              n_freq,                                $
+                   n_chunks:            n_chunks,                              $
+                   flag_bad_epsi:       flag_bad_epsi,                         $
+                   ev_stage:            evolutionary_stage_label               $
                  }
 
     plot_summary,parameters,1
-endif
 
-if (info.save_eps ne 0) or (info.save_png ne 0) then begin
     if info.save_eps eq 0 then begin
         read_jpeg,info.logo_filename,image
         TV, image, 0.855,0.865,TRUE = 1,/normal
@@ -1198,8 +1313,8 @@ linewidth = get_linewidth(freq1_final,teff,numax)
 
 get_lun,lun1
 openw,lun1,peakbagging_filename_global
-printf,lun1,'# nuMax (microHz), DeltaNu_ACF (microHz), DeltaNu_fit (microHz), epsilon, epsilon (interpolated), alpha, Teff (K), N_chunks, Flag depressed dipole',format='(A0)'
-printf,lun1,numax,acf_dnu,best_dnu,best_epsi,interp_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole,format='(F0.4,F10.4,F10.4,F10.4,F10.4,F10.4,F10.1,I6,I6)'
+printf,lun1,'# nuMax (microHz), DeltaNu_ACF (microHz), DeltaNu_fit (microHz), epsilon, epsilon (interpolated), alpha, Teff (K), N_chunks, Flag depressed dipole (0 = NO, 1 = YES), Evolutionary Stage (0 = MS, 1 = SG, 2 = RGB, 3 = RC1, 4 = RC2, 5 = AGB)',format='(A0)'
+printf,lun1,numax,acf_dnu,best_dnu,best_epsi,interp_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole,evolutionary_stage_index,format='(F0.4,F10.4,F10.4,F10.4,F10.4,F10.4,F10.1,I6,I6,I6)'
 
 ; Save the frequency positions of each chunk identified with the global fit
 

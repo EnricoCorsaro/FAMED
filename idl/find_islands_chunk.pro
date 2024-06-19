@@ -82,7 +82,7 @@ endif
 
 ; Load asymptotic parameters
 
-readcol,peakbagging_filename_global,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole,format='x,x,F,F,x,F,F,I,I',numline=2,comment='#',/silent
+readcol,peakbagging_filename_global,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole,evolutionary_stage_index,format='x,x,F,F,x,F,F,I,I,I',numline=2,comment='#',/silent
 
 best_dnu = best_dnu(0)
 best_epsi = best_epsi(0)
@@ -306,7 +306,7 @@ n_freq = n_maxima
 ; In case of RG, adopt a finer smoothing window to overcome the problem of very narrow mixed modes.
 
 avg_fwhm = mean(get_linewidth(maximum,teff,numax))
-if best_dnu le cp.dnu_rg then begin
+if best_dnu le cp.dnu_threshold then begin
     avg_fwhm = fit_linewidth*cp.smoothing_fwhm_factor_rg
 endif 
 
@@ -716,7 +716,7 @@ if n_radial_chunk ne 0 then begin
             asef_weights_radial = asef_weights(candidate_radial_index)
             max_asef_integral_weights = asef_integral_weights(radial_index)
             max_asef_weights = asef_weights(radial_index)
-            
+
             for kk=0, n_elements(candidate_radial_index)-1 do begin
                 local_index = candidate_radial_index(kk)
                 if (asef_integral_weights_radial(kk) gt max_asef_integral_weights*cp.threshold_search_radial_asef_integral) and (asef_weights_radial(kk) gt max_asef_weights*cp.threshold_search_radial_asef_maximum) then begin
@@ -780,7 +780,7 @@ if n_radial_chunk ne 0 then begin
 
     flag_quadrupole_found = 1
 
-    if best_dnu lt cp.dnu_rg then begin
+    if best_dnu lt cp.dnu_threshold then begin
         ; ---------------------------------
         ; Evolutionary stage: RG
         ; ---------------------------------
@@ -1183,7 +1183,7 @@ endelse
 ; Check whether the lower cut frequency of the chunk exceeds the position of a potential ocutpole mode
 ; Start by defining the l=3 search region
 
-if best_dnu lt cp.dnu_rg then begin
+if best_dnu lt cp.dnu_threshold then begin
     octupole_freq_asymp = freq_radial_chunk - best_dnu/2. - d03
     octupole_freq_lower = freq_radial_chunk - best_dnu/2. - d03*cp.d03_upper_scaling_factor
     octupole_freq_upper = freq_radial_chunk - best_dnu/2. - d03*cp.d03_lower_scaling_factor
@@ -1884,7 +1884,7 @@ if dipole_indices(0) ne -1 then begin
 
             ; Do not exceed the width given by the frequency range of the peak if the star is a RG, because l=1 modes are narrow. 
         
-            if best_dnu lt cp.dnu_rg then begin
+            if best_dnu lt cp.dnu_threshold then begin
                 range_peak = abs(range_maximum(1,freq_index) - range_maximum(0,freq_index))
                 if right_fwhm gt range_peak then right_fwhm = range_peak
             endif
@@ -1943,7 +1943,7 @@ if dipole_indices(0) ne -1 then begin
                 write_diamonds_prior,prior_filenames(0,i),boundariesA
                 write_diamonds_prior,prior_filenames(1,i),boundariesB
                 
-                if best_dnu lt cp.dnu_rg then begin
+                if best_dnu lt cp.dnu_threshold then begin
                     boundariesC = [freq_prior,height_prior,bkg_prior,sinc_prior]
                     
                     write_diamonds_data_range,data_range_filenames(2,i),data_freq_boundaries
@@ -1976,7 +1976,7 @@ if dipole_indices(0) ne -1 then begin
             fwhm_detection_fit = fltarr(cp.n_peak_test,n_elements(tested_peak_indices))
             p_BA = fltarr(cp.n_peak_test,n_elements(tested_peak_indices))
             
-            if best_dnu lt cp.dnu_rg then begin
+            if best_dnu lt cp.dnu_threshold then begin
                 p_CA = fltarr(cp.n_peak_test,n_elements(tested_peak_indices))
                 p_CB = fltarr(cp.n_peak_test,n_elements(tested_peak_indices))
             endif
@@ -2014,7 +2014,7 @@ if dipole_indices(0) ne -1 then begin
                     
                     p_BA(k,i) = exp(ln_evidB - ln_evidAB)
                     
-                    if best_dnu lt cp.dnu_rg then begin
+                    if best_dnu lt cp.dnu_threshold then begin
                         readcol, test_dirs(2,tested_peak_indices(i)) + '/peakbagging_evidenceInformation.txt', ln_evidC,format='D,x,x',/silent
                         
                         if (ln_evidA ge ln_evidC) then begin
@@ -2042,7 +2042,7 @@ if dipole_indices(0) ne -1 then begin
                                strcompress(string(freq1(dipole_indices(tested_peak_indices(i))),format='(F0.3)'),/remove_all) + ' muHz', format = '(A0)'
                 printf, lun1, '# Each line corresponds to a different run of the same test.', format = '(A0)'
                 
-                if best_dnu lt cp.dnu_rg then begin
+                if best_dnu lt cp.dnu_threshold then begin
                     printf, lun1, '# Col 1: p(BA), Col 2: p(CA), Col 3: p(CB), Col 4: FWHM single (microHz)', format = '(A0)'
                     for k=0, cp.n_peak_test-1 do begin
                         printf, lun1, p_BA(k,i),p_CA(k,i),p_CB(k,i),fwhm_detection_fit(k,i), format = '(F0.4,F10.4,F10.4,F10.4)'
@@ -2065,7 +2065,7 @@ if dipole_indices(0) ne -1 then begin
                     file_delete,data_range_filenames(0,tested_peak_indices(i))
                     file_delete,data_range_filenames(1,tested_peak_indices(i))
 
-                    if best_dnu lt cp.dnu_rg then begin
+                    if best_dnu lt cp.dnu_threshold then begin
                         file_delete,test_dirs(2,tested_peak_indices(i)),/recursive
                         file_delete,prior_filenames(2,tested_peak_indices(i))
                         file_delete,data_range_filenames(2,tested_peak_indices(i))
@@ -2075,7 +2075,7 @@ if dipole_indices(0) ne -1 then begin
         endif
             
         for i=0, n_elements(dipole_indices(tested_peak_indices))-1 do begin
-            if best_dnu lt cp.dnu_rg then begin
+            if best_dnu lt cp.dnu_threshold then begin
                 readcol,probability_filenames(tested_peak_indices(i)),p_BA,p_CA,p_CB,format='F,F,F,x',/silent,comment='#'
             endif else begin
                 readcol,probability_filenames(tested_peak_indices(i)),p_BA,format='F,x',/silent,comment='#'
@@ -2086,7 +2086,7 @@ if dipole_indices(0) ne -1 then begin
             max_p_BA = float(round(max(p_BA)*1.d3)/1.d3)
             detection_probability(dipole_indices(tested_peak_indices(i))) = max_p_BA
             
-            if best_dnu lt cp.dnu_rg then begin
+            if best_dnu lt cp.dnu_threshold then begin
                 max_p_CA = float(round(max(p_CA)*1.d3)/1.d3)
                 max_p_CB = float(round(max(p_CB)*1.d3)/1.d3)
                 
@@ -2108,7 +2108,7 @@ if dipole_indices(0) ne -1 then begin
                     strcompress(string(freq1(dipole_indices(tested_peak_indices(i))),format='(F0.2)'),/remove_all) + ' muHz'
                 print,' P (Lorentzian vs Only Background): ',max_p_BA
 
-                if best_dnu lt cp.dnu_rg then begin
+                if best_dnu lt cp.dnu_threshold then begin
                     print,' P (Sinc^2 vs Only Background): ',max_p_CA
                     print,' P (Sinc^2 vs Lorentzian): ',max_p_CB
                 endif
@@ -2251,7 +2251,7 @@ if dipole_indices(0) ne -1 then begin
                     write_diamonds_prior,prior_filenames(0,j),boundariesE
                     write_diamonds_prior,prior_filenames(1,j),boundariesF
                    
-                    if best_dnu lt cp.dnu_rg then begin
+                    if best_dnu lt cp.dnu_threshold then begin
                         boundariesG = [freq_duplet_prior,amplitude_prior,fwhm_prior,duplet_split_prior,amplitude_prior,fwhm_prior]
                         
                         write_diamonds_data_range,data_range_filenames(2,j),data_freq_boundaries
@@ -2284,7 +2284,7 @@ if dipole_indices(0) ne -1 then begin
                 cosi_fit = fltarr(cp.n_peak_test,n_elements(detected_dipole_indices))
                 central_freq_fit = fltarr(cp.n_peak_test,n_elements(detected_dipole_indices))
 
-                if best_dnu lt cp.dnu_rg then begin
+                if best_dnu lt cp.dnu_threshold then begin
                     p_GE = fltarr(cp.n_peak_test,n_elements(detected_dipole_indices))
                     p_GF = fltarr(cp.n_peak_test,n_elements(detected_dipole_indices))
                     left_freq_fit = fltarr(cp.n_peak_test,n_elements(detected_dipole_indices))
@@ -2347,7 +2347,7 @@ if dipole_indices(0) ne -1 then begin
                             cosi_fit(k,j) = total(par_cosi*post)/total(post)
                             central_freq_fit(k,j) = total(par_central_freq*post)/total(post)
                             
-                            if best_dnu lt cp.dnu_rg then begin
+                            if best_dnu lt cp.dnu_threshold then begin
                                 readcol, test_dirs(2,j) + '/peakbagging_evidenceInformation.txt',ln_evidG,format='D,x,x',/silent
                                 
                                 if (ln_evidG ge ln_evidF) then begin
@@ -2391,7 +2391,7 @@ if dipole_indices(0) ne -1 then begin
                                   strcompress(string(freq1(detected_dipole_indices(j)),format='(F0.2)'),/remove_all) + ' muHz', format = '(A0)'
                     printf, lun1, '# Each line corresponds to a different run of the same test.', format = '(A0)'
                     
-                    if best_dnu lt cp.dnu_rg then begin
+                    if best_dnu lt cp.dnu_threshold then begin
                         printf, lun1, '# Col 1: p(FE), Col 2: p(GE), Col 3: p(GF), Col 4: FWHM single (microHz), Col 5: Left freq duplet (microHz) ',  $
                                 format='(A0)'
                         printf, lun1, '# Col 6: Right freq duplet (microHz), Col 7: Left FWHM (microHz), Col 8: Right FWHM (microHz) ',format='(A0)'
@@ -2426,7 +2426,7 @@ if dipole_indices(0) ne -1 then begin
                             file_delete,prior_filenames(0,j)
                             file_delete,prior_filenames(1,j)
                             
-                            if best_dnu lt cp.dnu_rg then begin
+                            if best_dnu lt cp.dnu_threshold then begin
                                 file_delete,test_dirs(2,j),/recursive
                                 file_delete,data_range_filenames(2,j)
                                 file_delete,prior_filenames(2,j)
@@ -2438,7 +2438,7 @@ if dipole_indices(0) ne -1 then begin
             
             for j=0, n_elements(detected_dipole_indices)-1 do begin
                 if file_test(probability_filenames(j)) ne 0 then begin
-                    if best_dnu lt cp.dnu_rg then begin
+                    if best_dnu lt cp.dnu_threshold then begin
                         readcol,probability_filenames(j),p_FE,p_GE,p_GF,format='F,F,F,x,x,x,x,x,x,x,x',/silent,comment='#'
                         max_p_GE = float(round(max(p_GE)*1.d3)/1.d3)
                         max_p_GF = float(round(max(p_GF)*1.d3)/1.d3)
@@ -2458,7 +2458,7 @@ if dipole_indices(0) ne -1 then begin
                             strcompress(string(freq1(detected_dipole_indices(j)),format='(F0.2)'),/remove_all) + ' muHz'
                         print,' P (Rotation vs No rotation): ',max_p_FE
                     
-                        if best_dnu lt cp.dnu_rg then begin
+                        if best_dnu lt cp.dnu_threshold then begin
                             print,' P (Duplet vs No Rotation): ',max_p_GE
                             print,' P (Duplet vs Rotation): ',max_p_GF
                         endif
@@ -2512,7 +2512,7 @@ if n_dipole_chunk ne 0 then begin
     ; In general, search for an l=3 only if more than one l=1 mode is detected. This is to give priority to l=1 mode identification over l=3.
     ; If only one l=1 mode is detected, perform the l=3 search only in the case of a RG star or a depressed dipole star (which can be a SG too). 
     
-    if (n_elements(detected_dipole_indices) gt 1) or (n_elements(detected_dipole_indices) eq 1 and best_dnu le cp.dnu_rg) or (flag_depressed_dipole eq 1) then begin
+    if (n_elements(detected_dipole_indices) gt 1) or (n_elements(detected_dipole_indices) eq 1 and best_dnu le cp.dnu_threshold) or (flag_depressed_dipole eq 1) then begin
         ; Check whether an l=3 is present. To do so attempt to find at least one local maximum in the l=3 region as 
         ; computed from the asymptotic relation. The search region depends on the evolutionary stage of the star.
         ; Apply the additional condition that if the mode is flagged as a sinc^2 profile, then it is excluded from the candidate octupole mode list.
@@ -2639,7 +2639,7 @@ if n_dipole_chunk ne 0 then begin
                 rotation_probability_filename = star_dir + info.pb_subdir + '/rotationProbability_' + test_name + '.txt'
                 
                 if file_test(rotation_probability_filename) eq 1 then begin
-                    if best_dnu lt cp.dnu_rg then begin
+                    if best_dnu lt cp.dnu_threshold then begin
                         ; This is the case of RG stars
 
                         readcol,rotation_probability_filename,p_FE,p_GE,p_GF,freq_left,freq_right,fwhm_left,fwhm_right,  $
@@ -2727,14 +2727,14 @@ if n_dipole_chunk ne 0 then begin
 
     detected_dipole_indices = where(angular_degree eq 1 and (detection_probability ge cp.detection_probability_threshold or detection_probability eq -99.0))
 
-    if best_dnu gt cp.dnu_rg and n_elements(detected_dipole_indices) gt 1 then begin
+    if best_dnu gt cp.dnu_threshold and n_elements(detected_dipole_indices) gt 1 then begin
         for k=0, n_elements(detected_dipole_indices)-2 do begin
             ; Check the separation between two consecutive l=1 candidate mixed modes
 
             freq_left_dipole = freq1(detected_dipole_indices(k))
             freq_right_dipole = freq1(detected_dipole_indices(k+1))
 
-            if abs(freq_left_dipole - freq_right_dipole) lt best_dnu^2/cp.dnu_mixed_modes_separation_scaling/cp.dnu_rg then begin
+            if abs(freq_left_dipole - freq_right_dipole) lt best_dnu^2/cp.dnu_mixed_modes_separation_scaling/cp.dnu_threshold then begin
                 ; Since the two peaks are too close, these peaks are likely to originate from a single multiplet. 
                 ; Hence take as detected only the one with the largest sampling counts
 
@@ -2748,7 +2748,7 @@ if n_dipole_chunk ne 0 then begin
 
     ; If the star is a MS, a high-luminosity RGB star, or an early AGB star, make sure that there is only one dipole mode for this chunk.
    
-    if ((best_dnu ge cp.dnu_rg and best_dnu lt cp.dnu_sg and teff ge cp.teff_sg) or best_dnu ge cp.dnu_sg or best_dnu le cp.dnu_agb) then begin
+    if ((best_dnu ge cp.dnu_threshold and best_dnu lt cp.dnu_sg and teff ge cp.teff_sg) or best_dnu ge cp.dnu_sg or best_dnu le cp.dnu_agb) then begin
         detected_dipole_indices = where(angular_degree eq 1 and (detection_probability ge cp.detection_probability_threshold or detection_probability eq -99.0))
         ; If more than one dipole mode is found, then pick up the one with the best combination of SPSD maximum, ASEF maximum, sampling counts and 
         ; frequency position with respect to the global frequency of the dipole mode.
@@ -3345,31 +3345,35 @@ if info.print_on_screen eq 1 then begin
     endif
 endif
 
-parameters = { catalog_id:     catalog_id,     $
-               star_id:        star_id,        $
-               run:            run,            $
-               modality:       modality,       $
-               numax:          numax,          $
-               teff:           teff,           $
-               best_dnu:       best_dnu,       $
-               best_alpha:     best_alpha,     $
-               best_epsi:      best_epsi,      $
-               local_epsi:     local_epsi,     $
-               local_d02:      local_d02,      $
-               local_dp:       local_dp,       $
-               snr:            snr,            $
-               fit_linewidth:      fit_linewidth,      $
-               fwhm_radial_fit:    fwhm_radial_fit,    $
-               avg_fwhm:       avg_fwhm,       $
-               upper_height:   upper_height,   $
-               threshold_asef: threshold_asef, $
-               n_bins:         n_bins,         $
-               n_freq:         n_freq,         $
-               n_chunks:       n_chunks,       $
-               n_radial_chunk: n_radial_chunk  $
-             }
+evolutionary_stage_label_array = ['MS', 'SG', 'RGB', 'RC1', 'RC2', 'AGB']
+evolutionary_stage_label = evolutionary_stage_label_array(evolutionary_stage_index)
 
-if info.print_on_screen eq 1 then begin 
+if (info.save_eps ne 0) or (info.save_png ne 0) then begin
+    parameters = { catalog_id:         catalog_id,                      $
+                   star_id:            star_id,                         $
+                   run:                run,                             $
+                   modality:           modality,                        $
+                   numax:              numax,                           $
+                   teff:               teff,                            $
+                   best_dnu:           best_dnu,                        $
+                   best_alpha:         best_alpha,                      $
+                   best_epsi:          best_epsi,                       $
+                   local_epsi:         local_epsi,                      $
+                   local_d02:          local_d02,                       $
+                   local_dp:           local_dp,                        $
+                   snr:                snr,                             $
+                   fit_linewidth:      fit_linewidth,                   $
+                   fwhm_radial_fit:    fwhm_radial_fit,                 $
+                   avg_fwhm:           avg_fwhm,                        $
+                   upper_height:       upper_height,                    $
+                   threshold_asef:     threshold_asef,                  $
+                   n_bins:             n_bins,                          $
+                   n_freq:             n_freq,                          $
+                   n_chunks:           n_chunks,                        $
+                   n_radial_chunk:     n_radial_chunk,                  $
+                   ev_stage:           evolutionary_stage_label         $
+                 }
+
     plot_summary,parameters,0
 
     if info.save_eps eq 0 then begin
@@ -3378,17 +3382,17 @@ if info.print_on_screen eq 1 then begin
     endif else begin
         xyouts,0.987,0.2,sp.copyright_str+' FAMED',orientation=-90,charsize=lp.summary_charsize,charthick=lp.summary_charthick,/normal,color=250
     endelse
-
-    if info.save_eps eq 1 then begin
-        device,/close
-        spawn,'epstopdf ' + filename_star  + '.eps'
-        spawn,'open ' + filename_star  + '.pdf'
-        set_plot,'x'
-    endif
+endif
+    
+if info.save_eps eq 1 then begin
+    device,/close
+    spawn,'epstopdf ' + filename_star  + '.eps'
+    spawn,'open ' + filename_star  + '.pdf'
+    set_plot,'x'
+endif
    
-    if info.save_png eq 1 then begin
-        write_png, star_dir + info.figs_subdir + '/' + catalog_id + star_id + '_' + info.isla_subdir + '_' + run + '_' + modality + '.PNG', TVRD(/TRUE)
-    endif
+if info.save_png eq 1 then begin
+    write_png, star_dir + info.figs_subdir + '/' + catalog_id + star_id + '_' + info.isla_subdir + '_' + run + '_' + modality + '.PNG', TVRD(/TRUE)
 endif
 
 

@@ -11,7 +11,7 @@ pro interpolate_epsilon,teff,dnu,output_epsi,output_epsi_array,output_dnu_array,
 COMMON CONFIG,cp
 COMMON GRAPHIC,pp,lp,sp,ppe,lpe
 
-if (dnu gt cp.dnu_threshold) then begin
+if dnu gt cp.dnu_threshold then begin
     ; Values from Lund+17 LEGACY
     
     epsi_array = [1.114, 0.911, 1.356,0.988,1.114,1.445,1.325,1.377,1.374,1.077,1.431,1.343,      $

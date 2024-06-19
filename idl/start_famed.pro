@@ -92,6 +92,8 @@ if keyword_set(chunk) then begin
         run_index = strcompress(string(chunk_number),/remove_all)
         
         if info.print_on_screen eq 1 then begin
+            print,' '
+            print,' '
             print,' Analyzing CHUNK ' + run_index
             print,' ...'
             print,' ...'

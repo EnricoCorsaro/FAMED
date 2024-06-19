@@ -230,7 +230,7 @@ The curvature term of the asymptotic relation of radial modes as measured by Mos
 A flag specifying whether or not the radial mode frequencies obtained from the GLOBAL module should be corrected by the shift with respect to the central radial mode frequency obtained from the sliding pattern fit (see Corsaro et al. 2020 for more details). This correction generally improves the position of the global radial mode frequencies, thus allowing a better decomposition of the PSD into chunks. The default value is 1, meaning that the correction is applied.
 
 * ``save_asymptotic_radial``
-A flag specifying whether or not the global radial mode frequencies obtained within the GLOBAL module are in the end replaced by their asymptotic predictions. This may turn out to provide more stable estimates of the radial mode frequencies to be used for decomposing the PSD into chunks, especially toward the tails of the Gaussian envelope of the oscillations. In these regions the frequencies extracted from the ASEF and the subsequent mode identification can be more affected by the presence of noise peaks, by mixed modes, and by the curvature effects of the asymptotic pattern of p modes. This correction is mostly useful for evolved stars, where the contamination with mixed modes can be significant. The default value is set to 1, meaning that the asymptotic predictions of the global radial modes are in the end used as a reference to identify the chunks.
+A flag specifying whether or not the global radial mode frequencies obtained within the GLOBAL module are in the end replaced by their asymptotic predictions. This may turn out to provide more stable estimates of the radial mode frequencies to be used for decomposing the PSD into chunks, especially toward the tails of the Gaussian envelope of the oscillations. In these regions the frequencies extracted from the ASEF and the subsequent mode identification can be more affected by the presence of noise peaks, by mixed modes, and by the curvature effects of the asymptotic pattern of p modes. This correction is mostly useful for stars with low signal-to-noise ratio. The default value is set to 0, meaning that the asymptotic predictions of the global radial modes are not used as a reference to identify the chunks.
 
 * ``separations_dnu_tolerance_rg``
 When defining the separation s_n to the right side of each global radial mode frequency, an additional fraction of :math:`\Delta\nu`, set by this parameter, is added to the value of the asymptotic prediction for that radial mode. This is used in the GLOBAL module for stars in the SG and RG regime, having :math:`\Delta\nu < \Delta\nu_\mathrm{SG}` and :math:`T_\mathrm{eff} < T_\mathrm{eff,SG}`. The default value is set to 0.25.
@@ -266,7 +266,7 @@ Allows plotting the weights as a function of the frequency peaks extracted insid
 In the search for the proper chunk radial mode frequency in the CHUNK module, this parameter sets a lower limit threshold on the weight of the integral of the ASEF for the peak under inspection. This parameter is used to check whether the selected peak is not the adjacent quadrupole mode. If the weight of the given peak exceeds the fraction of weight imposed by this threshold, then the peak can be considered for further analysis as a candidate radial mode peak. The default value is 0.70.
 
 * ``threshold_search_radial_asef_maximum``
-n the search for the proper chunk radial mode frequency in the CHUNK module, this parameter sets a lower limit threshold on the weight of the maximum of the ASEF for the peak under inspection. This parameter is used to check whether the selected peak is not the adjacent quadrupole mode. If the weight of the given peak exceeds the fraction of weight imposed by this threshold, then the peak can be considered for further analysis as a candidate radial peak. The default value is 0.40.
+n the search for the proper chunk radial mode frequency in the CHUNK module, this parameter sets a lower limit threshold on the weight of the maximum of the ASEF for the peak under inspection. This parameter is used to check whether the selected peak is not the adjacent quadrupole mode. If the weight of the given peak exceeds the fraction of weight imposed by this threshold, then the peak can be considered for further analysis as a candidate radial peak. The default value is 0.45.
 
 * ``previous_radial_range_fraction``
 The fraction of frequency range of the chunk that is used to locate the first (potential) frequency candidates of the same chunk. These frequencies are used to check whether a potential radial mode from the previous chunk is still present, so that it can be excluded from further analysis. This is used only for chunks having a mean frequency above :math:`\nu_\mathrm{max}`. The default value is 8.
@@ -336,12 +336,6 @@ A threshold in units of :math:`\Delta\nu` that sets the minimum separation that 
 * ``dnu_echelle_threshold``
 A threshold in percentage of :math:`\Delta\nu` that sets the maximum deviation that can be found in an echelle ridge computed out of the frequencies found using the parameter ``n_central_orders_side``. This helps in classifying the star based on how much each frequency is deviating from an expected regular asymptotic pattern for p modes. The default value is 6, meaning that if the maximum deviation found exceeds a 6% variation in :math:`\Delta\nu`, then the star is flagged as an evolved star containing mixed modes. This is useful for setting up the sliding-pattern model as a function of different evolutionary stages.
 
-* ``epsilon_threshold``
-The minimum value allowed for :math:`\epsilon` in conjunction with the parameter ``dnu_lower_threshold_epsilon``, as obtained from Kallinger et al. (2012) to apply a possible shift by +1, if required. The default value is set to 0.59.
-
-* ``dnu_lower_threshold_epsilon``
-The minimum value for :math:`\Delta\nu` used in conjunction with ``epsilon_threshold`` to apply a correction to :math:`\epsilon`. The default value is set to 3 :math:`\mu\mbox{Hz}`. The correction :math:`\epsilon = \epsilon + 1` is applied if :math:`\epsilon < 0.59` and :math:`\Delta\nu > 3 \mu\mbox{Hz}`.
-
 * ``n_sliding_test``
 The number of times the sliding-pattern fit has to be repeated. This improves the reliability of the final outcome for more challenging targets. The default value is 5.
 
@@ -349,7 +343,7 @@ The number of times the sliding-pattern fit has to be repeated. This improves th
 The input value in :math:`\mu\mbox{Hz}` specifying the frequency of the reference radial mode of the star. This frequency is then used to evaluate :math:`\epsilon`. The default value is 0, meaning that no input frequency is used, which is instead obtained from the sliding-pattern fit.
 
 * ``force_epsilon_dnu_value``
-A flag specifying that :math:`\epsilon` has to be obtained from the :math:`\epsilon`-:math:`\Delta\nu` relation calibrated by Corsaro et al. (2012)b instead of being evaluated through the sliding-pattern fit. This is used only for stars that are evolved SGs or early RGB, having :math:`\Delta\nu_\mathrm{CL2} \leq \Delta\nu \leq \Delta\nu_\mathrm{thresh}`. The default value is set to 1, meaning that this condition is verified. Forcing this parameter to 1 can be useful if the sliding pattern fit keeps failing in obtaining a correct global mode identification despite other attempts have been made (e.g. see the parameter ``remove_dipole_peak``). However, caution should be used in general when forcing this condition. This is because for RGs that are not RGB (e.g. RC or 2nd RC stars) the :math:`\epsilon` value from the :math:`\epsilon`-:math:`\Delta\nu` relation is likely higher than the actual value of the star, thus yielding a potential incorrect global mode identification.
+A flag specifying that :math:`\epsilon` has to be obtained from the :math:`\epsilon`-:math:`\Delta\nu` relation calibrated by Corsaro et al. (2012)b instead of being evaluated through the sliding-pattern fit. This provides a reasonable estimate only for stars that are evolving along the RGB, having :math:`\Delta\nu \leq \Delta\nu_\mathrm{thresh}`. The default value is set to 0, meaning that this condition is not applied. Forcing this parameter to 1 can be useful if the sliding pattern fit keeps failing in obtaining a correct global mode identification despite other attempts have been made (e.g. see the parameter ``remove_dipole_peak``). However, caution should be used in general when forcing this condition. This is because for red giants that are not RGB (e.g. RC or 2nd RC stars) the :math:`\epsilon` value from the :math:`\epsilon`-:math:`\Delta\nu` relation is likely higher than the actual value of the star, thus yielding a potential incorrect global mode identification. When activating this keyword we recommend double-checking the numerical result with the visual solution of the GLOBAL summary plot in order to validate any mode identifation that is obtained by the pipeline. This keyword is automatically not activated if the keyword ``input_radial_freq_reference`` is in use.
 
 * ``n_orders_side_prior_ms``
 The number of radial orders on each side of :math:`\nu_\mathrm{max}` that are used to set up the prior boundaries on the central frequency :math:`\nu_0` of the sliding-pattern model within the GLOBAL module. This is used for stars classified as MS, having :math:`\Delta\nu > \Delta\nu_\mathrm{thresh}`, without depressed dipole modes, and without the presence of mixed modes. The default value is 1.5, meaning that the prior covers a total of 3 radial orders.
@@ -361,7 +355,7 @@ Similar as for the parameter ``n_orders_side_prior_ms`` but used for early SG st
 Similar as for the parameter ``n_orders_side_prior_ms`` but used for late SG and RG stars, having :math:`\Delta\nu \leq \Delta\nu_\mathrm{thresh}`. The default value is 1.5.
 
 * ``remove_dipole_peak``
-Activate this keyword to remove the :math:`\ell = 1` peak from the sliding-pattern model for stars having :math:`\Delta\nu_\mathrm{AGB} \leq \Delta\nu < \Delta\nu_\mathrm{thresh}`. This can be useful in some circumstances, for example when the :math:`\ell = 1` mode region is particularly confusing (i.e. crowded), especially if the PSD has a low SNR, or if the star has a very prominent, single, :math:`\ell = 1` peak, which can be confused with a :math:`\ell = 0` peak. This parameter can thus be used to improve the fit and avoid cases where the pipeline could end up in obtaining a swapped global mode identification (:math:`\ell = 1` identified as :math:`\ell = 0` and viceversa). The parameter is set to 0 by default, meaning that the :math:`\ell = 1` peak is included in the model but kept fixed to the position of a pure :math:`\ell = 1` p mode.
+Activate this keyword to remove the :math:`\ell = 1` peak from the sliding-pattern model for stars having :math:`\Delta\nu < \Delta\nu_\mathrm{thresh}`. This can be useful in some circumstances, for example when the :math:`\ell = 1` mode region is particularly confusing (i.e. crowded), especially if the PSD has a low SNR, or if the star has a very prominent, single, :math:`\ell = 1` peak, which can be confused with a :math:`\ell = 0` peak. This keyword can thus be activated to improve the fit and avoid cases where the pipeline could end up in obtaining a swapped global mode identification (:math:`\ell = 1` identified as :math:`\ell = 0` and viceversa). The keyword is set to 0 by default, meaning that the :math:`\ell = 1` peak is included in the model but kept fixed to the position of a pure :math:`\ell = 1` p mode.
 
 * ``dnu_prior_lower_fraction``
 The fraction of :math:`\Delta\nu` with respect to the asymptotic fit value obtained in the GLOBAL modality, used to set up the uniform prior lower bound on :math:`\Delta\nu` for the sliding-pattern model. The default value is 0.96.
@@ -433,20 +427,40 @@ The FWHM magnification factor of dipole modes with respect to the FWHM of radial
 Similar as for the parameter ``dipole_radial_fwhm_ratio_ms`` but used for SG stars. The default value is 1, the same as for MS stars.
 
 * ``dipole_radial_fwhm_ratio_rg``
-Similar as for the parameter ``dipole_radial_fwhm_ratio_ms`` but used for RG stars. The default value is 5, significantly larger than that used for less evolved stars, to allow compensating the varying frequency position of the dipole modes in such stars.
+Similar as for the parameter ``dipole_radial_fwhm_ratio_ms`` but used for RG stars. The default value is 4, significantly larger than that used for less evolved stars, to allow compensating the varying frequency position of the dipole modes in such stars.
 
-* ``upper_epsilon_rg_slope``
-The slope :math:`a` for the linear relation :math:`\epsilon_\mathrm{upper} = a \log \Delta\nu + b`, which provides the upper limit for :math:`\epsilon` in stars with :math:`\Delta\nu_\mathrm{cl,2} \leq \Delta\nu \leq \Delta\nu_\mathrm{thresh}`, where :math:`\Delta\nu_\mathrm{cl,2}` is set by the configuring parameter ``dnu_cl2``. This is used as a control check for the sliding pattern fit to avoid wrong inferences of the central radial mode position. It is particularly useful for low-resolution datasets of intermediate-mass red giant stars, where the unresolved dipole mode region can be confused with a radial mode. The default value is set to 0.253694 as obtained from a linear fit to the sample presented by Kallinger et al. (2012).
+* ``upper_epsilon_rgb_slope``
+The slope :math:`a` for the linear relation :math:`\epsilon_\mathrm{upper} = a \log \Delta\nu + b`, which provides the upper limit for :math:`\epsilon` in stars with :math:`\Delta\nu_\mathrm{AGB} \leq \Delta\nu \leq \Delta\nu_\mathrm{thresh}`, where :math:`\Delta\nu_\mathrm{AGB}` is set by the configuring parameter ``dnu_agb``. This is used as a control check for the sliding pattern fit to avoid wrong inferences of the central radial mode position. It is particularly useful for low-resolution datasets of intermediate-mass red giant stars, where the unresolved dipole mode region can be confused with a radial mode. The default value is set to 0.253694 as obtained from a linear fit to the sample presented by Kallinger et al. (2012).
 
-* ``upper_epsilon_rg_offset``
-The offset :math:`b` for the linear relation presented for the configuring parameter ``upper_epsilon_rg_slope``. The default value is set to 0.76. 
+* ``upper_epsilon_rgb_offset``
+The offset :math:`b` for the linear relation presented for the configuring parameter ``upper_epsilon_rgb_slope``. The default value is set to 0.76. 
 
-* ``lower_epsilon_rg_slope``
-The slope :math:`c` for the linear relation :math:`\epsilon_\mathrm{lower} = c \log \Delta\nu + d`, which provides the lower limit for :math:`\epsilon` in stars with :math:`\Delta\nu_\mathrm{cl,2} \leq \Delta\nu \leq \Delta\nu_\mathrm{thresh}`, where :math:`\Delta\nu_\mathrm{cl,2}` is set by the configuring parameter ``dnu_cl2``. This is used as a control check for the sliding pattern fit to avoid wrong inferences of the central radial mode position. It is particularly useful for low-resolution datasets of intermediate-mass red giant stars, where the unresolved dipole mode region can be confused with a radial mode. The default value is set to 0.468876 as obtained from a linear fit to the sample presented by Kallinger et al. (2012).
+* ``lower_epsilon_cl_slope``
+The slope :math:`a` for the linear relation :math:`\epsilon_\mathrm{lower} = a \log \Delta\nu + b`, which provides the lower limit for :math:`\epsilon` in stars with :math:`\Delta\nu_\mathrm{AGB} \leq \Delta\nu \leq \Delta\nu_\mathrm{CL2}`, where :math:`\Delta\nu_\mathrm{CL2}` is set by the configuring parameter ``dnu_cl2``. This is used as a control check for the sliding pattern fit to avoid wrong inferences of the central radial mode position. It is particularly useful for low-resolution datasets of intermediate-mass red giant stars, where the unresolved dipole mode region can be confused with a radial mode. The default value is set to 0.480525527 as obtained from a linear fit to the sample presented by Kallinger et al. (2012).
 
-* ``lower_epsilon_rg_offset``
-The offset :math:`d` for the linear relation presented for the configuring parameter ``lower_epsilon_rg_slope``. The default value is set to -0.104627. 
+* ``lower_epsilon_cl_offset``
+The offset :math:`b` for the linear relation presented for the configuring parameter ``lower_epsilon_cl_slope``. The default value is set to -0.14604031. 
 
+* ``upper_epsilon_evolved_rgb_slope``
+The slope :math:`a` for the linear relation :math:`\epsilon_\mathrm{upper} = a \log \Delta\nu + b`, which provides the upper limit for :math:`\epsilon` in stars with :math:`\Delta\nu_\mathrm{tip} \leq \Delta\nu < \Delta\nu_\mathrm{AGB}`, where :math:`\Delta\nu_\mathrm{AGB}` is set by the configuring parameter ``dnu_agb``. This is used as a control check for the sliding pattern fit to avoid wrong inferences of the central radial mode position. It is particularly useful for low-resolution datasets of evolved RGB stars, where the unresolved dipole mode region can be confused with a radial mode. The default value is set to 0.25354086 as obtained from a linear fit to the sample presented by Kallinger et al. (2012).
+
+* ``upper_epsilon_evolved_rgb_offset``
+The offset :math:`b` for the linear relation presented for the configuring parameter ``upper_epsilon_evolved_rgb_slope``. The default value is set to 0.78433261. 
+
+* ``lower_epsilon_evolved_rgb_slope``
+The slope :math:`a` for the linear relation :math:`\epsilon_\mathrm{lower} = a \log \Delta\nu + b`, which provides the lower limit for :math:`\epsilon` in stars with :math:`\Delta\nu < \Delta\nu_\mathrm{AGB}`, where :math:`\Delta\nu_\mathrm{AGB}` is set by the configuring parameter ``dnu_agb``. This is used as a control check for the sliding pattern fit to avoid wrong inferences of the central radial mode position. It is particularly useful for low-resolution datasets of evolved RGB stars, where the unresolved dipole mode region can be confused with a radial mode. The default value is set to 0.44393910 as obtained from a linear fit to the sample presented by Kallinger et al. (2012). This relation is also used as an indication of the transition between evolved RGB and early AGB stars.
+
+* ``lower_epsilon_evolved_rgb_offset``
+The offset :math:`b` for the linear relation presented for the configuring parameter ``lower_epsilon_evolved_rgb_slope``. The default value is set to 0.35913168. 
+
+* ``epsilon_division_rgb_cl_slope``
+The slope :math:`a` for the linear relation :math:`\epsilon_\mathrm{division} = a \log \Delta\nu + b`, which provides the lower limit for :math:`\epsilon` in stars with :math:`\Delta\nu_\mathrm{AGB} \leq \Delta\nu \leq \Delta\nu_\mathrm{thresh}`, where :math:`\Delta\nu_\mathrm{AGB}` is set by the configuring parameter ``dnu_agb``. This is used to provide an indication of the evolutionary stage of the star. If the star has :math:`\epsilon < \epsilon_\mathrm{division}` then it is classified as a clump star (either CL or CL2 depending on the range in :math:`\Delta\nu`), otherwise it is classified as a RGB. The default value is set to 0.29988410 as obtained from a linear fit to the sample presented by Kallinger et al. (2012). 
+
+* ``epsilon_division_rgb_cl_offset``
+The offset :math:`b` for the linear relation presented for the configuring parameter ``epsilon_rgb_cl_division_slope``. The default value is set to 0.50399553. 
+
+* ``lower_epsilon_agb``
+The limiting lower value for :math:`\epsilon` in the regime of early AGB star. The default value is set to 0.3 as suggested from the sample presented by Kallinger et al. (2012). 
 
 Asymptotic code fitting
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -560,7 +574,7 @@ The constant offset :math:`\beta_{02}` of the law :math:`\delta\nu_{02} = \alpha
 The constant multiplication factor (slope) :math:`\alpha_{02}` of the law :math:`\delta\nu_{02} = \alpha_{02} \Delta\nu + \beta_{02}`, as calibrated by Huber et al. (2010). The default value is set to 0.121.
 
 * ``dnu_threshold``
-A threshold in :math:`\Delta\nu`, known as :math:`\Delta\nu_\mathrm{thresh}`, to distinguish between the regimes of MS and early SGs and that of late SG and RG stars. The default value is set to 30 :math:`\mu\mbox{Hz}`. This is only an indicative separation that is used by the pipeline to optimize the analysis and has not to be considered as a physically meaningful value for discriminating the evolutionary stage of stars.
+A threshold in :math:`\Delta\nu`, known as :math:`\Delta\nu_\mathrm{thresh}`, to distinguish between the regimes of MS and early SGs and that of late SG and RG stars. The default value is set to 20 :math:`\mu\mbox{Hz}`. This is only an indicative separation that is used by the pipeline to optimize the analysis and has not to be considered as a physically meaningful value for discriminating the evolutionary stage of stars. Based on this threshold, :math:`\epsilon` is verified in either the :math:`\epsilon`-:math:`\Delta\nu` (for :math:`\Delta\nu <= \Delta\nu_\mathrm{thresh}`) or the :math:`\epsilon` - *T*:subscript:`eff` (for :math:`\Delta\nu > \Delta\nu_\mathrm{thresh}`) diagram.
 
 * ``numax_threshold``
 A threshold in :math:`\nu_\mathrm{max}`, known as :math:`\nu_\mathrm{max,thresh}`, to distinguish different asteroseismic relations for the evaluation of :math:`\Delta\nu` and of the FWHM of the radial modes (see Corsaro et al. 2020 for more details). The default value is set to 300 :math:`\mu\mbox{Hz}`.
