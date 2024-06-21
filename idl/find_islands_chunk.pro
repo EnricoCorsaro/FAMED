@@ -222,7 +222,7 @@ if info.print_on_screen eq 1 then begin
     
     if info.save_eps eq 0 then begin
         set_plot,'x'
-        window,1,xs=pp.xsize,ys=pp.ysize,xpos=pp.xpos,ypos=pp.ypos,title=catalog_id + star_id + ' RUN: ' + run
+        window,1,xs=pp.xsize,ys=pp.ysize,xpos=pp.xpos,ypos=pp.ypos,title=catalog_id + star_id + ' CHUNK: ' + run
         device,decomposed=0,true_color=8,retain=2
     endif else begin
         set_plot,'PS'
@@ -394,6 +394,14 @@ if strmid(filename_summary(0),str_length-3,3) eq 'txt' then begin
 
     if (max_d02 lt d02 or max_d02 eq 0) then max_d02 = d02
     if median_d02 eq 0 then median_d02 = d02
+   
+    ; Apply a check for RG stars
+
+    if (best_dnu le cp.dnu_rg) and (max_d02 gt d02*cp.d02_factor_search_range) then begin
+        max_d02 = d02
+        median_d02 = d02
+    endif
+
     flag_median_d02_active = 1
 endif else begin
     median_d02 = d02
@@ -603,19 +611,16 @@ endif else begin
     endif
 endelse
 
-if info.print_on_screen eq 1 then begin
-    if n_radial_chunk ne 0 then begin
-        oplot,[freq_radial,freq_radial],[0,max(asef_hist)*1.4],linestyle=2,color=160,thick=3
-    endif
-endif
-
 flag_quadrupole_found = 0
 
 if n_radial_chunk ne 0 then begin
     ; -------------------------------------------------------------------------------------------------------------------
     ; CASE 1: One radial mode is found in the chunk from the global modality
     ; -------------------------------------------------------------------------------------------------------------------
-    
+    if info.print_on_screen eq 1 then begin
+        oplot,[freq_radial,freq_radial],[0,max(asef_hist)*1.4],linestyle=2,color=160,thick=3
+    endif
+   
     ; ---------------------------------
     ; Radial mode
     ; ---------------------------------
@@ -689,6 +694,7 @@ if n_radial_chunk ne 0 then begin
     endelse
   
     ; Control check for assessing radial mode frequency peak identification
+    
     if cp.plot_weights_radial eq 1 then begin
         loadct,39
         !p.multi=[0,2,1]
@@ -700,7 +706,7 @@ if n_radial_chunk ne 0 then begin
         oplot,freq1,spsd_weights,color=160,psym=-6
         oplot,freq1,asef_integral_weights,color=90,psym=-6
         plot,freq1,total_weights,psym=-6,xr=[min(par_hist),max(par_hist)],yr=[0,max(total_weights)],/nodata,xtitle='!3Frequency ('+ sp.freq_unit_str + ')',   $
-            ytitle='Total Weight',xticklen=0.02,yticklen=0.03,xthick=pp.xthick,ythick=pp.ythick,charthick=pp.charthick
+            ytitle='Total Weight Radial',title=catalog_id + star_id + ' CHUNK: ' + run,xticklen=0.02,yticklen=0.03,xthick=pp.xthick,ythick=pp.ythick,charthick=pp.charthick
         oplot,freq1,total_weights,psym=-6,color=90
         oplot,freq1,asef_integral_weights,psym=-6,color=250
         oplot,[freq1(radial_index),freq1(radial_index)],[0,max(total_weights)*1.2],color=205,thick=3,linestyle=2
@@ -758,7 +764,7 @@ if n_radial_chunk ne 0 then begin
     if low_cut_frequency gt freq_radial_chunk - best_dnu*cp.dnu_lower_cut_fraction then low_cut_frequency = freq_radial_chunk - best_dnu*cp.dnu_lower_cut_fraction
 
     ; Finally, control the radial mode soolution from GLOBAL for the previous chunk. This is to avoid that the same radial mode is identified twice in two different chunks.
-    
+
     if low_cut_frequency le freq_previous_radial_global + freq_sig_previous_radial_global then low_cut_frequency = freq_previous_radial_global + freq_sig_previous_radial_global
 
     angular_degree(radial_index) = 0
@@ -1149,16 +1155,15 @@ if n_radial_chunk ne 0 then begin
         if median_d02 gt local_d02 then actual_d02 = median_d02
     endif
 
-    ; Update the lower frequency limit for this chunk
+    ; Update the lower frequency limit for this chunk by considering the highest value among those computed 
 
     low_cut_frequency2 = freq_radial_chunk - best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)) + freq_sig_radial
     low_cut_frequency3 = freq_radial_chunk - best_dnu + freq_sig_radial
-    if low_cut_frequency2 gt low_cut_frequency then low_cut_frequency = low_cut_frequency2
-    if low_cut_frequency3 gt low_cut_frequency then begin
-        tmp_lower_order = where(freq1 le low_cut_frequency3)
-        if tmp_lower_order(0) ne -1 then begin
-            low_cut_frequency = low_cut_frequency3
-        endif
+    
+    max_low_cut_frequency = max([low_cut_frequency,low_cut_frequency2,low_cut_frequency3])
+    tmp_lower_order = where(freq1 le max_low_cut_frequency)
+    if tmp_lower_order(0) ne -1 then begin
+        low_cut_frequency = max_low_cut_frequency
     endif
 endif else begin
      ; -------------------------------------------------------------------------------------------------------------------
@@ -1203,7 +1208,9 @@ endif else begin
     octupole_freq_asymp = (octupole_freq_lower + octupole_freq_upper)/2.
 endelse
 
-if low_cut_frequency gt octupole_freq_lower then low_cut_frequency = octupole_freq_lower
+; Lower down the low cut frequency limit of the chunk if the octupole mode from the asymptotic prediction is not covered
+
+if (best_dnu gt cp.dnu_agb) and (low_cut_frequency ge octupole_freq_asymp) then low_cut_frequency = octupole_freq_lower
 
 ; Force input value for lower limit frequency if required
 
@@ -1595,7 +1602,7 @@ if n_radial_chunk ne 0 then begin
                 print,' ---------------------------------------------'
                 print,' '
             endif
-        endif    
+        endif
     endif else begin
         ; This is the case of MS and early SG stars.
         ; Here perform a blending test on top of the peak significance test, only for the l=2,0 pair.
@@ -2137,7 +2144,7 @@ if dipole_indices(0) ne -1 then begin
 
     detected_dipole_indices = where(angular_degree eq 1 and (detection_probability ge cp.detection_probability_threshold or detection_probability eq -99.0) and $ 
         sinc_profile_flag ne 1)
-  
+    
     if cp.rotation_test_activated eq 1 then begin    
         if detected_dipole_indices(0) ne -1 then begin
             n_dipole_chunk = n_elements(detected_dipole_indices)
@@ -2746,6 +2753,7 @@ if n_dipole_chunk ne 0 then begin
         endfor
     endif
 
+
     ; If the star is a MS, a high-luminosity RGB star, or an early AGB star, make sure that there is only one dipole mode for this chunk.
    
     if ((best_dnu ge cp.dnu_threshold and best_dnu lt cp.dnu_sg and teff ge cp.teff_sg) or best_dnu ge cp.dnu_sg or best_dnu le cp.dnu_agb) then begin
@@ -2759,14 +2767,46 @@ if n_dipole_chunk ne 0 then begin
             freq_weights_dipole /= total(freq_weights_dipole)
             asef_weights_dipole = asef_weights(detected_dipole_indices)
             asef_integral_weights_dipole = asef_integral_weights(detected_dipole_indices)
+            
+            detection_probability_weights_dipole = detection_probability(detected_dipole_indices)
+            tmp_auto_detection = where(detection_probability_weights_dipole eq -99.0)
+            if tmp_auto_detection(0) ne -1 then begin
+                detection_probability_weights_dipole(where(detection_probability_weights_dipole eq -99.0)) = 1.5            ; Make peaks that were automatically detected to weight more
+            endif
+            detection_probability_weights_dipole /= total(detection_probability_weights_dipole)
+            
             spsd_weights_dipole = spsd_weights(detected_dipole_indices)
             sampling_weights_dipole = sampling_weights(detected_dipole_indices)
-            total_weights_dipole = cp.weight_freq_fraction*freq_weights_dipole + cp.weight_asef_fraction*asef_weights_dipole + cp.weight_spsd_fraction*spsd_weights_dipole + cp.weight_sampling_fraction*sampling_weights_dipole + cp.weight_asef_integral_fraction*asef_integral_weights_dipole
+            total_weights_dipole = cp.weight_freq_fraction*freq_weights_dipole + cp.weight_asef_fraction*asef_weights_dipole + cp.weight_spsd_fraction*spsd_weights_dipole + $
+                                    cp.weight_sampling_fraction*sampling_weights_dipole + cp.weight_asef_integral_fraction*asef_integral_weights_dipole + detection_probability_weights_dipole
+            total_weights_dipole /= total(total_weights_dipole)
             max_weight = max(total_weights_dipole,index)
             dipole_index = detected_dipole_indices(index)
             freq_dipole_chunk = freq1(dipole_index)
             bad_dipole_indices = where(detected_dipole_indices ne dipole_index)
 
+            ; Control check for assessing radial mode frequency peak identification
+            if cp.plot_weights_dipole eq 1 then begin
+                loadct,39
+                !p.multi=[0,2,1]
+                window,2
+                freq1_dipole = freq1(detected_dipole_indices)
+
+                plot,freq1_dipole,sampling_weights_dipole,psym=-6,yr=[0,max([asef_weights_dipole,freq_weights_dipole,spsd_weights_dipole,asef_integral_weights_dipole,sampling_weights_dipole])],xr=[min(par_hist),max(par_hist)],xtitle='!3Frequency ('+ sp.freq_unit_str + ')',ytitle='Weights',   $
+                    xticklen=0.02,yticklen=0.03,xthick=pp.xthick,ythick=pp.ythick,charthick=pp.charthick
+                oplot,freq1_dipole,asef_weights_dipole,color=200,psym=-6
+                oplot,freq1_dipole,freq_weights_dipole,color=250,psym=-6
+                oplot,freq1_dipole,spsd_weights_dipole,color=160,psym=-6
+                oplot,freq1_dipole,asef_integral_weights_dipole,color=90,psym=-6
+                oplot,freq1_dipole,detection_probability_weights_dipole,color=220,psym=-6
+                plot,freq1_dipole,total_weights_dipole,psym=-6,xr=[min(par_hist),max(par_hist)],yr=[0,max(total_weights_dipole)],/nodata,xtitle='!3Frequency ('+ sp.freq_unit_str + ')',   $
+                    ytitle='Total Weight Dipole',title=catalog_id + star_id + ' CHUNK: ' + run,xticklen=0.02,yticklen=0.03,xthick=pp.xthick,ythick=pp.ythick,charthick=pp.charthick
+                oplot,freq1_dipole,total_weights_dipole,psym=-6,color=90
+                oplot,freq1_dipole,asef_integral_weights_dipole,psym=-6,color=250
+                oplot,[freq_dipole_chunk,freq_dipole_chunk],[0,max(total_weights_dipole)*1.2],color=205,thick=3,linestyle=2
+                return
+            endif
+            
             ; Flag the bad modes as undetected to remove them from the list of good frequencies.
             
             detection_probability(detected_dipole_indices(bad_dipole_indices)) = 0.0

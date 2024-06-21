@@ -670,7 +670,7 @@ class Global(FamedStar):
                     diamonds.write_uniform_prior(prior_filenames[k],np.array(boundaries))
 
                 if self.cp.print_on_screen:
-                    print('\n Performing asymptotic pattern fit with DIAMONDS. \n')
+                    print('\n Performing sliding-pattern fit with DIAMONDS. \n')
 
                 peakbagging_parameters = {'subdir':          self.cp.as_subdir,
                                           'run':             run_names,

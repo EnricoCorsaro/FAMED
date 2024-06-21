@@ -162,7 +162,10 @@ Similar description as for ``threshold_asef_global`` but for MS stars only, havi
 Similar description as for ``threshold_asef_global`` but for subgiant stars, having :math:`\Delta\nu_\mathrm{RG} < \Delta\nu < \Delta\nu_\mathrm{SG}` and :math:`T_\mathrm{eff} < T_\mathrm{eff,SG}`. This parameter is used within the CHUNK module of the pipeline. The default value is set to 0.05, which is larger than that used in MS stars because the stellar spectra appear to be more complex.
 
 * ``threshold_asef_chunk_rg``
-Similar description as for ``threshold_asef_global`` but for red giant stars, having :math:`\Delta\nu \leq \Delta\nu_\mathrm{RG}`. This parameter is used within the CHUNK module of the pipeline. The default value is set to 0.05, which similarly as for subgiant stars, is larger than that used in MS stars because the stellar spectra appear to be more complex.
+Similar description as for ``threshold_asef_global`` but for red giant stars, having :math:`\Delta\nu_\mathrm{AGB} \leq \Delta\nu < \Delta\nu_\mathrm{RG}`. This parameter is used within the CHUNK module of the pipeline. The default value is set to 0.05, which similarly as for subgiant stars, is larger than that used in MS stars because the stellar spectra appear to be more complex.
+
+* ``threshold_asef_chunk_tip``
+Similar description as for ``threshold_asef_global`` but for red giant stars evolved toward the RGB tip and for early AGB stars, having :math:`\Delta\nu < \Delta\nu_\mathrm{AGB}`. This parameter is used within the CHUNK module of the pipeline. The default value is set to 0.03, which similarly as for main sequence stars is smaller to increase the chances of detecting peaks with a low number of databins.
 
 * ``skim_frequency_tolerance_ms``
 The fraction in units of :math:`\Delta\nu` by which the frequencies extracted from the multi-modal sampling in the GLOBAL module should match within the predictions from the asymptotic pattern of p modes. When the extracted frequencies exceed this fraction with respect to their asymptotic prediction, they are excluded from the final sample. This parameter regulates the skimming process of radial and dipole modes in the case of MS stars, having either :math:`\Delta\nu_\mathrm{RG} < \Delta\nu \leq \Delta\nu_\mathrm{SG}` and :math:`T_\mathrm{eff} \geq T_\mathrm{eff,SG}` or :math:`\Delta\nu \geq \Delta\nu_\mathrm{SG}`. See Corsaro et al. (2020) for more details. The default value is set to 0.18.
@@ -260,7 +263,10 @@ Similar description as for ``weight_freq_fraction`` but referring to the number 
 The limiting upper frequency of the chunk in the CHUNK module. The user has the possibility to input this frequency to force the chunk frequency range up to a specific value. The default value is 0, meaning that the limiting frequency is evaluated automatically during the analysis.
 
 * ``plot_weights_radial``
-Allows plotting the weights as a function of the frequency peaks extracted inside the chunk in the CHUNK module. Can be useful for debugging purposes. The default value is 0, meaning that no plotting is produced.
+Allows plotting the weights for candidate radial mode peaks as a function of the frequency extracted inside the chunk in the CHUNK module. Can be useful for debugging purposes. The default value is 0, meaning that no plotting is produced.
+
+* ``plot_weights_dipole``
+Allows plotting the weights for candidate dipole mode peaks as a function of the frequency extracted inside the chunk in the CHUNK module. Can be useful for debugging purposes. The default value is 0, meaning that no plotting is produced.
 
 * ``threshold_search_radial_asef_integral``
 In the search for the proper chunk radial mode frequency in the CHUNK module, this parameter sets a lower limit threshold on the weight of the integral of the ASEF for the peak under inspection. This parameter is used to check whether the selected peak is not the adjacent quadrupole mode. If the weight of the given peak exceeds the fraction of weight imposed by this threshold, then the peak can be considered for further analysis as a candidate radial mode peak. The default value is 0.70.

@@ -58,6 +58,7 @@ threshold_asef_global 0.01
 threshold_asef_chunk_ms 0.03
 threshold_asef_chunk_sg 0.05
 threshold_asef_chunk_rg 0.05
+threshold_asef_chunk_tip 0.03
 skim_frequency_tolerance_ms 0.18
 skim_frequency_tolerance_sg 0.20
 skim_frequency_tolerance_rg 0.25
@@ -93,7 +94,8 @@ weight_asef_integral_fraction 0.8
 weight_spsd_fraction 0.1
 weight_sampling_fraction 0.2
 upper_limit_freq_radial 0.
-plot_weights_radial 1
+plot_weights_radial 0
+plot_weights_dipole 0
 threshold_search_radial_asef_integral 0.70
 threshold_search_radial_asef_maximum 0.45
 previous_radial_range_fraction 8.

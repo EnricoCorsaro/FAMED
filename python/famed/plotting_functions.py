@@ -166,7 +166,11 @@ def psd_plot(famed_obj,ax=None,chunk=None):
         ### v0-dnu/2 line  on very top
         plt.axvline(famed_obj.freqs_radial_chunk[chunk]-famed_obj.best_dnu/2,ls='--',color=famed_obj.cp.text2,zorder=5)
         ax.text(famed_obj.freqs_radial_chunk[chunk]-famed_obj.best_dnu/2,.53,r'$\nu_0-\Delta\nu/2$',rotation='vertical',ha='right',fontsize='x-small',color=famed_obj.cp.text2,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),clip_on=True)
-                
+
+        # nu_max arrow
+        ann = ax.annotate('',xy=(famed_obj.numax,.90),xycoords=transforms.blended_transform_factory(ax.transData,ax.transAxes),xytext=(famed_obj.numax,1),textcoords=transforms.blended_transform_factory(ax.transData,ax.transAxes),arrowprops=dict(color=famed_obj.cp.numax_arrow, lw=3, arrowstyle='-|>'))
+        ann.arrow_patch.set_clip_box(ax.bbox)
+ 
     # Mode lines, arrows, and id (n,l) 
     for mode,order,degree,sig in zip(modes,orders,degrees,sigs):
         ax.axvline(mode,ls=':',color=famed_obj.cp.psd_line,zorder=1)
@@ -413,6 +417,7 @@ def asef_histogram(famed_obj,ax=None,chunk=None):
         ax = plt.axes()
     ax.set_ylabel('ASEF (Nested iteration)')
     ax.set_xlabel(r'Frequency ($\mu$Hz)')
+    #ax.semilogy([np.min(par_hist),np.max(par_hist)],[,famed_obj.threshold_asef],'--',c='white',lw=2)
 
     # Plot histogram.
 
@@ -434,6 +439,7 @@ def asef_histogram(famed_obj,ax=None,chunk=None):
     y1,y2=plt.ylim()
     plt.ylim(y1,y2*1.2)
     
+
     # Errorbars and modes.
 
     for mode,err,degree in zip(modes,errs,degrees):
@@ -445,7 +451,8 @@ def asef_histogram(famed_obj,ax=None,chunk=None):
             plt.axvline(mode,ls='dashed',color=famed_obj.cp.vline1)
 
         update_freq_radial_global = famed_obj.freqs_radial_global[chunk]
-        plt.axvline(update_freq_radial_global,ls='dashed',color=famed_obj.cp.vline2)
+        if update_freq_radial_global is not None:
+            plt.axvline(update_freq_radial_global,ls='dashed',color=famed_obj.cp.vline2)
         
         # Bracket showing location of octupole modes
 
@@ -455,7 +462,9 @@ def asef_histogram(famed_obj,ax=None,chunk=None):
         plt.plot([octu_lower,octu_upper],[.55,.55],transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),zorder=5,color=famed_obj.cp.text4,lw=2)
         ann=plt.annotate('',xy=(octu,.58),xycoords=transforms.blended_transform_factory(ax.transData,ax.transAxes),xytext=(octu,.68),textcoords=transforms.blended_transform_factory(ax.transData,ax.transAxes),arrowprops=dict(color=famed_obj.cp.text4, lw=1, arrowstyle='-|>'),clip_on=True)
         #ann.arrow_patch.set_clip_box(ax.bbox
-            
+    
+    plt.axhline(y=famed_obj.threshold_asef*np.max(asef_hist), color='white', linestyle='--')
+
 def text_panel(famed_obj,ax=None,chunk=None):
     """
     Print a text summary of GLOBAL results as text over and empty axes.

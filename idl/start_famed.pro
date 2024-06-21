@@ -80,7 +80,11 @@ if keyword_set(chunk) then begin
     for j=0, n_elements(snr)-1 do begin
         chunk_number = tmp_sort(j)
         if best_dnu lt cp.dnu_rg then begin
-            threshold_asef = cp.threshold_asef_chunk_rg
+            if best_dnu lt cp.dnu_agb then begin
+                threshold_asef = cp.threshold_asef_chunk_tip
+            endif else begin
+                threshold_asef = cp.threshold_asef_chunk_rg
+            endelse
         endif else begin
             if (best_dnu lt cp.dnu_sg and teff lt cp.teff_sg) then begin
                 threshold_asef = cp.threshold_asef_chunk_sg

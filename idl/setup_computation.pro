@@ -105,6 +105,7 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        threshold_asef_chunk_ms:        (float(par_value(where(par_name eq 'threshold_asef_chunk_ms'))))[0],        $
        threshold_asef_chunk_sg:        (float(par_value(where(par_name eq 'threshold_asef_chunk_sg'))))[0],        $
        threshold_asef_chunk_rg:        (float(par_value(where(par_name eq 'threshold_asef_chunk_rg'))))[0],        $
+       threshold_asef_chunk_tip:       (float(par_value(where(par_name eq 'threshold_asef_chunk_tip'))))[0],       $
        skim_frequency_tolerance_ms:    (float(par_value(where(par_name eq 'skim_frequency_tolerance_ms'))))[0],    $
        skim_frequency_tolerance_sg:    (float(par_value(where(par_name eq 'skim_frequency_tolerance_sg'))))[0],    $
        skim_frequency_tolerance_rg:    (float(par_value(where(par_name eq 'skim_frequency_tolerance_rg'))))[0],    $
@@ -138,6 +139,7 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        weight_sampling_fraction:           (float(par_value(where(par_name eq 'weight_sampling_fraction'))))[0],           $
        upper_limit_freq_radial:            (float(par_value(where(par_name eq 'upper_limit_freq_radial'))))[0],            $
        plot_weights_radial:                (fix(par_value(where(par_name eq 'plot_weights_radial'))))[0],                  $
+       plot_weights_dipole:                (fix(par_value(where(par_name eq 'plot_weights_dipole'))))[0],                  $
        threshold_search_radial_asef_integral:            (float(par_value(where(par_name eq 'threshold_search_radial_asef_integral'))))[0],            $
        threshold_search_radial_asef_maximum:             (float(par_value(where(par_name eq 'threshold_search_radial_asef_maximum'))))[0],             $
        previous_radial_range_fraction:     (float(par_value(where(par_name eq 'previous_radial_range_fraction'))))[0],     $

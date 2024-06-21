@@ -210,7 +210,10 @@ class Chunk(FamedStar):
         # Give as input the minimum number of adjacent bins required to consider two local maxima separated. Don't need to calculate for each chunk. Just save number now.
 
         if best_dnu < self.cp.dnu_rg:
-            threshold_asef = self.cp.threshold_asef_chunk_rg
+            if best_dnu < self.cp.dnu_agb:
+                threshold_asef = self.cp.threshold_asef_chunk_tip
+            else:
+                threshold_asef = self.cp.threshold_asef_chunk_rg
         else:
             if (best_dnu < self.cp.dnu_sg) & (self.teff < self.cp.teff_sg):
                 threshold_asef = self.cp.threshold_asef_chunk_sg
@@ -537,7 +540,7 @@ class Chunk(FamedStar):
 
         filename_summary = np.sort(glob.glob(str(peakbagging_filename_chunk) + '*' + self.modality + '.txt'))
         
-        flag_median_d02_active = 0
+        flag_median_d02_active = False
         if len(filename_summary) > 0:
             d02_array = np.zeros(len(filename_summary))
             for jj in range(0, len(filename_summary)):
@@ -553,9 +556,17 @@ class Chunk(FamedStar):
 
             if (max_d02 < d02) or (max_d02==0):
                 max_d02 = d02
+
             if median_d02==0:
                 median_d02 = d02
-            flag_median_d02_active = 1
+
+            # Apply a check for RG stars
+
+            if (best_dnu <= self.cp.dnu_rg) and (max_d02 > d02*self.cp.d02_factor_search_range):
+                max_d02 = d02
+                median_d02 = d02
+
+            flag_median_d02_active = True
         else:
             median_d02 = d02
             max_d02 = d02
@@ -737,15 +748,15 @@ class Chunk(FamedStar):
                                     if n_dipole_chunk==0:
                                         freq_dipole = freq_radial - best_dnu/2. - d01
                                         freq_sig_dipole = freq_sig_radial
-                                        n_dipole_chunk = 1
-                           
-        self.freqs_radial_global[run_number] = freq_radial
+                                        n_dipole_chunk = 1 
+        
         flag_quadrupole_found = 0
 
         if n_radial_chunk != 0:
             # ----------------------------------------------------------------------
             # CASE 1: One radial mode is found in the chunk from the global modality
             # ----------------------------------------------------------------------
+            self.freqs_radial_global[run_number] = freq_radial
 
             # Radial mode
 
@@ -959,7 +970,7 @@ class Chunk(FamedStar):
                 # This is because here d02_RG  constitutes an upper limit for the actual d02 (see White et al. 2011). 
                 # For MS stars, take as an upper limit for d02 the value Dnu/4 in order to incorporate also cases with very large d02.
 
-                if flag_median_d02_active == 1:
+                if flag_median_d02_active:
                     max_local_d02 = median_d02*self.cp.d02_fraction_prior_upper_duplet_fit 
                 else:
                     if best_dnu <= self.cp.dnu_sg:
@@ -1200,7 +1211,7 @@ class Chunk(FamedStar):
                 
             actual_d02 = local_d02
 
-            if flag_median_d02_active==1:
+            if flag_median_d02_active:
                 if median_d02 > local_d02:
                     actual_d02 = median_d02
     
@@ -1208,13 +1219,11 @@ class Chunk(FamedStar):
 
             low_cut_frequency2 = freq_radial_chunk - best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)) + freq_sig_radial
             low_cut_frequency3 = freq_radial_chunk - best_dnu + freq_sig_radial
-            if low_cut_frequency2 > low_cut_frequency:
-                low_cut_frequency = low_cut_frequency2
-            if low_cut_frequency3 > low_cut_frequency:
-                tmp_lower_order = np.where(freq1 <= low_cut_frequency3)[0]
-                if len(tmp_lower_order) > 0:
-                    low_cut_frequency = low_cut_frequency3
-
+            
+            max_low_cut_frequency = np.max([low_cut_frequency,low_cut_frequency2,low_cut_frequency3])
+            tmp_lower_order = np.where(freq1 <= max_low_cut_frequency)[0]
+            if len(tmp_lower_order) > 0:
+                low_cut_frequency = max_low_cut_frequency
         else:
             # ---------------------------------------------------------------------
             # CASE 2: No radial mode is found in the chunk from the global modality
@@ -1257,7 +1266,9 @@ class Chunk(FamedStar):
             octupole_freq_upper = freq_radial_chunk - best_dnu/2. - d02_lower_scaling_factor*actual_d02
             octupole_freq_asymp = (octupole_freq_lower + octupole_freq_upper)/2.
 
-        if low_cut_frequency > octupole_freq_lower:
+        # Lower down the low cut frequency limit of the chunk if the octupole mode from the asymptotic prediction is not covered
+        
+        if (best_dnu > self.cp.dnu_agb) and (low_cut_frequency > octupole_freq_asymp):
             low_cut_frequency = octupole_freq_lower
 
         # Force input value for lower limit frequency if required
@@ -1354,6 +1365,7 @@ class Chunk(FamedStar):
                     # Allow for a very narrow FWHM
 
                     fwhm_prior = [left_fwhm,fwhm_radial*self.cp.fwhm_magnification_factor_radial*iterations]
+
                     if best_dnu < self.cp.dnu_threshold:
                         boundaries = [freq_prior_radial,amplitude_prior_radial,fwhm_prior]
                     else:
