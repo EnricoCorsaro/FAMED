@@ -257,6 +257,7 @@ class Global(FamedStar):
         self.epsi_fit_epsi_arr = epsi_array
         self.epsi_fit_teff_arr = teff_array
         self.epsi_fit_arr = epsi_fit_array
+        self.threshold_asef = self.cp.threshold_asef_global
         
         # Find the local maxima using a hill-climbing algorithm on the ASEF.
         # Give as input the minimum number of adjacent bins required to consider

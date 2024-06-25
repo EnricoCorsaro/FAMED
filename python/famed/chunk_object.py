@@ -327,9 +327,14 @@ class Chunk(FamedStar):
         # Load the information available from the global fit
         # Load asymptotic parameters
 
-        acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole = np.loadtxt(peakbagging_filename_global, max_rows=1, skiprows=1, usecols=(1,2,3,5,6,7,8))
+        acf_dnu,best_dnu,best_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole,evolutionary_stage_index = np.loadtxt(peakbagging_filename_global, max_rows=1, skiprows=1, usecols=(1,2,3,5,6,7,8,9))
         n_chunks = int(n_chunks)
         flag_depressed_dipole = int(flag_depressed_dipole)
+        evolutionary_stage_index = int(evolutionary_stage_index)
+
+        evolutionary_stage_label_array = ['MS','SG','RGB','RC1','RC2','AGB']
+        evolutionary_stage_label = evolutionary_stage_label_array[evolutionary_stage_index]
+        self.evolutionary_stage_label = evolutionary_stage_label
 
         # Load the SNR for the given chunk
 

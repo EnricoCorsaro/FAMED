@@ -462,8 +462,9 @@ def asef_histogram(famed_obj,ax=None,chunk=None):
         plt.plot([octu_lower,octu_upper],[.55,.55],transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),zorder=5,color=famed_obj.cp.text4,lw=2)
         ann=plt.annotate('',xy=(octu,.58),xycoords=transforms.blended_transform_factory(ax.transData,ax.transAxes),xytext=(octu,.68),textcoords=transforms.blended_transform_factory(ax.transData,ax.transAxes),arrowprops=dict(color=famed_obj.cp.text4, lw=1, arrowstyle='-|>'),clip_on=True)
         #ann.arrow_patch.set_clip_box(ax.bbox
-    
+        
     plt.axhline(y=famed_obj.threshold_asef*np.max(asef_hist), color='white', linestyle='--')
+    
 
 def text_panel(famed_obj,ax=None,chunk=None):
     """
@@ -520,13 +521,13 @@ def text_panel(famed_obj,ax=None,chunk=None):
         ax.text(0.0,.05,r'$\mathbf{%s %s}$''\n Folder:%s\n Run:%s\n Modality:%s'%(famed_obj.catalog_id.replace('_', '\_'),famed_obj.star_id.replace('_', '\_'),famed_obj.cp.isla_subdir,famed_obj.chunk_number[chunk],famed_obj.modality),fontsize='small',color=famed_obj.cp.text1)
 
         # Text 2 chunk
-        ax.text(0.15,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\epsilon$ = %.2f\, $\delta\nu_{02}$ = %.2f $\mu$Hz''\n'r' SNR = %.1f\, $\Delta P_1 = %.1f s$'%(famed_obj.numax,famed_obj.best_dnu,famed_obj.local_epsi[chunk],famed_obj.local_d02[chunk],famed_obj.snr[chunk],famed_obj.local_dp[chunk]),fontsize='small',color=famed_obj.cp.text2)
+        ax.text(0.14,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\epsilon$ = %.2f\, $\delta\nu_{02}$ = %.2f $\mu$Hz''\n'r' SNR = %.1f\, $\Delta P_1 = %.1f s$'%(famed_obj.numax,famed_obj.best_dnu,famed_obj.local_epsi[chunk],famed_obj.local_d02[chunk],famed_obj.snr[chunk],famed_obj.local_dp[chunk]),fontsize='small',color=famed_obj.cp.text2)
 
         # Text 3 chunk
         if famed_obj.n_radial_chunk[chunk] == 1:
-            ax.text(0.36,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{radial}$ = %.3f $\mu$Hz''\n'r' H$_{\mathrm{max,prior}}$ = %.1e ppm$^2/\mu$Hz''\n'r'  $\alpha$ = %.3f\, $T_{\mathrm{eff}}$ = %i K'%(famed_obj.fit_linewidth[chunk],famed_obj.fwhm_radial_fit[chunk],famed_obj.upper_height[chunk],famed_obj.best_alpha,famed_obj.teff),fontsize='small',color=famed_obj.cp.text3)
+            ax.text(0.34,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{radial}$ = %.3f $\mu$Hz''\n'r' H$_{\mathrm{max,prior}}$ = %.1e ppm$^2/\mu$Hz''\n'r'  $\alpha$ = %.3f\, $T_{\mathrm{eff}}$ = %i K\,\,\, ES$_{\mathrm{\epsilon}}$ = %s'%(famed_obj.fit_linewidth[chunk],famed_obj.fwhm_radial_fit[chunk],famed_obj.upper_height[chunk],famed_obj.best_alpha,famed_obj.teff,famed_obj.evolutionary_stage_label),fontsize='small',color=famed_obj.cp.text3)
         else:
-            ax.text(0.36,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{radial}$ = %.3f $\mu$Hz''\n'r' H$_{\mathrm{max,prior}}$ = %.1e ppm$^2/\mu$Hz''\n'r'  $\alpha$ = %.3f\, $T_{\mathrm{eff}}$ = %i K'%(famed_obj.fit_linewidth[chunk],famed_obj.avg_fwhm[chunk],famed_obj.upper_height[chunk],famed_obj.best_alpha,famed_obj.teff),fontsize='small',color=famed_obj.cp.text3)
+            ax.text(0.34,.05,r' $\Gamma_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\Gamma_{radial}$ = %.3f $\mu$Hz''\n'r' H$_{\mathrm{max,prior}}$ = %.1e ppm$^2/\mu$Hz''\n'r'  $\alpha$ = %.3f\, $T_{\mathrm{eff}}$ = %i K\,\,\, ES$_{\mathrm{\epsilon}}$ = %s'%(famed_obj.fit_linewidth[chunk],famed_obj.avg_fwhm[chunk],famed_obj.upper_height[chunk],famed_obj.best_alpha,famed_obj.teff,famed_obj.evolutionary_stage_label),fontsize='small',color=famed_obj.cp.text3)
             
         # Text 4
-        ax.text(0.61,.05,r' ASEF$_{\mathrm{threshold}}$ = %.2f \%%''\n'r' ASEF$_{\mathrm{bins}}$ = %i''\n'r' N$_{\mathrm{freq}}$ = %i \,\,\,  N$_{\mathrm{orders}}$ = %i'%(100*famed_obj.threshold_asef,famed_obj.asef_bins[chunk],famed_obj.n_freqs[chunk],famed_obj.n_chunks),fontsize='small',color=famed_obj.cp.text4)
+        ax.text(0.62,.05,r' ASEF$_{\mathrm{threshold}}$ = %.2f \%%''\n'r' ASEF$_{\mathrm{bins}}$ = %i''\n'r' N$_{\mathrm{freq}}$ = %i \,\,\,  N$_{\mathrm{orders}}$ = %i'%(100*famed_obj.threshold_asef,famed_obj.asef_bins[chunk],famed_obj.n_freqs[chunk],famed_obj.n_chunks),fontsize='small',color=famed_obj.cp.text4)
