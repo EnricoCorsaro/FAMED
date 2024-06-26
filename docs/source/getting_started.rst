@@ -127,7 +127,7 @@ To force ``find_islands`` to recompute the sliding pattern fit we can use the ``
 
      >>> star.find_islands(force=True)
 
-With this interactive method, you can change specific configuring parameters and recompute just the steps that you need to.
+The ``force`` option overwrites any existing solution that was obtained in a previous run. With this interactive method, you can change specific configuring parameters and recompute just the steps that you need to.
 
 If the input configuring parameter ``save_progress_pickle`` is set to 1, a pickle of the star object is saved in the results directory of each star after both the ``make_islands()`` and ``find_islands()`` functions have been run. The keyword ``load_islands`` can be set to ``True`` when creating a ``Global`` object to load the pickled data. 
 
@@ -145,33 +145,62 @@ where in this example the last input, here set to 10, represents the subfolder n
 
 All at once
 -----------
-This method does everything in the step-by-step method with a single command. This is helpful if you do not need to examine individual steps of the process and just want to get the results and output created. By default this method has ``force=True`` for both ``make_islands`` and ``find_islands``. It will only produce plots if the ``save_png`` or ``save_eps`` flags are set in the configuring parameters.
+This method does everything in the step-by-step method with a single command. This is helpful if you do not need to examine individual steps of the process and just want to get the results and output created. By default this method has the option ``force=True`` for both ``make_islands`` and ``find_islands``. It will only produce plots if the ``save_png`` or ``save_eps`` flags are set in the configuring parameters.
 
 .. code :: python
 
      >>> import famed as f
      >>> f.run.GLOBAL('KIC', '012069424', 5825)
 
-In this method one can decide to change at runtime the reference subfolder containing the background fit solution obtained with the DIAMONDS+Background code. The general calling sequence thus becomes:
+In this calling sequence there is also the option ``fit=True`` set by default. The option ``fit`` executes the ``make_islands`` method to evaluate the multi-modal sampling. If repeating the multi-modal fit is not necessary, for example because one wants to re-execute the GLOBAL module only to attempt at improving the identification of the l=0,1 pairs, hence to repeat the sliding-pattern fit, we recommend using the following calling sequence:
+
+.. code :: python
+
+     >>> import famed as f
+     >>> f.run.GLOBAL('KIC', '012069424', 5825, fit=False)
+
+In addition, in this method one can decide to change at runtime the reference subfolder containing the background fit solution obtained with the DIAMONDS+Background code. The default subfolder is the one specified in the input configuring parameter file under the keyword ``background_run_number`` (normally set to ``00``). The general calling sequence to read at runtime the background fit solution contained in a different subfolder, e.g. the subfolder ``10``, thus becomes:
+
+.. code :: python
+
+     >>> f.run.GLOBAL('KIC', '012069424', 5825, background_run_number=10)
+
+or simply
 
 .. code :: python
 
      >>> f.run.GLOBAL('KIC', '012069424', 5825, 10)
 
-where we adopted the same example used above, namely forcing the pipeline to use the background fit solution stored inside the subfolder 10 (instead of the default 00).
-
-We recommend using the all at once method to perform the analysis of the CHUNK module. Once the GLOBAL module has been completed, following the example above the user can activate the CHUNK with the following commands:
+For the analysis performed by the CHUNK module we recommend using the all at once method. Once the GLOBAL module has been completed, following the example above the user can activate the CHUNK with the following commands:
 
 .. code ::
 
-    >>> f.run.CHUNK('KIC', '012069424') 
+    >>> f.run.CHUNK('KIC', '012069424')
 
-where we note that the input temperature is no longer required because this will be obtained directly from the solution of the GLOBAL module.
-If a specific background fit solution has to be used once again, similarly to the case of the GLOBAL module the user can force its reading with the following calling sequence:
+where we note that the input temperature is no longer required because this is obtained directly from the solution of the GLOBAL module. Similarly to the case of GLOBAL, the calling sequence for CHUNK also allows two optional flags, both activated by default, ``fit=True``, ``force=True``. The two options have an analogous meaning to that of GLOBAL. If repeating the multi-modal fit is not necessary, for example because one wants to re-execute the CHUNK module just for a better identification of the individual modes and/or to repeat the peak detection tests, then the following calling sequence should be used:
 
 .. code ::
 
-    >>> f.run.CHUNK('KIC', '012069424', 10)  
+    >>> f.run.CHUNK('KIC', '012069424', fit=False)
+
+There is also the possibility to recompute the analysis of an individual chunk instead of all the chunks together, for example because we only want to intervene in a specific region of the dataset. In this case, if for example one wants to re-analyze chunk #5, one can use the following calling sequence:
+
+.. code ::
+
+    >>> f.run.CHUNK('KIC', '012069424', chunk_id=5)
+
+where ``chunk_id`` would be otherwise set to -1 by default, with -1 meaning that all the identified chunks should be processed. The number of the chunk to adopt matches the numbering provided by the GLOBAL module.
+Similarly to GLOBA, if a background fit solution has to be specified at runtime, the user can force its reading also in the CHUNK by means of the following calling sequence:
+
+.. code ::
+
+    >>> f.run.CHUNK('KIC', '012069424', background_run_number=10)  
+
+Note that these are positional arguments, so in this case the argument name ``background_run_number`` has to be specified entirely when providing it as an explicit input, otherwise the code may confuse it with the other input ``chunk_id`` if the latter one is not specified instead. In summary, if one wants to re-execute the CHUNK analysis for the chunk number 5 by using the background fit solution contained in the sub-folder ``10`` but without repeating the multi-modal fit, then the user should adopt the following calling sequence:
+
+.. code ::
+
+    >>> f.run.CHUNK('KIC', '012069424', chunk_id=5, background_run_number=10, fit=False)  
 
 Using an external background fit solution
 -----------------------------------------
