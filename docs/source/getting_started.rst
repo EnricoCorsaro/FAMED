@@ -183,14 +183,14 @@ where we note that the input temperature is no longer required because this is o
 
     >>> f.run.CHUNK('KIC', '012069424', fit=False)
 
-There is also the possibility to recompute the analysis of an individual chunk instead of all the chunks together, for example because we only want to intervene in a specific region of the dataset. In this case, if for example one wants to re-analyze chunk #5, one can use the following calling sequence:
+There is also the possibility to recompute the analysis of an individual chunk instead of all the chunks together, for example because we only want to intervene in a specific region of the dataset. In this case, if for example one wants to re-analyze chunk #5, the following calling sequence should be used:
 
 .. code ::
 
     >>> f.run.CHUNK('KIC', '012069424', chunk_id=5)
 
 where ``chunk_id`` would be otherwise set to -1 by default, with -1 meaning that all the identified chunks should be processed. The number of the chunk to adopt matches the numbering provided by the GLOBAL module.
-Similarly to GLOBA, if a background fit solution has to be specified at runtime, the user can force its reading also in the CHUNK by means of the following calling sequence:
+Similarly to GLOBAL, if a background fit solution has to be specified at runtime, the user can force its reading also in the CHUNK by means of the following calling sequence:
 
 .. code ::
 
