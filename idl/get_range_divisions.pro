@@ -126,7 +126,7 @@ for i=0, n_maxima-1 do begin
             endif
         endif
     endif
-  
+    
     ; Extend right range beyond if the local maximum is the last one of the list and there is an ASEF value
     ; smaller than that at the right bound.
 
@@ -157,7 +157,7 @@ for i=0, n_maxima-1 do begin
                 ; If here then find the range that is closest to the local maximum and make the other boundary not exceed the
                 ; maximum number of bins allowed starting from the selected bound.
               
-                index_range_closest = closest(range_maximum(*,i),maximum(i))
+                index_range_closest = closest(maximum(i),range_maximum(*,i))
                 if index_range_closest eq 0 then begin
                     index_left_range = closest(range_maximum(0,i),par_hist)
                     if index_left_range + n_bins_max le (n_elements(par_hist)-1) then begin
