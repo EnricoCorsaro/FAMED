@@ -404,13 +404,15 @@ class FamedStar(object):
                 else:
                     divisions_maximum[1,i] = (maximum[i+1]+maximum[i])/2.0
 
-        avg_spacing = np.mean(np.diff(maximum)) 
-        first_division = maximum[0] - avg_spacing
-        last_division = maximum[-1] + avg_spacing
-        if first_division > divisions_maximum[0,0]:
-            divisions_maximum[0,0] = first_division
-        if last_division < divisions_maximum[1,-1]:
-            divisions_maximum[1,-1] = last_division
+            avg_spacing = np.mean(np.diff(maximum))
+            first_division = maximum[0] - avg_spacing
+            last_division = maximum[-1] + avg_spacing
+            
+            if first_division > divisions_maximum[0,0]:
+                divisions_maximum[0,0] = first_division
+            
+            if last_division < divisions_maximum[1,-1]:
+                divisions_maximum[1,-1] = last_division
         else:
             divisions_maximum[0,0] = np.min(par_hist)
             divisions_maximum[1,0] = np.max(par_hist)
@@ -476,42 +478,45 @@ class FamedStar(object):
                         else:
                             range_maximum[1,i] = divisions_maximum[1,i]
 
-                # Extend right range beyond if the local maxiumu is the last one
-                # of the list and there is an ASEF value smaller that that at
-                # the right bound.
-                if i == n_maxima-1:
-                    tmp_right_exceed = np.where(par_hist > range_maximum[1,i])[0]
-                    if len(tmp_right_exceed)>0:
-                        par_hist_exceed = par_hist[tmp_right_exceed]
-                        index_right_maximum = closest(range_maximum[1,i],par_hist,index=True)
-                        asef_right_maximum = asef_hist[index_right_maximum]
-                        asef_hist_exceed = asef_hist[tmp_right_exceed]
 
-                        min_asef_index=np.argmin(asef_hist_exceed)
-                        if asef_hist_exceed[min_asef_index] < asef_right_maximum:
-                            range_maximum[1,i] = par_hist_exceed[min_asef_index]
+            # Extend right range beyond if the local maxiumu is the last one
+            # of the list and there is an ASEF value smaller that that at
+            # the right bound.
+            if i == n_maxima-1:
+                tmp_right_exceed = np.where(par_hist > range_maximum[1,i])[0]
+                if len(tmp_right_exceed)>0:
+                    par_hist_exceed = par_hist[tmp_right_exceed]
+                    index_right_maximum = closest(range_maximum[1,i],par_hist,index=True)
+                    asef_right_maximum = asef_hist[index_right_maximum]
+                    asef_hist_exceed = asef_hist[tmp_right_exceed]
 
-                # In the CHUNK modality verify that if the local maxiumum is not
-                # a prominent one, i.e. its ASEF is below 3/4, the ranges do not
-                # extend over a given maximum number of allowed bins. This will
-                # prevent from having very wide ranges if the peak is small
-                # (surrounded by flat ASEF region).
-                if chunk:
-                    tmp_bins_range = np.where((par_hist >= range_maximum[0,i]) & (par_hist <= range_maximum[1,i]))[0]
-                    if (len(tmp_bins_range) > n_bins_max) & (asef_maximum[i] < asef_threshold):
-                        # If here then find the range that is closest to the
-                        # local maximum and make the other boundary not exceed
-                        # the maximum number of bins allowed starting from the
-                        # selected bound.
-                        index_range_closest = closest(range_maximum[:,i],maximum[i],index=True)
-                        if index_range_closest == 0:
-                            index_left_range = closest(range_maximum[0,i],par_hist,index=True)
-                            if index_left_range + n_bins_max <= len(par_hist)-1:
-                                range_maximum[1,i] = par_hist[index_left_range+n_bins_max]
-                        else:
-                            index_right_range = closest(range_maximum[1,i],par_hist,index=True)
-                            if index_right_range - n_bins_max >= 0:
-                                range_maximum[0,i] = par_hist[index_right_range-n_bins_max]
+                    min_asef_index=np.argmin(asef_hist_exceed)
+                    if asef_hist_exceed[min_asef_index] < asef_right_maximum:
+                        range_maximum[1,i] = par_hist_exceed[min_asef_index]
+
+
+            # In the CHUNK modality verify that if the local maxiumum is not
+            # a prominent one, i.e. its ASEF is below 3/4, the ranges do not
+            # extend over a given maximum number of allowed bins. This will
+            # prevent from having very wide ranges if the peak is small
+            # (surrounded by flat ASEF region).
+            if chunk:
+                tmp_bins_range = np.where((par_hist >= range_maximum[0,i]) & (par_hist <= range_maximum[1,i]))[0]
+                if (len(tmp_bins_range) > n_bins_max) & (asef_maximum[i] < asef_threshold):
+                    # If here then find the range that is closest to the
+                    # local maximum and make the other boundary not exceed
+                    # the maximum number of bins allowed starting from the
+                    # selected bound.
+                    index_range_closest = closest(range_maximum[:,i],maximum[i],index=True)
+                    print(index_range_closest)
+                    if index_range_closest == 0:
+                        index_left_range = closest(range_maximum[0,i],par_hist,index=True)
+                        if index_left_range + n_bins_max <= len(par_hist)-1:
+                            range_maximum[1,i] = par_hist[index_left_range+n_bins_max]
+                    else:
+                        index_right_range = closest(range_maximum[1,i],par_hist,index=True)
+                        if index_right_range - n_bins_max >= 0:
+                            range_maximum[0,i] = par_hist[index_right_range-n_bins_max]
 
         return range_maximum,divisions_maximum
 
