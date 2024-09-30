@@ -173,7 +173,7 @@ endelse
 
 if (size(error))[0] ne 0 then begin
     if info.print_on_screen eq 1 then begin
-        print,' Peakbagging fit could not be completed. '
+        print,' Peakbagging fit stopped before reaching termination factor. '
     endif
 endif
 

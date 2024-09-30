@@ -12,6 +12,10 @@ pro find_islands_global,catalog_id,star_id,teff,force=force,external=external
 ;              because the epsilon term from asymptotic relation may change depending on the evolutionary stage of 
 ;              the starmode is performed, as epsilon from asymptotic relation may change depending on the 
 ;              evolutionary stage of the star.
+; Usage:       <catalog_id>: string specifying the Catalog name of the star (e.g. KIC, TIC, etc.).
+;              <star_id>: string specifying the ID number of the star. 
+;              <teff>: a value for the effective temperature of the star. Based on Teff, and nuMax
+;              a proper l=0 linewidth estimate will be computed in order to run the fit.
 ; -------------------------------------------------------------------------------------------------------------------
 
 COMMON CONFIG,cp
@@ -674,7 +678,7 @@ while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
             flag_bad_epsi = 1
         
             if info.print_on_screen and (k eq 0) then begin
-                print,' Forcing an input central radial mode frequency: ' + strcompress(string(radial_freq_reference,format='(F0.3)'),/remove_all) + ' muHz'
+                print,' Forcing an input central radial mode frequency: ' + strcompress(string(radial_freq_reference,format='(F0.3)'),/remove_all) + ' uHz'
             endif
         endif
 
@@ -682,13 +686,25 @@ while ((flag_repeat_sliding_fit eq 1) and (sliding_iteration le 1)) do begin
         modulo_reference = radial_freq_reference mod fit_dnu
         echelle_epsi = modulo_reference/fit_dnu
 
-        if (fit_dnu le cp.dnu_threshold) and (echelle_epsi lt epsilon_upper_limit - 1.0) then begin
-            echelle_epsi += 1
-            
-            if info.print_on_screen and (k eq 0) then begin
-                print,' Increasing epsilon by 1.'
+        if fit_dnu le cp.dnu_threshold then begin
+            if echelle_epsi lt (epsilon_upper_limit - 1.0) then begin
+                echelle_epsi += 1
+                
+                if info.print_on_screen and (k eq 0) then begin
+                    print,' Increasing epsilon by 1 for RGs.'
+                endif
             endif
-        endif
+        endif else begin
+            if echelle_epsi lt 0.6 then begin
+                ; Limit from White et al. 2011
+                echelle_epsi += 1
+
+                if info.print_on_screen and (k eq 0) then begin
+                    print,' Increasing epsilon by 1 for MS and SG.'
+                endif
+
+            endif
+        endelse
 
         echelle_epsi_array(k) = echelle_epsi
 
@@ -887,7 +903,7 @@ endif
 if info.print_on_screen eq 1 then begin
     print,' Epsilon values from the sliding fit: ',echelle_epsi_array
     print,' Final epsilon: ',median_echelle_epsi
-    print,' The reference radial mode is at: ' + strcompress(string(radial_freq_reference,format='(F0.3)'),/remove_all) + ' muHz'
+    print,' The reference radial mode is at: ' + strcompress(string(radial_freq_reference,format='(F0.3)'),/remove_all) + ' uHz'
     print,''
 endif
 
@@ -1313,7 +1329,7 @@ linewidth = get_linewidth(freq1_final,teff,numax)
 
 get_lun,lun1
 openw,lun1,peakbagging_filename_global
-printf,lun1,'# nuMax (microHz), DeltaNu_ACF (microHz), DeltaNu_fit (microHz), epsilon, epsilon (interpolated), alpha, Teff (K), N_chunks, Flag depressed dipole (0 = NO, 1 = YES), Evolutionary Stage (0 = MS, 1 = SG, 2 = RGB, 3 = RC1, 4 = RC2, 5 = AGB)',format='(A0)'
+printf,lun1,'# nuMax (uHz), DeltaNu_ACF (uHz), DeltaNu_fit (uHz), epsilon, epsilon (interpolated), alpha, Teff (K), N_chunks, Flag depressed dipole (0 = NO, 1 = YES), Evolutionary Stage (0 = MS, 1 = SG, 2 = RGB, 3 = RC1, 4 = RC2, 5 = AGB)',format='(A0)'
 printf,lun1,numax,acf_dnu,best_dnu,best_epsi,interp_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole,evolutionary_stage_index,format='(F0.4,F10.4,F10.4,F10.4,F10.4,F10.4,F10.1,I6,I6,I6)'
 
 ; Save the frequency positions of each chunk identified with the global fit
@@ -1330,7 +1346,7 @@ endfor
 
 ; Save the individual oscillation frequencies from the global fit, their uncertainties, mode identification and associated FWHM from Ball+18
 
-printf,lun1,'# n, l, frequency (microHz), 1-sigma frequency (microHz), ASEF maximum (iterations), FWHM from predictions (microHz)',format='(A0)'
+printf,lun1,'# n, l, frequency (uHz), 1-sigma frequency (uHz), ASEF maximum (iterations), FWHM from predictions (uHz)',format='(A0)'
 
 for i=0,n_freq-1 do begin
     printf,lun1,order_number(i),angular_degree(i),freq1_final(i),freq_sig1_final(i),asef_maximum_final(i),linewidth(i),format='(I0,I5,F15.5,F15.5,I10,F15.5)'

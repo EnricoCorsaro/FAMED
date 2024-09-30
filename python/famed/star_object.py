@@ -508,7 +508,7 @@ class FamedStar(object):
                     # the maximum number of bins allowed starting from the
                     # selected bound.
                     index_range_closest = closest(range_maximum[:,i],maximum[i],index=True)
-                    print(index_range_closest)
+                    
                     if index_range_closest == 0:
                         index_left_range = closest(range_maximum[0,i],par_hist,index=True)
                         if index_left_range + n_bins_max <= len(par_hist)-1:

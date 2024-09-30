@@ -9,7 +9,7 @@ pro make_islands_chunk,catalog_id,star_id,chunk_id,teff,external=external
 ;              modality was not performed as a previous step.  
 ; Usage:       <catalog_id>: string specifying the Catalog name of the star (e.g. KIC, TIC, etc.).
 ;              <star_id>: string specifying the ID number of the star. 
-;              <chunk_id>: an integer specifying the number of the chunk for which the sampling is
+;              <chunk_id>: an integer or string specifying the number of the chunk for which the sampling is
 ;              required. If < 0 or > the total number of chunks, by default it will compute the sampling 
 ;              for all the chunks identified in the GLOBAL module.
 ;              <teff>: a value for the effective temperature of the star. Based on Teff, and nuMax
@@ -66,6 +66,8 @@ endif else begin
     bg_names = strarr(n_chunks)
     run_labels = indgen(n_chunks)
 
+    chunk_id = fix(chunk_id)
+
     if ((chunk_id lt 0) or (chunk_id ge n_chunks)) then begin
         first_it = 0
         last_it = n_chunks-1
@@ -101,8 +103,19 @@ endif else begin
                 avg_fwhm = min_linewidths(i)*cp.smoothing_fwhm_factor_rg
             endelse
         endif else begin
+            ; Here distinguish between SG and MS. Do a more careful treatment in the case of SG
+            ; because of the fast evolution that the stars undergo during this stage
+
             if (best_dnu lt cp.dnu_sg and teff lt cp.teff_sg) then begin
-                min_linewidths(i) = get_linewidth(mean(freq_chunk),teff,numax)/cp.fwhm_chunk_scaling_sg
+                ; Obtain a more optimized FWHM scaling based on Teff of the star
+                
+                teff_rg = 4500.
+                teff_range = [teff_rg, cp.teff_sg]
+                scaling_range = [cp.fwhm_chunk_scaling_late_sg, cp.fwhm_chunk_scaling_early_sg]
+                coeff = poly_fit(teff_range,scaling_range,1)
+                actual_scaling = teff*coeff(1) + coeff(0)
+                
+                min_linewidths(i) = get_linewidth(mean(freq_chunk),teff,numax)/actual_scaling
             endif else begin
                 min_linewidths(i) = get_linewidth(mean(freq_chunk),teff,numax)/cp.fwhm_chunk_scaling_ms
             endelse

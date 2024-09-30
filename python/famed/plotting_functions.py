@@ -235,17 +235,27 @@ def psd_total_plot(famed_obj,ax=None):
     degrees_total = np.array([])
     sigs_total = np.array([])
 
+    print("n_chunks: ", famed_obj.n_chunks)
     for j in range(0,famed_obj.n_chunks-1):
         freq, psd, spsd, bg_level = famed_obj.freq[j], famed_obj.psd[j], famed_obj.spsd[j], famed_obj.bg_level[j]
         modes,orders,degrees,sigs = famed_obj.freqs[j], famed_obj.orders[j], famed_obj.degrees[j], famed_obj.freqs_sig[j]
+        
         freq_total = np.append(freq_total,freq)
         psd_total = np.append(psd_total,psd)
         spsd_total = np.append(spsd_total,spsd)
         bg_level_total = np.append(bg_level_total,bg_level)
-        modes_total = np.append(modes_total,modes)
-        orders_total = np.append(orders_total,orders)
-        degrees_total = np.append(degrees_total,degrees)
-        sigs_total = np.append(sigs_total,sigs)
+
+        if modes is not None:
+            modes_total = np.append(modes_total,modes)
+            orders_total = np.append(orders_total,orders)
+            degrees_total = np.append(degrees_total,degrees)
+            sigs_total = np.append(sigs_total,sigs)
+        else:
+            modes_total = np.append(modes_total,[])
+            orders_total = np.append(orders_total,[])
+            degrees_total = np.append(degrees_total,[])
+            sigs_total = np.append(sigs_total,[])
+
 
     freq_total,indices = np.unique(freq_total,return_index=True)
     psd_total = psd_total[indices]

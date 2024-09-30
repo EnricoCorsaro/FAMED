@@ -59,10 +59,11 @@ class Chunk(FamedStar):
 
         Parameters
         ----------
-        run : int
+        run : int or str
             An integer specifying the number of the chunk for which the sampling must be evaluated. 
             If a number < 0 is provided, all the chunks are taken into account at the same time.
         """
+        run = int(run)
         peakbagging_filename_global = self.star_dir/self.cp.summary_subdir/(self.catalog_id + self.star_id + self.cp.peakbagging_filename_label + self.cp.isla_subdir + '_' + self.cp.global_subdir + '_GLOBAL.txt')
         
         # Read input PSD and global asteroseismic parameters
@@ -145,8 +146,19 @@ class Chunk(FamedStar):
                             min_linewidths[i] = astero.get_linewidth(min_freq,self.teff,numax)/self.cp.fwhm_chunk_scaling_rg                
                         avg_fwhm = min_linewidths[i]*self.cp.smoothing_fwhm_factor_rg
                 else:
+                    # Here distinguish between SG and MS. Do a more careful treatment in the case of SG
+                    # because of the fast evolution that the stars undergo during this stage
+                    
                     if (best_dnu < self.cp.dnu_sg) & (self.teff < self.cp.teff_sg):
-                        min_linewidths[i] = astero.get_linewidth(np.mean(freq_chunk),self.teff,numax)/self.cp.fwhm_chunk_scaling_sg
+                        # Obtain a more optimized FWHM scaling based on Teff of the star
+                        
+                        teff_rg = 4500.
+                        teff_range = [teff_rg, self.cp.teff_sg]
+                        scaling_range = [self.cp.fwhm_chunk_scaling_late_sg, self.cp.fwhm_chunk_scaling_early_sg]
+                        coeff = np.polyfit(teff_range,scaling_range,1)
+                        actual_scaling = self.teff*coeff[0] + coeff[1]
+                        
+                        min_linewidths[i] = astero.get_linewidth(np.mean(freq_chunk),self.teff,numax)/actual_scaling
                     else:
                         min_linewidths[i] = astero.get_linewidth(np.mean(freq_chunk),teff,numax)/self.cp.fwhm_chunk_scaling_ms
                     avg_fwhm = np.mean(astero.get_linewidth([min(freq_chunk),max(freq_chunk)],self.teff,numax))
@@ -274,6 +286,17 @@ class Chunk(FamedStar):
 
 
     def find_islands(self,run,force=False):
+        """
+        Process the chunk multi-modal sampling obtained with DIAMONDS in order to identify 
+        meaningful frequency peaks related to oscillation modes. It also applies a tag to each selected 
+        frequency peak, corresponding to the expected mode identification, up to the angular degree level.
+
+        Parameters
+        ----------
+        run : int or str
+            An integer or string specifying the number of the chunk for which the sampling must be evaluated. 
+            If a number < 0 is provided, all the chunks are taken into account at the same time.
+        """
         run = str(run)
         run_number = int(run)
         peakbagging_filename_global = self.star_dir/self.cp.summary_subdir/(self.catalog_id + self.star_id + self.cp.peakbagging_filename_label + self.cp.isla_subdir + '_' + self.cp.global_subdir + '_GLOBAL.txt')
@@ -318,10 +341,10 @@ class Chunk(FamedStar):
 
         if self.cp.print_on_screen:
             print(' ---------------------------------------------------')
-            print(' Parameter range (microHz): [{:.2f}, {:.2f}]'.format(min(par0),max(par0)))
+            print(' Parameter range (uHz): [{:.2f}, {:.2f}]'.format(min(par0),max(par0)))
             print(' ---------------------------------------------------\n')
             print(' -------------------------------------------------')
-            print(' PSD frequency range (microHz): [{:.2f}, {:.2f}]'.format(min(freq),max(freq)))
+            print(' PSD frequency range (uHz): [{:.2f}, {:.2f}]'.format(min(freq),max(freq)))
             print(' -------------------------------------------------\n')
 
         # Load the information available from the global fit
@@ -625,9 +648,10 @@ class Chunk(FamedStar):
                         fwhm_radial = astero.get_linewidth(freq_radial,self.teff,numax)
                
                         if n_radial_chunk==0:
+                            freq_sig_radial = freq_sig_dipole
+                            
                             if freq_radial <= max(par0):
                                 n_radial_chunk = 1
-                                freq_sig_radial = freq_sig_dipole
                                 
                         if n_dipole_chunk==0:
                             freq_dipole = freq_radial - best_dnu/2. - d01
@@ -665,9 +689,10 @@ class Chunk(FamedStar):
                                     fwhm_radial = astero.get_linewidth(freq_radial,self.teff,numax)
                            
                                     if n_radial_chunk==0:
+                                        freq_sig_radial = freq_sig_dipole
+                                        
                                         if freq_radial <= max(par0):
                                             n_radial_chunk = 1
-                                            freq_sig_radial = freq_sig_dipole
                                             
                                     if n_dipole_chunk==0:
                                         freq_dipole = freq_radial - best_dnu/2. - d01
@@ -706,9 +731,10 @@ class Chunk(FamedStar):
                         fwhm_radial = astero.get_linewidth(freq_radial,self.teff,numax)
                 
                         if n_radial_chunk==0:
+                            freq_sig_radial = freq_sig_dipole
+                            
                             if freq_radial >= min(par0):
                                 n_radial_chunk = 1
-                                freq_sig_radial = freq_sig_dipole
                                                                 
                         if n_dipole_chunk==0:
                             freq_dipole = freq_radial - best_dnu/2. - d01
@@ -746,9 +772,10 @@ class Chunk(FamedStar):
                                     fwhm_radial = astero.get_linewidth(freq_radial,self.teff,numax)
                             
                                     if n_radial_chunk==0:
+                                        freq_sig_radial = freq_sig_dipole
+                                        
                                         if freq_radial >= min(par0):
                                             n_radial_chunk = 1
-                                            freq_sig_radial = freq_sig_dipole
                                                                                         
                                     if n_dipole_chunk==0:
                                         freq_dipole = freq_radial - best_dnu/2. - d01
@@ -802,7 +829,7 @@ class Chunk(FamedStar):
                 upper_limit_freq_radial = self.cp.upper_limit_freq_radial
     
             if self.cp.print_on_screen:
-                print(' Upper limit frequency for l=0: {:.3f}  muHz'.format(upper_limit_freq_radial))
+                print(' Upper limit frequency for l=0: {:.3f}  uHz'.format(upper_limit_freq_radial))
 
             additional_freq_sig_radial = 0.
             if flag_previous_radial_mode_found != 0:
@@ -849,26 +876,35 @@ class Chunk(FamedStar):
             freq_sig_radial_chunk = freq_sig1[radial_index]
             low_cut_frequency = freq_radial_chunk - best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)) + freq_sig_radial/2.0 
   
+            print('LOW freq 879: ', low_cut_frequency)
             # Make sure that the previous l=0 mode is not included, in case the chunk belongs to the right-end tail of the oscillation envelope.
             # First verify that if a radial mode has been found from previous chunks (to the left side), the low cut frequency is not including it.
-            
+           
+            print('FLAG PREV. l=0',flag_previous_radial_mode_found)
+
             if flag_previous_radial_mode_found == 1:
-                if low_cut_frequency < freq_previous_radial + freq_sig_radial/2.:
-                    low_cut_frequency = freq_previous_radial + freq_sig_radial/2.
+                if low_cut_frequency < freq_previous_radial + freq_sig_radial:
+                    low_cut_frequency = freq_previous_radial + freq_sig_radial
             
             if flag_previous_radial_mode_found == 2:
-                if low_cut_frequency < freq_previous_radial + best_dnu*(1.0 + best_alpha*(enn_radial-1 - 0.5 - numax/best_dnu)) + freq_sig_radial/2.:
-                    low_cut_frequency = freq_previous_radial + best_dnu*(1.0 + best_alpha*(enn_radial-1 - 0.5 - numax/best_dnu)) + freq_sig_radial/2.
+                if low_cut_frequency < freq_previous_radial + best_dnu*(1.0 + best_alpha*(enn_radial-1 - 0.5 - numax/best_dnu)) + freq_sig_radial:
+                    low_cut_frequency = freq_previous_radial + best_dnu*(1.0 + best_alpha*(enn_radial-1 - 0.5 - numax/best_dnu)) + freq_sig_radial
                        
+            print('LOW freq 893: ', low_cut_frequency)
+            
             # Apply a check on the upper bound for the low cut frequency
             
             if low_cut_frequency > freq_radial_chunk - best_dnu*self.cp.dnu_lower_cut_fraction:
                 low_cut_frequency = freq_radial_chunk - best_dnu*self.cp.dnu_lower_cut_fraction
 
-            # Finally, control the radial mode soolution from GLOBAL for the previous chunk. This is to avoid that the same radial mode is identified twice in two different chunks.
+            print('LOW freq 900: ', low_cut_frequency)
+            
+            # Finally, control the radial mode solution from GLOBAL for the previous chunk. This is to avoid that the same radial mode is identified twice in two different chunks.
     
-            if low_cut_frequency <= freq_previous_radial_global + freq_sig_previous_radial_global:
-                low_cut_frequency = freq_previous_radial_global + freq_sig_previous_radial_global
+            if low_cut_frequency <= freq_previous_radial_global + freq_sig_radial_chunk:
+                low_cut_frequency = freq_previous_radial_global + freq_sig_radial_chunk
+
+            print('LOW freq 907: ', low_cut_frequency)
 
             angular_degree[radial_index] = 0
             order_number[radial_index] = enn_radial
@@ -1069,14 +1105,18 @@ class Chunk(FamedStar):
                 lower_bound_radial = midpoint_02
                 best_radial_index = max(np.where(range_maximum[0,:] <= freq_radial_chunk)[0])
                 upper_bound_radial = range_maximum[1,best_radial_index]
-                #upper_bound_radial = upper_bound_radial[0]
         
                 # Put safe conditions on the lower bound for l=0
 
                 if lower_bound_radial >= upper_bound_radial:
-                    print(' Adjusting upper frequency bound for l=0 due to swap with lower bound.')
-                    upper_bound_radial += abs(upper_bound_radial - lower_bound_radial)*2 
-        
+                    print(' Adjusting upper frequency bound for l=0 because smaller than lower bound.')
+                    #upper_bound_radial += abs(upper_bound_radial - lower_bound_radial)*2 
+                    upper_bound_radial = lower_bound_radial + abs(lower_bound_radial - lower_bound_quadrupole) 
+       
+                if (upper_bound_radial - lower_bound_radial) <= d02/2.0:
+                    print(' Enlarging the upper bound for l=0 because otherwise too close to the lower bound.')
+                    upper_bound_radial = lower_bound_radial + abs(lower_bound_radial - lower_bound_quadrupole) 
+
                 # Compute l=2 frequency uncertainty
 
                 tmp_range = np.where((par0 < upper_bound_quadrupole) & (par0 >= lower_bound_quadrupole))[0]
@@ -1101,16 +1141,15 @@ class Chunk(FamedStar):
                 if len(tmp_range) == 0:
                     print(' Not enough sampling points in the specified frequency range for l=0. Quitting program.')
                     return False
-        
 
                 iteration = 0
+
                 while len(tmp_hist_range) == 0:
                     best_radial_index += 1
 
-                    if best_radial_index <= len(freq1):
+                    if best_radial_index < len(freq1):
                         upper_bound_radial = range_maximum[iteration%2,best_radial_index]
-                        #upper_bound_radial = upper_bound_radial[0]
-                        tmp_hist_range = np.where((par_hist < upper_bound_radial) & (par_hist >= lower_bound_radial))[0]
+                        tmp_hist_range = np.where((par_hist <= upper_bound_radial) & (par_hist >= lower_bound_radial))[0]
                     else:
                         print(' Not enough bins in the specified ASEF range for l=0. Quitting program.')
                         return False
@@ -1220,6 +1259,7 @@ class Chunk(FamedStar):
                 if median_d02 > local_d02:
                     actual_d02 = median_d02
     
+            
             # Update the lower frequency limit for this chunk
 
             low_cut_frequency2 = freq_radial_chunk - best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)) + freq_sig_radial
@@ -1249,6 +1289,17 @@ class Chunk(FamedStar):
 
             freq_quadrupole_chunk = freq_radial_chunk - d02
             low_cut_frequency = freq_radial_chunk - best_dnu + freq_sig_dipole
+
+            # Make sure that the previous l=0 mode is not included, in case the chunk belongs to the right-end tail of the oscillation envelope.
+            # First verify that if a radial mode has been found from previous chunks (to the left side), the low cut frequency is not including it.
+            
+            if flag_previous_radial_mode_found == 1:
+                if low_cut_frequency < freq_previous_radial + freq_sig_radial:
+                    low_cut_frequency = freq_previous_radial + freq_sig_radial
+            
+            if flag_previous_radial_mode_found == 2:
+                if low_cut_frequency < freq_previous_radial + best_dnu*(1.0 + best_alpha*(enn_radial-1 - 0.5 - numax/best_dnu)) + freq_sig_radial:
+                    low_cut_frequency = freq_previous_radial + best_dnu*(1.0 + best_alpha*(enn_radial-1 - 0.5 - numax/best_dnu)) + freq_sig_radial
 
         # Check whether the lower cut frequency of the chunk exceeds the position of a potential ocutpole mode
         # Start by defining the l=3 search region
@@ -1282,7 +1333,7 @@ class Chunk(FamedStar):
             low_cut_frequency = self.cp.low_cut_frequency
 
         if self.cp.print_on_screen:
-            print(' Lower limit for chunk frequency range: {:.3f} muHz\n'.format(low_cut_frequency))
+            print(' Lower limit for chunk frequency range: {:.3f} uHz\n'.format(low_cut_frequency))
 
         # Now check that the previous order l=0 frequency was not selected as a potential dipole mode by the ASEF.
         # If it is selected, then remove it from the sample of identified frequencies.
@@ -1429,7 +1480,7 @@ class Chunk(FamedStar):
             fwhm_radial_fit = np.median(fwhm_radial_fit_array)
     
             if self.cp.print_on_screen:
-                print(' FWHM (l=0) = {:.3f} muHz \n'.format(fwhm_radial_fit))
+                print(' FWHM (l=0) = {:.3f} uHz \n'.format(fwhm_radial_fit))
 
 
         # Define a detection probability array for each frequency peak. Set it to -99, meaning all
@@ -1584,7 +1635,7 @@ class Chunk(FamedStar):
                     
                         for i in range(0, len(tested_peak_indices)):
                             with open(probability_filenames[tested_peak_indices[i]],'w') as f:
-                                f.write('# Detection probabilities for l={} at {:.2f} muHz\n'.format(angular_degree_quadrupole_radial[tested_peak_indices[i]],freq1[quadrupole_radial_index[tested_peak_indices[i]]])) 
+                                f.write('# Detection probabilities for l={} at {:.2f} uHz\n'.format(angular_degree_quadrupole_radial[tested_peak_indices[i]],freq1[quadrupole_radial_index[tested_peak_indices[i]]])) 
                                 f.write('# Each line corresponds to a different run of the same test.\n')
                                 f.write('# Col 1: p(BA).\n')
                                 for val in p_BA[:,i]:
@@ -1606,7 +1657,7 @@ class Chunk(FamedStar):
                         max_p_BA = round(max(p_BA),3)
 
                         if self.cp.print_on_screen:
-                            print('\n Peak detection test for l={} at {:.2f} muHz'.format(angular_degree_quadrupole_radial[tested_peak_indices[i]],freq1[quadrupole_radial_index[tested_peak_indices[i]]]))
+                            print('\n Peak detection test for l={} at {:.2f} uHz'.format(angular_degree_quadrupole_radial[tested_peak_indices[i]],freq1[quadrupole_radial_index[tested_peak_indices[i]]]))
                             print(' P (One Lorentzian vs Only Background): {} \n'.format(max_p_BA))
                            
                         detection_probability[quadrupole_radial_index[tested_peak_indices[i]]] = max_p_BA
@@ -1735,9 +1786,9 @@ class Chunk(FamedStar):
                             nu0[k] = np.sum(par_nu0*post)/np.sum(post)
                         
                         with open(probability_filename,'w') as f:
-                            f.write('# Detection probabilities for l=2,0 duplet at {:.2f} + {:.2f} muHz\n'.format(freq1[quadrupole_index],freq1[radial_index]))
+                            f.write('# Detection probabilities for l=2,0 duplet at {:.2f} + {:.2f} uHz\n'.format(freq1[quadrupole_index],freq1[radial_index]))
                             f.write('# Each line corresponds to a different run of the same test.\n')
-                            f.write('# Col 1: p(BA), Col 2: p(DA), Col 3: p(DB), Col 4: nu0 (microHz).\n')
+                            f.write('# Col 1: p(BA), Col 2: p(DA), Col 3: p(DB), Col 4: nu0 (uHz).\n')
                             for l in range(0,self.cp.n_peak_test):
                                 f.write('{:.4f}  {:10.4f}  {:10.4f}  {:15.4f}\n'.format(p_BA[l],p_DA[l],p_DB[l],nu0[l]))
                             
@@ -1764,11 +1815,12 @@ class Chunk(FamedStar):
                     max_p_DB = round(max(p_DB),3)
 
                     if self.cp.print_on_screen:
-                        print('\n Peak detection test for l=2,0 duplet at {:.2f} + {:.2f} muHz\n'.format(freq1[quadrupole_index],freq1[radial_index]))
+                        print('\n Peak detection test for l=2,0 duplet at {:.2f} + {:.2f} uHz\n'.format(freq1[quadrupole_index],freq1[radial_index]))
                         print(' P (One Lorentzian vs Only Background): ',max_p_BA)
                         print(' P (Two Lorentzians vs Only Background): ',max_p_DA)
-                        print(' P (Two Lorentzians vs One Lorentzian): \n',max_p_DB)
-                
+                        print(' P (Two Lorentzians vs One Lorentzian): ',max_p_DB)
+                        print('\n')
+
                     if max_p_DB > 0.5:
                         # Here we have a peak blending. The two peaks are treated together and are considered
                         # detected only if their p_DA >= 0.993.
@@ -1794,6 +1846,7 @@ class Chunk(FamedStar):
                         print(' ----------------------------------------------------------\n')
                         
 
+
         # --------------------------------------------------------------
         # Dipole mode(s) and Octupole mode
         # --------------------------------------------------------------
@@ -1806,400 +1859,161 @@ class Chunk(FamedStar):
         # If no dipole modes were identified from the global fit, still give it a try in the chunk modality
         # and check whether there could be a potential dipole mode. This is assuming that l=0 was found!
 
-        if (best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg):
-            dipole_indices = np.where(angular_degree==1)[0]
-        else:
-            # For MS stars, only check the modes below nu0 - Dnu/2 + freq_dipole_sig, and above the lower limit of the l=3 region. 
-            # All remaining ones are flagged as undetected. This will speed up the mode identification process.
+        largest_octupole_fwhm = 0.0
+       
+        if self.cp.dipole_search_activated == 1: 
+            if (best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg):
+                dipole_indices = np.where(angular_degree==1)[0]
 
-            if n_radial_chunk != 0:
-                upper_dipole_limit = freq_radial_chunk - best_dnu/2.0 + freq_sig_radial
+                # Discard peaks that are too close to l=0 and l=2 modes of the chunk
+                # This is especially useful for low order chunks
+   
+                if n_radial_chunk != 0:
+                    freq_sig_global = freq_sig_radial
+                else:
+                    freq_sig_global = freq_sig_dipole
+    
+                n_sigma = 1.0 
+                dipole_indices = np.where((angular_degree == 1) & ((freq1 > freq_radial_chunk + n_sigma*freq_sig_global) | (freq1 < freq_radial_chunk - n_sigma*freq_sig_global)) & ((freq1 > freq_quadrupole_chunk + n_sigma*freq_sig_global) | (freq1 < freq_quadrupole_chunk - n_sigma*freq_sig_global)))[0]
+                bad_dipole_indices = np.where((angular_degree == 1) & (((freq1 <= freq_radial_chunk + n_sigma*freq_sig_global) & (freq1 >= freq_radial_chunk - n_sigma*freq_sig_global)) | ((freq1 <= freq_quadrupole_chunk + n_sigma*freq_sig_global) & (freq1 >= freq_quadrupole_chunk - n_sigma*freq_sig_global))))[0]
+    
+                if len(bad_dipole_indices) > 0:
+                    detection_probability[bad_dipole_indices] = 0.0
             else:
-                upper_dipole_limit = freq_radial_chunk - best_dnu/2.0 + freq_sig_dipole
-    
-            if upper_dipole_limit > freq_radial_chunk - best_dnu/4.0:
-                upper_dipole_limit = freq_radial_chunk - best_dnu/4.0
-    
-            dipole_indices = np.where((freq1 < upper_dipole_limit) & (freq1 >= octupole_freq_lower) & (angular_degree==1))[0]
-            bad_dipole_indices = np.where(((freq1 >= upper_dipole_limit) | (freq1 < octupole_freq_lower)) & (angular_degree==1))[0]
-    
-            if len(bad_dipole_indices) > 0:
-                detection_probability[bad_dipole_indices] = 0.0
+                # For MS stars, only check the modes below nu0 - Dnu/2 + freq_dipole_sig, and above the lower limit of the l=3 region. 
+                # All remaining ones are flagged as undetected. This will speed up the mode identification process.
 
-        if len(dipole_indices) > 0:
-            # Peak significance test for candidate l=1 mode(s)
+                if n_radial_chunk != 0:
+                    upper_dipole_limit = freq_radial_chunk - best_dnu/2.0 + freq_sig_radial
+                else:
+                    upper_dipole_limit = freq_radial_chunk - best_dnu/2.0 + freq_sig_dipole
+    
+                if upper_dipole_limit > freq_radial_chunk - best_dnu/4.0:
+                    upper_dipole_limit = freq_radial_chunk - best_dnu/4.0
+    
+                dipole_indices = np.where((freq1 < upper_dipole_limit) & (freq1 >= octupole_freq_lower) & (angular_degree==1))[0]
+                bad_dipole_indices = np.where(((freq1 >= upper_dipole_limit) | (freq1 < octupole_freq_lower)) & (angular_degree==1))[0]
+    
+                if len(bad_dipole_indices) > 0:
+                    detection_probability[bad_dipole_indices] = 0.0
+
+            if len(dipole_indices) > 0:
+                # Peak significance test for candidate l=1 mode(s)
             
-            # Perform a peak significance test in order to identify all the significant peaks marked as l=1.
-            # If the star is a RG, add up the test for sinc^2 profile to account for possible unresolved mixed modes.
+                # Perform a peak significance test in order to identify all the significant peaks marked as l=1.
+                # If the star is a RG, add up the test for sinc^2 profile to account for possible unresolved mixed modes.
 
-            height_ratio_array = np.zeros(len(dipole_indices))
-            test_dirs = np.zeros((3,len(dipole_indices)),dtype='U200')
-            prior_filenames = np.zeros((3,len(dipole_indices)),dtype='U200')
-            data_range_filenames = np.zeros((3,len(dipole_indices)),dtype='U200')
-            probability_filenames = np.zeros(len(dipole_indices),dtype='U200')
-            run_test = []
-            flag_run_test = 0
+                height_ratio_array = np.zeros(len(dipole_indices))
+                test_dirs = np.zeros((3,len(dipole_indices)),dtype='U200')
+                prior_filenames = np.zeros((3,len(dipole_indices)),dtype='U200')
+                data_range_filenames = np.zeros((3,len(dipole_indices)),dtype='U200')
+                probability_filenames = np.zeros(len(dipole_indices),dtype='U200')
+                run_test = []
+                flag_run_test = 0
 
-            for i in range(0, len(dipole_indices)):
-                # Take smallest range possible that is available to build the frequency prior of the given peak. This will avoid that the peak may result not
-                # significant if the parameter space is too large.
-                # For each peak consider the maximum data range between the range and the division  
+                for i in range(0, len(dipole_indices)):
+                    # Take smallest range possible that is available to build the frequency prior of the given peak. This will avoid that the peak may result not
+                    # significant if the parameter space is too large.
+                    # For each peak consider the maximum data range between the range and the division  
                 
-                freq_index = dipole_indices[i]
-                left_bound = min([range_maximum[0,freq_index],divisions_maximum[0,freq_index]])
-                right_bound = max([range_maximum[1,freq_index],divisions_maximum[1,freq_index]])
+                    freq_index = dipole_indices[i]
+                    left_bound = min([range_maximum[0,freq_index],divisions_maximum[0,freq_index]])
+                    right_bound = max([range_maximum[1,freq_index],divisions_maximum[1,freq_index]])
 
-                # For RG and SG stars, adopt a narrower FWHM prior for those l=1 modes outside the l=3 region.
-                # This will speed up the computation of the peak test by reducing the parameter space.
+                    # For RG and SG stars, adopt a narrower FWHM prior for those l=1 modes outside the l=3 region.
+                    # This will speed up the computation of the peak test by reducing the parameter space.
         
-                right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_radial*2
-                left_fwhm = self.cp.fwhm_lower_bound
+                    right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_radial*2
+                    left_fwhm = self.cp.fwhm_lower_bound
 
-                if (best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg):
-                    right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_radial
+                    if (best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg):
+                        right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_radial
             
-                    # Allow for a very narrow FWHM accounting for unresolved mixed modes
+                        # Allow for a very narrow FWHM accounting for unresolved mixed modes
                     
-                    if (freq1[freq_index] >= octupole_freq_upper) or (freq1[freq_index] <= octupole_freq_lower):
-                        right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_dipole
+                        if (freq1[freq_index] >= octupole_freq_upper) or (freq1[freq_index] <= octupole_freq_lower):
+                            right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_dipole
             
-                    # Do not exceed the width given by the frequency range of the peak if the star is a RG, because l=1 modes are narrow. 
+                        # Do not exceed the width given by the frequency range of the peak if the star is a RG, because l=1 modes are narrow. 
                     
-                    if best_dnu < self.cp.dnu_rg:
-                        range_peak = abs(range_maximum[1,freq_index] - range_maximum[0,freq_index])
-                        if right_fwhm > range_peak:
-                            right_fwhm = range_peak
+                        if best_dnu < self.cp.dnu_rg:
+                            range_peak = abs(range_maximum[1,freq_index] - range_maximum[0,freq_index])
+                            if right_fwhm > range_peak:
+                                right_fwhm = range_peak
 
-                tmp_freq_peak = np.where((freq <= right_bound) & (freq >= left_bound))[0]
-                bg_peak = np.mean(bg_level_local[tmp_freq_peak])
-                response_peak = np.mean((np.sin(np.pi/2. * freq[tmp_freq_peak]/nyq) / (np.pi/2. * freq[tmp_freq_peak]/nyq))**2)
-                amplitude = np.sqrt((abs(max(spsd[tmp_freq_peak]) - bg_peak)/response_peak)*np.pi*right_fwhm)
-                height_ratio = spsd_maximum[freq_index]/(bg_peak*self.cp.height_ratio_threshold)
-                height_ratio_array[i] = height_ratio
+                    tmp_freq_peak = np.where((freq <= right_bound) & (freq >= left_bound))[0]
+                    bg_peak = np.mean(bg_level_local[tmp_freq_peak])
+                    response_peak = np.mean((np.sin(np.pi/2. * freq[tmp_freq_peak]/nyq) / (np.pi/2. * freq[tmp_freq_peak]/nyq))**2)
+                    amplitude = np.sqrt((abs(max(spsd[tmp_freq_peak]) - bg_peak)/response_peak)*np.pi*right_fwhm)
+                    height_ratio = spsd_maximum[freq_index]/(bg_peak*self.cp.height_ratio_threshold)
+                    height_ratio_array[i] = height_ratio
                         
-                peak_number = str(int(freq_index))
-                test_name = run + '_' + peak_number
-                test_nameA = test_name + 'A'           # Only background
-                test_nameB = test_name + 'B'           # Background and Lorentzian profile
-                test_nameC = test_name + 'C'           # Background and Sinc^2 profile
-                test_dirA = self.star_dir/self.cp.pb_subdir/test_nameA
-                test_dirB = self.star_dir/self.cp.pb_subdir/test_nameB
-                test_dirC = self.star_dir/self.cp.pb_subdir/test_nameC
-                probability_filename = self.star_dir/self.cp.pb_subdir/('detectionProbability_' + test_name + '.txt')    
-                filenameA = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + test_nameA + '.txt')
-                filenameB = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + test_nameB + '.txt')
-                filenameC = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + test_nameC + '.txt')
+                    peak_number = str(int(freq_index))
+                    test_name = run + '_' + peak_number
+                    test_nameA = test_name + 'A'           # Only background
+                    test_nameB = test_name + 'B'           # Background and Lorentzian profile
+                    test_nameC = test_name + 'C'           # Background and Sinc^2 profile
+                    test_dirA = self.star_dir/self.cp.pb_subdir/test_nameA
+                    test_dirB = self.star_dir/self.cp.pb_subdir/test_nameB
+                    test_dirC = self.star_dir/self.cp.pb_subdir/test_nameC
+                    probability_filename = self.star_dir/self.cp.pb_subdir/('detectionProbability_' + test_name + '.txt')    
+                    filenameA = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + test_nameA + '.txt')
+                    filenameB = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + test_nameB + '.txt')
+                    filenameC = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + test_nameC + '.txt')
 
-                filename_rangeA = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + test_nameA + '.txt')
-                filename_rangeB = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + test_nameB + '.txt')
-                filename_rangeC = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + test_nameC + '.txt')
-                test_dirs[:,i] = [test_dirA,test_dirB,test_dirC]
-                probability_filenames[i] = probability_filename
-                prior_filenames[:,i] = [filenameA,filenameB,filenameC]
-                data_range_filenames[:,i] = [filename_rangeA,filename_rangeB,filename_rangeC]
+                    filename_rangeA = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + test_nameA + '.txt')
+                    filename_rangeB = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + test_nameB + '.txt')
+                    filename_rangeC = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + test_nameC + '.txt')
+                    test_dirs[:,i] = [test_dirA,test_dirB,test_dirC]
+                    probability_filenames[i] = probability_filename
+                    prior_filenames[:,i] = [filenameA,filenameB,filenameC]
+                    data_range_filenames[:,i] = [filename_rangeA,filename_rangeB,filename_rangeC]
         
-                if height_ratio < 1.0:
-                    if not os.path.isfile(probability_filename):
-                        # Set up priors for the peak test profile
-                        
-                        data_freq_boundaries = [left_bound,right_bound] 
-                        freq_prior = [freq1[freq_index] - freq_sig1[freq_index],freq1[freq_index] + freq_sig1[freq_index]]
-                        amplitude_prior = [0.0,amplitude]
-                        fwhm_prior = [left_fwhm,right_fwhm]
-                        bkg_prior = [self.cp.bkg_prior_lower,self.cp.bkg_prior_upper]
-                        height_prior = [0.0,spsd_maximum[freq_index]*1.5]
-                        sinc_prior = [-1,-1]
-               
-                        boundariesA = [bkg_prior]
-                        boundariesB = [freq_prior,amplitude_prior,fwhm_prior,bkg_prior]
-                
-                        diamonds.write_data_range(data_range_filenames[0,i],data_freq_boundaries)
-                        diamonds.write_data_range(data_range_filenames[1,i],data_freq_boundaries)
-                        diamonds.write_uniform_prior(prior_filenames[0,i],boundariesA)
-                        diamonds.write_uniform_prior(prior_filenames[1,i],boundariesB)
-                
-                        if best_dnu < self.cp.dnu_rg:
-                            boundariesC = [freq_prior,height_prior,bkg_prior,sinc_prior]
-                            diamonds.write_data_range(data_range_filenames[2,i],data_freq_boundaries)
-                            diamonds.write_uniform_prior(prior_filenames[2,i],boundariesC)
-                            run_test.extend([test_nameA,test_nameB,test_nameC])
-                        else:
-                            run_test.extend([test_nameA,test_nameB])
-                        flag_run_test +=1
-
-            tested_peak_indices = np.where(height_ratio_array < 1.0)[0]
-            if len(tested_peak_indices) > 0:
-                if self.cp.print_on_screen:
-                    print('\n --------------------------------------------------------')
-                    print(' Peak Detection Test for candidate l=1 mode(s).')
- 
-                if flag_run_test > 0:
-                    if self.cp.print_on_screen:
-                        print(' A total of {} tests must be performed.'.format(len(run_test))) 
-            
-                    fwhm_detection_fit = np.zeros((self.cp.n_peak_test,len(tested_peak_indices)))
-                    p_BA = np.zeros((self.cp.n_peak_test,len(tested_peak_indices)))
-            
-                    if best_dnu < self.cp.dnu_rg:
-                        p_CA = np.zeros((self.cp.n_peak_test,len(tested_peak_indices)))
-                        p_CB = np.zeros((self.cp.n_peak_test,len(tested_peak_indices)))
-            
-                    for k in range(0, self.cp.n_peak_test):
-                        peakbagging_parameters = {'subdir':       self.cp.pb_subdir,
-                                                  'run':          run_test,
-                                                  'background':   background_name,
-                                                  'fwhm':         -1.0,
-                                                  'filename_run': test_name}
-                
-                        flag_computation_completed = diamonds.run_peakbagging(self.catalog_id,self.star_id,peakbagging_parameters,1,0,0, self.cp.dp_pb, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename)
-                
-                        if self.cp.print_on_screen:
-                            print(' Iteration #{} completed.'.format(k))
- 
-                        for i in range (0, len(dipole_indices[tested_peak_indices])):
-                            # Compute the estimate for FWHM from model B.
-                            
-                            par_fwhm = np.loadtxt(test_dirs[1,tested_peak_indices[i]]+'/peakbagging_parameter002.txt')
-                            post = np.loadtxt(test_dirs[1,tested_peak_indices[i]]+'/peakbagging_posteriorDistribution.txt')
-                            post /= max(post)
-                            fwhm_detection_fit[k,i] = np.sum(par_fwhm*post)/np.sum(post)
-                        
-                            ln_evidA = np.loadtxt(test_dirs[0,tested_peak_indices[i]]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
-                            ln_evidB = np.loadtxt(test_dirs[1,tested_peak_indices[i]]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
-                    
-                            if (ln_evidA >= ln_evidB):
-                                ln_evidAB = ln_evidA + np.log(1+np.exp(ln_evidB-ln_evidA)) 
-                            else:
-                                ln_evidAB = ln_evidB + np.log(1+np.exp(ln_evidA-ln_evidB))
-                    
-                            p_BA[k,i] = np.exp(ln_evidB - ln_evidAB)
-                    
-                            if best_dnu < self.cp.dnu_rg:
-                                ln_evidC = np.loadtxt(test_dirs[2,tested_peak_indices[i]]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
-                        
-                                if (ln_evidA >= ln_evidC):
-                                    ln_evidAC = ln_evidA + np.log(1+np.exp(ln_evidC-ln_evidA)) 
-                                else:
-                                    ln_evidAC = ln_evidC + np.log(1+np.exp(ln_evidA-ln_evidC))
-                        
-                                if (ln_evidB >= ln_evidC):
-                                    ln_evidBC = ln_evidB + np.log(1+np.exp(ln_evidC-ln_evidB)) 
-                                else:
-                                    ln_evidBC = ln_evidC + np.log(1+np.exp(ln_evidB-ln_evidC))
-                    
-                                p_CA[k,i] = np.exp(ln_evidC - ln_evidAC)
-                                p_CB[k,i] = np.exp(ln_evidC - ln_evidBC)
-                            
-                    for i in range(0, len(dipole_indices[tested_peak_indices])):
-                        
-                        with open(probability_filenames[tested_peak_indices[i]],'w') as f:
-                            f.write('# Detection probabilities for frequency peak {:.3f} muHz\n'.format(freq1[dipole_indices[tested_peak_indices[i]]]))
-                            f.write('# Each line corresponds to a different run of the same test.\n')
-                            if best_dnu < self.cp.dnu_rg:
-                                f.write('# Col 1: p(BA), Col 2: p(CA), Col 3: p(CB), Col 4: FWHM single (microHz).\n')
-                                for k in range(0,self.cp.n_peak_test):
-                                    f.write('{:.4f}  {:10.4f}  {:10.4f}  {:10.4f}\n'.format(p_BA[k,i],p_CA[k,i],p_CB[k,i],fwhm_detection_fit[k,i]))
-                            else:
-                                f.write('# Col 1: p(BA), Col 2: FWHM single (microHz).\n')
-                                for k in range(0,self.cp.n_peak_test):
-                                    f.write('{:.4f}  {:10.4f}\n'.format(p_BA[k,i],fwhm_detection_fit[k,i]))
-                                    
-                        if self.cp.save_test_files==0:
-                            # Remove test folders and prior files if required
-                            
-                            shutil.rmtree(test_dirs[0,tested_peak_indices[i]])
-                            shutil.rmtree(test_dirs[1,tested_peak_indices[i]])
-                            os.remove(prior_filenames[0,tested_peak_indices[i]])
-                            os.remove(prior_filenames[1,tested_peak_indices[i]])
-                            os.remove(data_range_filenames[0,tested_peak_indices[i]])
-                            os.remove(data_range_filenames[1,tested_peak_indices[i]])
-                            if best_dnu < self.cp.dnu_rg:
-                                shutil.rmtree(test_dirs[2,tested_peak_indices[i]])
-                                os.remove(prior_filenames[2,tested_peak_indices[i]])
-                                os.remove(data_range_filenames[2,tested_peak_indices[i]])     
-
-                for i in range(0, len(dipole_indices[tested_peak_indices])):
-                    if best_dnu < self.cp.dnu_rg:
-                        p_BA,p_CA,p_CB = np.loadtxt(probability_filenames[tested_peak_indices[i]],usecols=(0,1,2),unpack=True)
-                    else:
-                        p_BA = np.loadtxt(probability_filenames[tested_peak_indices[i]],usecols=(0,))
-            
-                    # Consider the maximum probabilities among the different runs. Approximate up to third decimal digit.
-                    
-                    max_p_BA = round(max(p_BA),3)
-                    detection_probability[dipole_indices[tested_peak_indices[i]]] = max_p_BA
-            
-                    if best_dnu < self.cp.dnu_rg:
-                        max_p_CA = round(max(p_CA),3)
-                        max_p_CB = round(max(p_CB),3)
-                
-                        # For a RG star take the maximum probability between the two (Lorentzian and Sinc^2) to deem the peak as 
-                        # detected. In this way one makes sure to incorporate the result from the best model possible,
-                        # between the two tested.
-                        
-                        if max_p_CB > 0.5:
-                            detection_probability[dipole_indices[tested_peak_indices[i]]] = max_p_CA
-                            sinc_profile_flag[dipole_indices[tested_peak_indices[i]]] = 1
-                        else:
-                            detection_probability[dipole_indices[tested_peak_indices[i]]] = max_p_BA
-
-                    if self.cp.print_on_screen:
-                        print('\n Peak detection test for frequency peak #{} at {:.2f} muHz'.format(tested_peak_indices[i],freq1[dipole_indices[tested_peak_indices[i]]]))
-                        print(' P (Lorentzian vs Only Background): {}'.format(max_p_BA))
-                        if best_dnu < self.cp.dnu_rg:
-                            print(' P (Sinc^2 vs Only Background): '.format(max_p_CA))
-                            print(' P (Sinc^2 vs Lorentzian): '.format(max_p_CB))
-                        print('\n')
-            
-                if self.cp.print_on_screen:
-                    print(' Peak Detection Test for candidate l=1 mode(s) completed.') 
-                    print(' --------------------------------------------------------\n')
-                    
-            # -------------------------------------------------------------
-            # Peak rotation and duplet test for all significant candidate l=1 modes
-            # -------------------------------------------------------------
-            
-            # Update the number of dipole modes in the chunk by considering only the significant peaks. 
-            # For the significant peaks (if any) perform a rotation test to check whether the peaks are individuals or multiplets. If the rotation
-            # test is positive, then also save the rotational splitting associated with the fit, so that the individual
-            # frequency components can be reconstructed. For RG stars, add the duplet test, to check whether the peak is actually constituted by
-            # two adjacent mixed modes of different g-mode order n_g (i.e. not a rotational splitting effect).
-            # Perform the test only if explicitly requested through the input configuring parameter file.
-           
-            detected_dipole_indices = np.where((angular_degree==1) & ((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0)) & (sinc_profile_flag != 1))[0]
-            if self.cp.rotation_test_activated:    
-                if len(detected_dipole_indices) > 0:
-                    n_dipole_chunk = len(detected_dipole_indices)
-                    test_dirs = np.zeros((3,len(detected_dipole_indices)),dtype='U200')
-                    prior_filenames = np.zeros((3,len(detected_dipole_indices)),dtype='U200')
-                    data_range_filenames = np.zeros((3,len(detected_dipole_indices)),dtype='U200')
-                    probability_filenames = np.zeros(len(detected_dipole_indices),dtype='U200')
-                    run_test = []
-                    flag_run_test = 0
-
-                    for j in range(0, len(detected_dipole_indices)):
-                        dipole_index = detected_dipole_indices[j]
-                        
-                        # For each peak consider the maximum data range between the range and the division
-                        
-                        left_bound = min([range_maximum[0,dipole_index],divisions_maximum[0,dipole_index]])
-                        right_bound = max([range_maximum[1,dipole_index],divisions_maximum[1,dipole_index]])
-                        peak_number = str(int(dipole_index))
-                        test_name = run + '_' + peak_number
-                        test_nameE = test_name + 'E'           # Lorentzian profile, fixed background
-                        test_nameF = test_name + 'F'           # Lorentzian profile split by rotation (considered as l=1), fixed background
-                        test_nameG = test_name + 'G'           # Two Lorentzian profiles, fixed background
-                        test_dirE = self.star_dir/self.cp.pb_subdir/test_nameE
-                        test_dirF = self.star_dir/self.cp.pb_subdir/test_nameF
-                        test_dirG = self.star_dir/self.cp.pb_subdir/test_nameG
-                        rotation_probability_filename = self.star_dir/self.cp.pb_subdir/('rotationProbability_' + test_name + '.txt')
-                        filenameE = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + test_nameE + '.txt')
-                        filenameF = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + test_nameF + '.txt')
-                        filenameG = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + test_nameG + '.txt')
-                        filename_rangeE = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + test_nameE + '.txt')
-                        filename_rangeF = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + test_nameF + '.txt')
-                        filename_rangeG = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + test_nameG + '.txt')
-
-                        test_dirs[:,j] = [test_dirE,test_dirF,test_dirG]
-                        probability_filenames[j] = rotation_probability_filename
-                        prior_filenames[:,j] = [filenameE,filenameF,filenameG]
-                        data_range_filenames[:,j] = [filename_rangeE,filename_rangeF,filename_rangeG]
-               
-                        if not os.path.isfile(rotation_probability_filename):
-                            # For RG and SG stars, adopt a narrower FWHM prior for those l=1 modes outside the l=3 region.
-                            # This will speed up the computation of the peak test and improve the actual fits of the 
-                            # rotational multiplets.
-                            # Also, if the star is a MS, make the prior on the frequency centroid as narrow as possible.                    
-                        
-                            right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_radial
-                            left_fwhm = self.cp.fwhm_lower_bound
-
-                            freq_prior = [freq1[dipole_index] - freq_sig1[dipole_index],freq1[dipole_index] + freq_sig1[dipole_index]]
-
-                            if (best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg):
-                                freq_prior = [range_maximum[0,dipole_index],range_maximum[1,dipole_index]]
-                        
-                                if (freq1[dipole_index] >= octupole_freq_upper) or (freq1[dipole_index] <= octupole_freq_lower):
-                                    if best_dnu < self.cp.dnu_threshold:
-                                        right_fwhm = fwhm_radial_fit
-                        
-                                        # Do not exceed the width given by the frequency range of the peak if the star is a RG or late SG, because l=1 modes are narrow. 
-                        
-                                        range_peak = abs(range_maximum[1,freq_index] - range_maximum[0,freq_index])
-                        
-                                        if right_fwhm > range_peak:
-                                            right_fwhm = range_peak
-                                    else:
-                                        right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_dipole
-                            
-                            tmp_peak = np.where((freq >= left_bound) & (freq <= right_bound))[0]
-                            bg_peak = np.mean(bg_level_local[tmp_peak])
-                            response_peak = np.mean((np.sin(np.pi/2. * freq[tmp_peak]/nyq) / (np.pi/2. * freq[tmp_peak]/nyq))**2)
-
-                            # For the amplitude estimate of the rotational multiplet incorporate the np.sqrt(2) factor to take into account a case with i=90 degrees
-                        
-                            amplitude = np.sqrt((abs(max(spsd[tmp_peak]) - bg_peak)/response_peak)*np.pi*right_fwhm)    
-                        
+                    if height_ratio < 1.0:
+                        if not os.path.isfile(probability_filename):
                             # Set up priors for the peak test profile
                         
-                            data_freq_boundaries = [left_bound,right_bound]
-                            freq_duplet_prior = [range_maximum[0,dipole_index],range_maximum[1,dipole_index]]
-                            duplet_split_prior = [freqbin*2,abs(freq_duplet_prior[1]-freq_duplet_prior[0])]
+                            data_freq_boundaries = [left_bound,right_bound] 
+                            freq_prior = [freq1[freq_index] - freq_sig1[freq_index],freq1[freq_index] + freq_sig1[freq_index]]
                             amplitude_prior = [0.0,amplitude]
                             fwhm_prior = [left_fwhm,right_fwhm]
-
-                            # Divide the frequency prior range into nearly three parts
-                        
-                            rot_split = abs(freq_prior[1] - freq_prior[0])/self.cp.rot_split_scaling
-                            rot_split_prior = [freqbin*2,rot_split]
- 
-                            # If the frequency resolution is comparable to the expected separation among the fine-structure peaks, then skip the test. 
-                        
-                            if duplet_split_prior[0] >= duplet_split_prior[1]*0.5:
-                                continue  
-                            if rot_split_prior[0] >= rot_split_prior[1]*0.5:
-                                continue
-                    
-                            cosi_prior = [self.cp.cosi_prior_lower,self.cp.cosi_prior_upper]
-                            boundariesE = [freq_prior,amplitude_prior,fwhm_prior]
-                            boundariesF = [freq_prior,amplitude_prior,fwhm_prior,rot_split_prior,cosi_prior] 
-                            diamonds.write_data_range(data_range_filenames[0,j],data_freq_boundaries)
-                            diamonds.write_data_range(data_range_filenames[1,j],data_freq_boundaries)
-                            diamonds.write_uniform_prior(prior_filenames[0,j],boundariesE)
-                            diamonds.write_uniform_prior(prior_filenames[1,j],boundariesF)
+                            bkg_prior = [self.cp.bkg_prior_lower,self.cp.bkg_prior_upper]
+                            height_prior = [0.0,spsd_maximum[freq_index]*1.5]
+                            sinc_prior = [-1,-1]
                    
+                            boundariesA = [bkg_prior]
+                            boundariesB = [freq_prior,amplitude_prior,fwhm_prior,bkg_prior]
+                
+                            diamonds.write_data_range(data_range_filenames[0,i],data_freq_boundaries)
+                            diamonds.write_data_range(data_range_filenames[1,i],data_freq_boundaries)
+                            diamonds.write_uniform_prior(prior_filenames[0,i],boundariesA)
+                            diamonds.write_uniform_prior(prior_filenames[1,i],boundariesB)
+                
                             if best_dnu < self.cp.dnu_rg:
-                                boundariesG = [freq_duplet_prior,amplitude_prior,fwhm_prior,duplet_split_prior,amplitude_prior,fwhm_prior]
-                        
-                                diamonds.write_data_range(data_range_filenames[2,j],data_freq_boundaries)
-                                diamonds.write_uniform_prior(prior_filenames[2,j],boundariesG)
-                        
-                                run_test.extend([test_nameE,test_nameF,test_nameG])
+                                boundariesC = [freq_prior,height_prior,bkg_prior,sinc_prior]
+                                diamonds.write_data_range(data_range_filenames[2,i],data_freq_boundaries)
+                                diamonds.write_uniform_prior(prior_filenames[2,i],boundariesC)
+                                run_test.extend([test_nameA,test_nameB,test_nameC])
                             else:
-                                run_test.extend([test_nameE,test_nameF])
-                            flag_run_test += 1
+                                run_test.extend([test_nameA,test_nameB])
+                            flag_run_test +=1
 
+                tested_peak_indices = np.where(height_ratio_array < 1.0)[0]
+                if len(tested_peak_indices) > 0:
                     if self.cp.print_on_screen:
-                        print('\n ---------------------------------------------')
-                        print(' Peak Rotation Test for l=1 mode(s).' )
-            
+                        print('\n --------------------------------------------------------')
+                        print(' Peak Detection Test for candidate l=1 mode(s).')
+ 
                     if flag_run_test > 0:
                         if self.cp.print_on_screen:
                             print(' A total of {} tests must be performed.'.format(len(run_test))) 
-                                
-                        p_FE = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
-                        fwhm_rotation_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
-                        rot_split_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
-                        cosi_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
-                        central_freq_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
-
+            
+                        fwhm_detection_fit = np.zeros((self.cp.n_peak_test,len(tested_peak_indices)))
+                        p_BA = np.zeros((self.cp.n_peak_test,len(tested_peak_indices)))
+            
                         if best_dnu < self.cp.dnu_rg:
-                            p_GE = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
-                            p_GF = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
-                            left_freq_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
-                            right_freq_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
-                            left_fwhm_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
-                            right_fwhm_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
+                            p_CA = np.zeros((self.cp.n_peak_test,len(tested_peak_indices)))
+                            p_CB = np.zeros((self.cp.n_peak_test,len(tested_peak_indices)))
             
                         for k in range(0, self.cp.n_peak_test):
                             peakbagging_parameters = {'subdir':       self.cp.pb_subdir,
@@ -2207,381 +2021,642 @@ class Chunk(FamedStar):
                                                       'background':   background_name,
                                                       'fwhm':         -1.0,
                                                       'filename_run': test_name}
-
-                            flag_computation_completed = diamonds.run_peakbagging(self.catalog_id,self.star_id,peakbagging_parameters,1,0,0,self.cp.dp_pb, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename)
-                    
+                
+                            flag_computation_completed = diamonds.run_peakbagging(self.catalog_id,self.star_id,peakbagging_parameters,1,0,0, self.cp.dp_pb, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename)
+                
                             if self.cp.print_on_screen:
-                                print,' Iteration #{} completed.'.format(k) 
-                                        
-                            for j in range(0, len(detected_dipole_indices)):
-                                # Make sure that the given peak has been tested.
+                                print(' Iteration #{} completed.'.format(k))
+ 
+                            for i in range (0, len(dipole_indices[tested_peak_indices])):
+                                # Compute the estimate for FWHM from model B.
+                            
+                                par_fwhm = np.loadtxt(test_dirs[1,tested_peak_indices[i]]+'/peakbagging_parameter002.txt')
+                                post = np.loadtxt(test_dirs[1,tested_peak_indices[i]]+'/peakbagging_posteriorDistribution.txt')
+                                post /= max(post)
+                                fwhm_detection_fit[k,i] = np.sum(par_fwhm*post)/np.sum(post)
                         
-                                if os.path.isfile(test_dirs[0,j]+'/peakbagging_evidenceInformation.txt'):
-                                    ln_evidE = np.loadtxt(test_dirs[0,j]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
-                                    ln_evidF = np.loadtxt(test_dirs[1,j]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
-                                    if (ln_evidE >= ln_evidF):
-                                        ln_evidEF = ln_evidE + np.log(1.+np.exp(ln_evidF-ln_evidE)) 
+                                ln_evidA = np.loadtxt(test_dirs[0,tested_peak_indices[i]]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
+                                ln_evidB = np.loadtxt(test_dirs[1,tested_peak_indices[i]]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
+                    
+                                if (ln_evidA >= ln_evidB):
+                                    ln_evidAB = ln_evidA + np.log(1+np.exp(ln_evidB-ln_evidA)) 
+                                else:
+                                    ln_evidAB = ln_evidB + np.log(1+np.exp(ln_evidA-ln_evidB))
+                    
+                                p_BA[k,i] = np.exp(ln_evidB - ln_evidAB)
+                    
+                                if best_dnu < self.cp.dnu_rg:
+                                    ln_evidC = np.loadtxt(test_dirs[2,tested_peak_indices[i]]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
+                        
+                                    if (ln_evidA >= ln_evidC):
+                                        ln_evidAC = ln_evidA + np.log(1+np.exp(ln_evidC-ln_evidA)) 
                                     else:
-                                        ln_evidEF = ln_evidF + np.log(1.+np.exp(ln_evidE-ln_evidF))
-                            
-                                    p_FE[k,j] = np.exp(ln_evidF - ln_evidEF)
-
-                                    # Compute the estimate for FWHM from model E.
+                                        ln_evidAC = ln_evidC + np.log(1+np.exp(ln_evidA-ln_evidC))
                         
-                                    par_fwhm = np.loadtxt(test_dirs[0,j]+'/peakbagging_parameter002.txt')
-                                    post = np.loadtxt(test_dirs[0,j]+'/peakbagging_posteriorDistribution.txt')
-                                    post /= max(post)
-                                    fwhm_rotation_fit[k,j] = np.sum(par_fwhm*post)/np.sum(post)
+                                    if (ln_evidB >= ln_evidC):
+                                        ln_evidBC = ln_evidB + np.log(1+np.exp(ln_evidC-ln_evidB)) 
+                                    else:
+                                        ln_evidBC = ln_evidC + np.log(1+np.exp(ln_evidB-ln_evidC))
+                    
+                                    p_CA[k,i] = np.exp(ln_evidC - ln_evidAC)
+                                    p_CB[k,i] = np.exp(ln_evidC - ln_evidBC)
                             
-                                    # Compute the estimates for nu0, rot_split and cosi from model F.
-                            
-                                    par_central_freq = np.loadtxt(test_dirs[1,j]+'/peakbagging_parameter000.txt')
-                                    par_rot_split = np.loadtxt(test_dirs[1,j]+'/peakbagging_parameter003.txt')
-                                    par_cosi = np.loadtxt(test_dirs[1,j]+'/peakbagging_parameter004.txt')
-                                    post = np.loadtxt(test_dirs[1,j]+'/peakbagging_posteriorDistribution.txt')
-
-                                    # In this case apply an additional trick. Consider only the last 100 nested iterations to get a first
-                                    # estimate of the frequency centroid, and compute a standard deviation of the entire sampling. 
-                                    # Then recompute the parameter mean by using the sampling located only within 1-sigma of the first estimate.
-                                    # This will improve the estimation of the frequency centroid and of the rotational splitting in case
-                                    # multiple solutions have been found during the nested sampling process.
+                        for i in range(0, len(dipole_indices[tested_peak_indices])):
                         
-                                    post /= max(post)
-                                    rot_split_fit[k,j] = np.sum(par_rot_split*post)/np.sum(post)
-                                    cosi_fit[k,j] = np.sum(par_cosi*post)/np.sum(post)
-                                    central_freq_fit[k,j] = np.sum(par_central_freq*post)/np.sum(post)
-                            
-                                    if best_dnu < self.cp.dnu_rg:
-                                        ln_evidG = np.loadtxt(test_dirs[2,j]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
-                                        if (ln_evidG >= ln_evidF):
-                                            ln_evidGF = ln_evidG + np.log(1.+np.exp(ln_evidF-ln_evidG)) 
-                                        else:
-                                            ln_evidGF = ln_evidF + np.log(1.+np.exp(ln_evidG-ln_evidF))
-
-                                        if (ln_evidG >= ln_evidE):
-                                            ln_evidGE = ln_evidG + np.log(1.+np.exp(ln_evidE-ln_evidG)) 
-                                        else:
-                                            ln_evidGE = ln_evidE + np.log(1.+np.exp(ln_evidG-ln_evidE))
-                                
-                                        p_GE[k,j] = np.exp(ln_evidG - ln_evidGE)
-                                        p_GF[k,j] = np.exp(ln_evidG - ln_evidGF)
-                            
-                                        # Compute the estimates for the duplet frequencies and FWHM from model G
-                        
-                                        par_left_freq = np.loadtxt(test_dirs[2,j]+'/peakbagging_parameter000.txt')
-                                        par_duplet_split = np.loadtxt(test_dirs[2,j]+'/peakbagging_parameter003.txt')
-                                        par_left_fwhm = np.loadtxt(test_dirs[2,j]+'/peakbagging_parameter002.txt')
-                                        par_right_fwhm = np.loadtxt(test_dirs[2,j]+'/peakbagging_parameter005.txt')
-                                        post = np.loadtxt(test_dirs[2,j]+'/peakbagging_posteriorDistribution.txt')
-                                        post /= max(post)
-                                        left_freq_fit[k,j] = np.sum(par_left_freq*post)/np.sum(post)
-                                        right_freq_fit[k,j] = np.sum(par_duplet_split*post)/np.sum(post) + left_freq_fit[k,j]
-                                        left_fwhm_fit[k,j] = np.sum(par_left_fwhm*post)/np.sum(post)
-                                        right_fwhm_fit[k,j] = np.sum(par_right_fwhm*post)/np.sum(post)
-                            
-                        for j in range(0, len(detected_dipole_indices)):
-                            with open(probability_filenames[j],'w') as f:
-                                f.write('# Rotation probabilities for frequency peak {:.2f} muHz\n'.format(freq1[detected_dipole_indices[j]]))
+                            with open(probability_filenames[tested_peak_indices[i]],'w') as f:
+                                f.write('# Detection probabilities for frequency peak {:.3f} uHz\n'.format(freq1[dipole_indices[tested_peak_indices[i]]]))
                                 f.write('# Each line corresponds to a different run of the same test.\n')
                                 if best_dnu < self.cp.dnu_rg:
-                                    f.write('# Col 1: p(FE), Col 2: p(GE), Col 3: p(GF), Col 4: FWHM single (microHz), Col 5: Left freq duplet (microHz) \n')
-                                    f.write('# Col 6: Right freq duplet (microHz), Col 7: Left FWHM (microHz), Col 8: Right FWHM (microHz) \n')
-                                    f.write('# Col 9: Central freq (microHz), Col 10: rotational splitting (microHz), Col 11: cos i \n')
+                                    f.write('# Col 1: p(BA), Col 2: p(CA), Col 3: p(CB), Col 4: FWHM single (uHz).\n')
                                     for k in range(0,self.cp.n_peak_test):
-                                        f.write('{:.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}\n'.format(p_FE[k,j], p_GE[k,j], p_GF[k,j], fwhm_rotation_fit[k,j], left_freq_fit[k,j], right_freq_fit[k,j], left_fwhm_fit[k,j], right_fwhm_fit[k,j], central_freq_fit[k,j], rot_split_fit[k,j], cosi_fit[k,j]))
+                                        f.write('{:.4f}  {:10.4f}  {:10.4f}  {:10.4f}\n'.format(p_BA[k,i],p_CA[k,i],p_CB[k,i],fwhm_detection_fit[k,i]))
                                 else:
-                                    f.write('# Col 1: p(FE), Col 2: FWHM single (microHz), Col 3: Central freq (microHz), Col 4: rotational splitting (microHz), Col 5: cos i \n')
+                                    f.write('# Col 1: p(BA), Col 2: FWHM single (uHz).\n')
                                     for k in range(0,self.cp.n_peak_test):
-                                        f.write('{:.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}\n'.format(p_FE[k,j], fwhm_rotation_fit[k,j], central_freq_fit[k,j], rot_split_fit[k,j], cosi_fit[k,j]))
+                                        f.write('{:.4f}  {:10.4f}\n'.format(p_BA[k,i],fwhm_detection_fit[k,i]))
                                     
-                    
                             if self.cp.save_test_files==0:
                                 # Remove test folders and prior files if required
-                        
-                                if os.path.isdir(test_dirs[0,j]):
-                                    shutil.rmtree(test_dirs[0,j])
-                                    shutil.rmtree(test_dirs[1,j])
-                                    os.remove(data_range_filenames[0,j])
-                                    os.remove(data_range_filenames[1,j])
-                                    os.remove(prior_filenames[0,j])
-                                    os.remove(prior_filenames[1,j])
                             
-                                    if best_dnu < self.cp.dnu_rg:
-                                        shutil.rmtree(test_dirs[2,j])
-                                        os.remove(data_range_filenames[2,j])
-                                        os.remove(prior_filenames[2,j])
-                            
-                    for j in range(0, len(detected_dipole_indices)):
-                        if os.path.isfile(probability_filenames[j]):
-                            if best_dnu < self.cp.dnu_rg:
-                                p_FE,p_GE,p_GF = np.loadtxt(probability_filenames[j], usecols=(0,1,2), unpack=True)
-                                max_p_GE = round(max(p_GE),3)
-                                max_p_GF = round(max(p_GF),3)
-                                duplicity_probability[detected_dipole_indices[j]] = max_p_GE
-                            else:
-                                p_FE = np.loadtxt(probability_filenames[j], usecols=(0,))
-
-                            # Consider the maximum probabilities among the different runs. Approximate up to second decimal digit.
-                            
-                            max_p_FE = round(max(p_FE),3)
-                            rotation_probability[detected_dipole_indices[j]] = max_p_FE
-                    
-                            if self.cp.print_on_screen:
-                                print('\n Peak rotation and duplet test for frequency peak #{} at {:.2f} muHz'.format(detected_dipole_indices[j],freq1[detected_dipole_indices[j]]))
-                                print(' P (Rotation vs No rotation): {}'.format(max_p_FE))
-                    
+                                shutil.rmtree(test_dirs[0,tested_peak_indices[i]])
+                                shutil.rmtree(test_dirs[1,tested_peak_indices[i]])
+                                os.remove(prior_filenames[0,tested_peak_indices[i]])
+                                os.remove(prior_filenames[1,tested_peak_indices[i]])
+                                os.remove(data_range_filenames[0,tested_peak_indices[i]])
+                                os.remove(data_range_filenames[1,tested_peak_indices[i]])
+           
                                 if best_dnu < self.cp.dnu_rg:
-                                    print(' P (Duplet vs No Rotation): {}'.format(max_p_GE))
-                                    print(' P (Duplet vs Rotation): {}'.format(max_p_GF))
-                                print()
+                                    shutil.rmtree(test_dirs[2,tested_peak_indices[i]])
+                                    os.remove(prior_filenames[2,tested_peak_indices[i]])
+                                    os.remove(data_range_filenames[2,tested_peak_indices[i]])     
+
+                    for i in range(0, len(dipole_indices[tested_peak_indices])):
+                        if best_dnu < self.cp.dnu_rg:
+                            p_BA,p_CA,p_CB = np.loadtxt(probability_filenames[tested_peak_indices[i]],usecols=(0,1,2),unpack=True)
+                        else:
+                            p_BA = np.loadtxt(probability_filenames[tested_peak_indices[i]],usecols=(0,))
+            
+                        # Consider the maximum probabilities among the different runs. Approximate up to third decimal digit.
+                    
+                        max_p_BA = round(max(p_BA),3)
+                        detection_probability[dipole_indices[tested_peak_indices[i]]] = max_p_BA
+            
+                        if best_dnu < self.cp.dnu_rg:
+                            max_p_CA = round(max(p_CA),3)
+                            max_p_CB = round(max(p_CB),3)
+                
+                            # For a RG star take the maximum probability between the two (Lorentzian and Sinc^2) to deem the peak as 
+                            # detected. In this way one makes sure to incorporate the result from the best model possible,
+                            # between the two tested.
+                        
+                            if max_p_CB > 0.5:
+                                detection_probability[dipole_indices[tested_peak_indices[i]]] = max_p_CA
+                                sinc_profile_flag[dipole_indices[tested_peak_indices[i]]] = 1
+                            else:
+                                detection_probability[dipole_indices[tested_peak_indices[i]]] = max_p_BA
+
+                        if self.cp.print_on_screen:
+                            print('\n Peak detection test for frequency peak #{} at {:.2f} uHz'.format(tested_peak_indices[i],freq1[dipole_indices[tested_peak_indices[i]]]))
+                            print(' P (Lorentzian vs Only Background): {}'.format(max_p_BA))
+                            
+                            if best_dnu < self.cp.dnu_rg:
+                                print(' P (Sinc^2 vs Only Background): '.format(max_p_CA))
+                                print(' P (Sinc^2 vs Lorentzian): '.format(max_p_CB))
+                            print('\n')
             
                     if self.cp.print_on_screen:
-                        print('\n Peak Rotation Test for l=1 mode(s) completed.')
-                        print(' ---------------------------------------------\n')
+                        print(' Peak Detection Test for candidate l=1 mode(s) completed.') 
+                        print(' --------------------------------------------------------\n')
+                    
+                # -------------------------------------------------------------
+                # Peak rotation and duplet test for all significant candidate l=1 modes
+                # -------------------------------------------------------------
+                
+                # Update the number of dipole modes in the chunk by considering only the significant peaks. 
+                # For the significant peaks (if any) perform a rotation test to check whether the peaks are individuals or multiplets. If the rotation
+                # test is positive, then also save the rotational splitting associated with the fit, so that the individual
+                # frequency components can be reconstructed. For RG stars, add the duplet test, to check whether the peak is actually constituted by
+                # two adjacent mixed modes of different g-mode order n_g (i.e. not a rotational splitting effect).
+                # Perform the test only if explicitly requested through the input configuring parameter file.
+           
+                detected_dipole_indices = np.where((angular_degree==1) & ((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0)) & (sinc_profile_flag != 1))[0]
+            
+                if self.cp.rotation_test_activated:    
+                    if len(detected_dipole_indices) > 0:
+                        n_dipole_chunk = len(detected_dipole_indices)
+                        test_dirs = np.zeros((3,len(detected_dipole_indices)),dtype='U200')
+                        prior_filenames = np.zeros((3,len(detected_dipole_indices)),dtype='U200')
+                        data_range_filenames = np.zeros((3,len(detected_dipole_indices)),dtype='U200')
+                        probability_filenames = np.zeros(len(detected_dipole_indices),dtype='U200')
+                        run_test = []
+                        flag_run_test = 0
+
+                        for j in range(0, len(detected_dipole_indices)):
+                            dipole_index = detected_dipole_indices[j]
+                        
+                            # For each peak consider the maximum data range between the range and the division
+                        
+                            left_bound = min([range_maximum[0,dipole_index],divisions_maximum[0,dipole_index]])
+                            right_bound = max([range_maximum[1,dipole_index],divisions_maximum[1,dipole_index]])
+                            peak_number = str(int(dipole_index))
+                            test_name = run + '_' + peak_number
+                            test_nameE = test_name + 'E'           # Lorentzian profile, fixed background
+                            test_nameF = test_name + 'F'           # Lorentzian profile split by rotation (considered as l=1), fixed background
+                            test_nameG = test_name + 'G'           # Two Lorentzian profiles, fixed background
+                            test_dirE = self.star_dir/self.cp.pb_subdir/test_nameE
+                            test_dirF = self.star_dir/self.cp.pb_subdir/test_nameF
+                            test_dirG = self.star_dir/self.cp.pb_subdir/test_nameG
+                            rotation_probability_filename = self.star_dir/self.cp.pb_subdir/('rotationProbability_' + test_name + '.txt')
+                            filenameE = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + test_nameE + '.txt')
+                            filenameF = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + test_nameF + '.txt')
+                            filenameG = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + test_nameG + '.txt')
+                            filename_rangeE = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + test_nameE + '.txt')
+                            filename_rangeF = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + test_nameF + '.txt')
+                            filename_rangeG = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + test_nameG + '.txt')
+
+                            test_dirs[:,j] = [test_dirE,test_dirF,test_dirG]
+                            probability_filenames[j] = rotation_probability_filename
+                            prior_filenames[:,j] = [filenameE,filenameF,filenameG]
+                            data_range_filenames[:,j] = [filename_rangeE,filename_rangeF,filename_rangeG]
+               
+                            if not os.path.isfile(rotation_probability_filename):
+                                # For RG and SG stars, adopt a narrower FWHM prior for those l=1 modes outside the l=3 region.
+                                # This will speed up the computation of the peak test and improve the actual fits of the 
+                                # rotational multiplets.
+                                # Also, if the star is a MS, make the prior on the frequency centroid as narrow as possible.                    
+                        
+                                right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_radial
+                                left_fwhm = self.cp.fwhm_lower_bound
+
+                                freq_prior = [freq1[dipole_index] - freq_sig1[dipole_index],freq1[dipole_index] + freq_sig1[dipole_index]]
+
+                                if (best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg):
+                                    freq_prior = [range_maximum[0,dipole_index],range_maximum[1,dipole_index]]
+                        
+                                    if (freq1[dipole_index] >= octupole_freq_upper) or (freq1[dipole_index] <= octupole_freq_lower):
+                                        if best_dnu < self.cp.dnu_threshold:
+                                            right_fwhm = fwhm_radial_fit
+                        
+                                            # Do not exceed the width given by the frequency range of the peak if the star is a RG or late SG, because l=1 modes are narrow. 
+                        
+                                            range_peak = abs(range_maximum[1,freq_index] - range_maximum[0,freq_index])
+                        
+                                            if right_fwhm > range_peak:
+                                                right_fwhm = range_peak
+                                        else:
+                                            right_fwhm = fwhm_radial_fit*self.cp.fwhm_magnification_factor_dipole
+                            
+                                tmp_peak = np.where((freq >= left_bound) & (freq <= right_bound))[0]
+                                bg_peak = np.mean(bg_level_local[tmp_peak])
+                                response_peak = np.mean((np.sin(np.pi/2. * freq[tmp_peak]/nyq) / (np.pi/2. * freq[tmp_peak]/nyq))**2)
+
+                                # For the amplitude estimate of the rotational multiplet incorporate the np.sqrt(2) factor to take into account a case with i=90 degrees
+                        
+                                amplitude = np.sqrt((abs(max(spsd[tmp_peak]) - bg_peak)/response_peak)*np.pi*right_fwhm)    
+                        
+                                # Set up priors for the peak test profile
+                        
+                                data_freq_boundaries = [left_bound,right_bound]
+                                freq_duplet_prior = [range_maximum[0,dipole_index],range_maximum[1,dipole_index]]
+                                duplet_split_prior = [freqbin*2,abs(freq_duplet_prior[1]-freq_duplet_prior[0])]
+                                amplitude_prior = [0.0,amplitude]
+                                fwhm_prior = [left_fwhm,right_fwhm]
+
+                                # Divide the frequency prior range into nearly three parts
+                        
+                                rot_split = abs(freq_prior[1] - freq_prior[0])/self.cp.rot_split_scaling
+                                rot_split_prior = [freqbin*2,rot_split]
+ 
+                                # If the frequency resolution is comparable to the expected separation among the fine-structure peaks, then skip the test. 
+                        
+                                if duplet_split_prior[0] >= duplet_split_prior[1]*0.5:
+                                    continue  
+                                if rot_split_prior[0] >= rot_split_prior[1]*0.5:
+                                    continue
+                    
+                                cosi_prior = [self.cp.cosi_prior_lower,self.cp.cosi_prior_upper]
+                                boundariesE = [freq_prior,amplitude_prior,fwhm_prior]
+                                boundariesF = [freq_prior,amplitude_prior,fwhm_prior,rot_split_prior,cosi_prior] 
+                                diamonds.write_data_range(data_range_filenames[0,j],data_freq_boundaries)
+                                diamonds.write_data_range(data_range_filenames[1,j],data_freq_boundaries)
+                                diamonds.write_uniform_prior(prior_filenames[0,j],boundariesE)
+                                diamonds.write_uniform_prior(prior_filenames[1,j],boundariesF)
+                   
+                                if best_dnu < self.cp.dnu_rg:
+                                    boundariesG = [freq_duplet_prior,amplitude_prior,fwhm_prior,duplet_split_prior,amplitude_prior,fwhm_prior]
+                        
+                                    diamonds.write_data_range(data_range_filenames[2,j],data_freq_boundaries)
+                                    diamonds.write_uniform_prior(prior_filenames[2,j],boundariesG)
+                        
+                                    run_test.extend([test_nameE,test_nameF,test_nameG])
+                                else:
+                                    run_test.extend([test_nameE,test_nameF])
+                                flag_run_test += 1
+
+                        if self.cp.print_on_screen:
+                            print('\n ---------------------------------------------')
+                            print(' Peak Rotation Test for l=1 mode(s).' )
+            
+                        if flag_run_test > 0:
+                            if self.cp.print_on_screen:
+                                print(' A total of {} tests must be performed.'.format(len(run_test))) 
+                                
+                            p_FE = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
+                            fwhm_rotation_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
+                            rot_split_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
+                            cosi_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
+                            central_freq_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
+
+                            if best_dnu < self.cp.dnu_rg:
+                                p_GE = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
+                                p_GF = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
+                                left_freq_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
+                                right_freq_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
+                                left_fwhm_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
+                                right_fwhm_fit = np.zeros((self.cp.n_peak_test,len(detected_dipole_indices)))
+            
+                            for k in range(0, self.cp.n_peak_test):
+                                peakbagging_parameters = {'subdir':       self.cp.pb_subdir,
+                                                          'run':          run_test,
+                                                          'background':   background_name,
+                                                          'fwhm':         -1.0,
+                                                          'filename_run': test_name}
+
+                                flag_computation_completed = diamonds.run_peakbagging(self.catalog_id,self.star_id,peakbagging_parameters,1,0,0,self.cp.dp_pb, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename)
+                    
+                                if self.cp.print_on_screen:
+                                    print,' Iteration #{} completed.'.format(k) 
+                                       
+                                for j in range(0, len(detected_dipole_indices)):
+                                    # Make sure that the given peak has been tested.
+                        
+                                    if os.path.isfile(test_dirs[0,j]+'/peakbagging_evidenceInformation.txt'):
+                                        ln_evidE = np.loadtxt(test_dirs[0,j]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
+                                        ln_evidF = np.loadtxt(test_dirs[1,j]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
+                                        if (ln_evidE >= ln_evidF):
+                                            ln_evidEF = ln_evidE + np.log(1.+np.exp(ln_evidF-ln_evidE)) 
+                                        else:
+                                            ln_evidEF = ln_evidF + np.log(1.+np.exp(ln_evidE-ln_evidF))
+                            
+                                        p_FE[k,j] = np.exp(ln_evidF - ln_evidEF)
+
+                                        # Compute the estimate for FWHM from model E.
+                        
+                                        par_fwhm = np.loadtxt(test_dirs[0,j]+'/peakbagging_parameter002.txt')
+                                        post = np.loadtxt(test_dirs[0,j]+'/peakbagging_posteriorDistribution.txt')
+                                        post /= max(post)
+                                        fwhm_rotation_fit[k,j] = np.sum(par_fwhm*post)/np.sum(post)
+                            
+                                        # Compute the estimates for nu0, rot_split and cosi from model F.
+                            
+                                        par_central_freq = np.loadtxt(test_dirs[1,j]+'/peakbagging_parameter000.txt')
+                                        par_rot_split = np.loadtxt(test_dirs[1,j]+'/peakbagging_parameter003.txt')
+                                        par_cosi = np.loadtxt(test_dirs[1,j]+'/peakbagging_parameter004.txt')
+                                        post = np.loadtxt(test_dirs[1,j]+'/peakbagging_posteriorDistribution.txt')
+
+                                        # In this case apply an additional trick. Consider only the last 100 nested iterations to get a first
+                                        # estimate of the frequency centroid, and compute a standard deviation of the entire sampling. 
+                                        # Then recompute the parameter mean by using the sampling located only within 1-sigma of the first estimate.
+                                        # This will improve the estimation of the frequency centroid and of the rotational splitting in case
+                                        # multiple solutions have been found during the nested sampling process.
+                        
+                                        post /= max(post)
+                                        rot_split_fit[k,j] = np.sum(par_rot_split*post)/np.sum(post)
+                                        cosi_fit[k,j] = np.sum(par_cosi*post)/np.sum(post)
+                                        central_freq_fit[k,j] = np.sum(par_central_freq*post)/np.sum(post)
+                            
+                                        if best_dnu < self.cp.dnu_rg:
+                                            ln_evidG = np.loadtxt(test_dirs[2,j]+'/peakbagging_evidenceInformation.txt', usecols=(0,))
+                                            if (ln_evidG >= ln_evidF):
+                                                ln_evidGF = ln_evidG + np.log(1.+np.exp(ln_evidF-ln_evidG)) 
+                                            else:
+                                                ln_evidGF = ln_evidF + np.log(1.+np.exp(ln_evidG-ln_evidF))
+
+                                            if (ln_evidG >= ln_evidE):
+                                                ln_evidGE = ln_evidG + np.log(1.+np.exp(ln_evidE-ln_evidG)) 
+                                            else:
+                                                ln_evidGE = ln_evidE + np.log(1.+np.exp(ln_evidG-ln_evidE))
+                                
+                                            p_GE[k,j] = np.exp(ln_evidG - ln_evidGE)
+                                            p_GF[k,j] = np.exp(ln_evidG - ln_evidGF)
+                            
+                                            # Compute the estimates for the duplet frequencies and FWHM from model G
+                        
+                                            par_left_freq = np.loadtxt(test_dirs[2,j]+'/peakbagging_parameter000.txt')
+                                            par_duplet_split = np.loadtxt(test_dirs[2,j]+'/peakbagging_parameter003.txt')
+                                            par_left_fwhm = np.loadtxt(test_dirs[2,j]+'/peakbagging_parameter002.txt')
+                                            par_right_fwhm = np.loadtxt(test_dirs[2,j]+'/peakbagging_parameter005.txt')
+                                            post = np.loadtxt(test_dirs[2,j]+'/peakbagging_posteriorDistribution.txt')
+                                            post /= max(post)
+                                            left_freq_fit[k,j] = np.sum(par_left_freq*post)/np.sum(post)
+                                            right_freq_fit[k,j] = np.sum(par_duplet_split*post)/np.sum(post) + left_freq_fit[k,j]
+                                            left_fwhm_fit[k,j] = np.sum(par_left_fwhm*post)/np.sum(post)
+                                            right_fwhm_fit[k,j] = np.sum(par_right_fwhm*post)/np.sum(post)
+                            
+                            for j in range(0, len(detected_dipole_indices)):
+                                with open(probability_filenames[j],'w') as f:
+                                    f.write('# Rotation probabilities for frequency peak {:.2f} uHz\n'.format(freq1[detected_dipole_indices[j]]))
+                                    f.write('# Each line corresponds to a different run of the same test.\n')
+                                    if best_dnu < self.cp.dnu_rg:
+                                        f.write('# Col 1: p(FE), Col 2: p(GE), Col 3: p(GF), Col 4: FWHM single (uHz), Col 5: Left freq duplet (uHz) \n')
+                                        f.write('# Col 6: Right freq duplet (uHz), Col 7: Left FWHM (uHz), Col 8: Right FWHM (uHz) \n')
+                                        f.write('# Col 9: Central freq (uHz), Col 10: rotational splitting (uHz), Col 11: cos i \n')
+                                        for k in range(0,self.cp.n_peak_test):
+                                            f.write('{:.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}\n'.format(p_FE[k,j], p_GE[k,j], p_GF[k,j], fwhm_rotation_fit[k,j], left_freq_fit[k,j], right_freq_fit[k,j], left_fwhm_fit[k,j], right_fwhm_fit[k,j], central_freq_fit[k,j], rot_split_fit[k,j], cosi_fit[k,j]))
+                                    else:
+                                        f.write('# Col 1: p(FE), Col 2: FWHM single (uHz), Col 3: Central freq (uHz), Col 4: rotational splitting (uHz), Col 5: cos i \n')
+                                        for k in range(0,self.cp.n_peak_test):
+                                            f.write('{:.4f}  {:10.4f}  {:10.4f}  {:10.4f}  {:10.4f}\n'.format(p_FE[k,j], fwhm_rotation_fit[k,j], central_freq_fit[k,j], rot_split_fit[k,j], cosi_fit[k,j]))
+                                    
+                    
+                                if self.cp.save_test_files==0:
+                                    # Remove test folders and prior files if required
+                        
+                                    if os.path.isdir(test_dirs[0,j]):
+                                        shutil.rmtree(test_dirs[0,j])
+                                        shutil.rmtree(test_dirs[1,j])
+                                        os.remove(data_range_filenames[0,j])
+                                        os.remove(data_range_filenames[1,j])
+                                        os.remove(prior_filenames[0,j])
+                                        os.remove(prior_filenames[1,j])
+                            
+                                        if best_dnu < self.cp.dnu_rg:
+                                            shutil.rmtree(test_dirs[2,j])
+                                            os.remove(data_range_filenames[2,j])
+                                            os.remove(prior_filenames[2,j])
+                            
+                        for j in range(0, len(detected_dipole_indices)):
+                            if os.path.isfile(probability_filenames[j]):
+                                if best_dnu < self.cp.dnu_rg:
+                                    p_FE,p_GE,p_GF = np.loadtxt(probability_filenames[j], usecols=(0,1,2), unpack=True)
+                                    max_p_GE = round(max(p_GE),3)
+                                    max_p_GF = round(max(p_GF),3)
+                                    duplicity_probability[detected_dipole_indices[j]] = max_p_GE
+                                else:
+                                    p_FE = np.loadtxt(probability_filenames[j], usecols=(0,))
+
+                                # Consider the maximum probabilities among the different runs. Approximate up to second decimal digit.
+                            
+                                max_p_FE = round(max(p_FE),3)
+                                rotation_probability[detected_dipole_indices[j]] = max_p_FE
+                    
+                                if self.cp.print_on_screen:
+                                    print('\n Peak rotation and duplet test for frequency peak #{} at {:.2f} uHz'.format(detected_dipole_indices[j],freq1[detected_dipole_indices[j]]))
+                                    print(' P (Rotation vs No rotation): {}'.format(max_p_FE))
+                    
+                                    if best_dnu < self.cp.dnu_rg:
+                                        print(' P (Duplet vs No Rotation): {}'.format(max_p_GE))
+                                        print(' P (Duplet vs Rotation): {}'.format(max_p_GF))
+                                    print()
+            
+                        if self.cp.print_on_screen:
+                            print('\n Peak Rotation Test for l=1 mode(s) completed.')
+                            print(' ---------------------------------------------\n')
 
             
+                    else:
+                        n_dipole_chunk = 0
                 else:
-                    n_dipole_chunk = 0
-            else:
-                if self.cp.print_on_screen:
-                    print('\n --------------------------------------------------------')
-                    print(' Peak Rotation Test Disabled.')
-                    print(' --------------------------------------------------------\n')
+                    if self.cp.print_on_screen:
+                        print('\n --------------------------------------------------------')
+                        print(' Peak Rotation Test Disabled.')
+                        print(' --------------------------------------------------------\n')
 
          
-            # If at least one candidate l=1 mode is detected, make sure that the n_dipole_chunk is activated in case it is not (i.e. if there is no dipole
-            # mode found from the global modality)
+                # If at least one candidate l=1 mode is detected, make sure that the n_dipole_chunk is activated in case it is not (i.e. if there is no dipole
+                # mode found from the global modality)
     
-            if (len(detected_dipole_indices) > 0) & (n_dipole_chunk==0): 
-                n_dipole_chunk = 1
-                freq_dipole = freq_radial_chunk - best_dnu/2. - d01
-        else:
-            # If here, then no dipole peaks were found in the chunk from the multi-modal fit. 
+                if (len(detected_dipole_indices) > 0) & (n_dipole_chunk==0): 
+                    n_dipole_chunk = 1
+                    freq_dipole = freq_radial_chunk - best_dnu/2. - d01
+            else:
+                # If here, then no dipole peaks were found in the chunk from the multi-modal fit. 
             
-            n_dipole_chunk = 0
+                n_dipole_chunk = 0
 
-        largest_octupole_fwhm = 0.0
         
-        if n_dipole_chunk != 0:
-            # -------------------------------------------------------------------
-            # CASE 1: One or more significant dipole modes are found in the chunk 
-            # -------------------------------------------------------------------
-    
-            # Evolutionary stage: RG, SG, MS
-            # In general, search for an l=3 only if more than one l=1 mode is detected. This is to give priority to l=1 mode identification over l=3.
-            # If only one l=1 mode is detected, perform the l=3 search only in the case of a RG star or a depressed dipole star (which can be a SG too). 
-    
-            if (len(detected_dipole_indices) > 1) or ((len(detected_dipole_indices)==1) & (best_dnu <= self.cp.dnu_rg)) or (flag_depressed_dipole==1):
-                # Check whether an l=3 is present. To do so attempt to find at least one local maximum in the l=3 region as 
-                # computed from the asymptotic relation. The search region depends on the evolutionary stage of the star.
-                # Apply the additional condition that if the mode is flagged as a sinc^2 profile, then it is excluded from the candidate octupole mode list.
-
-                detected_octupole_index = np.where((freq1 <= octupole_freq_upper) & (freq1 >= octupole_freq_lower) & ((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0)) & (sinc_profile_flag != 1))[0]
+            if n_dipole_chunk != 0:
+                # -------------------------------------------------------------------
+                # Peak significance test for candidate octupole l=3) mode
+                # -------------------------------------------------------------------
+                # One or more significant dipole modes are found in the chunk 
         
-                if len(detected_octupole_index) > 0:
-                    # In this case there is at least one significant peak in this l=3 region.
-                    # Therefore check whether one of the l=3 candidates is a true l=3 mode, or it is favoring the scenario of a l=1 mixed mode.
-                    # If the sinc^2 is not favored, then verify that the detection favors a single Lorentzian peak (i.e. both the rotational splitting and the duplicity are not present). 
-                    # Finally use the FWHM from the single Lorentzian peak test of the candidate l=3 peak to assess whether it is an actual l=3 or a mixed mode peak.
-                    # Do so for each peak found in the l=3 range from the asymptotic relation.
+                # Evolutionary stage: RG, SG, MS
+                # In general, search for an l=3 only if more than one l=1 mode is detected. This is to give priority to l=1 mode identification over l=3.
+                # If only one l=1 mode is detected, perform the l=3 search only in the case of a RG star or a depressed dipole star (which can be a SG too). 
+    
+                if (len(detected_dipole_indices) > 1) or ((len(detected_dipole_indices)==1) & (best_dnu <= self.cp.dnu_rg)) or (flag_depressed_dipole==1):
+                    # Check whether an l=3 is present. To do so attempt to find at least one local maximum in the l=3 region as 
+                    # computed from the asymptotic relation. The search region depends on the evolutionary stage of the star.
+                    # Apply the additional condition that if the mode is flagged as a sinc^2 profile, then it is excluded from the candidate octupole mode list.
+    
+                    detected_octupole_index = np.where((freq1 <= octupole_freq_upper) & (freq1 >= octupole_freq_lower) & ((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0)) & (sinc_profile_flag != 1))[0]
+        
+                    if len(detected_octupole_index) > 0:
+                        # In this case there is at least one significant peak in this l=3 region.
+                        # Therefore check whether one of the l=3 candidates is a true l=3 mode, or it is favoring the scenario of a l=1 mixed mode.
+                        # If the sinc^2 is not favored, then verify that the detection favors a single Lorentzian peak (i.e. both the rotational splitting and the duplicity are not present). 
+                        # Finally use the FWHM from the single Lorentzian peak test of the candidate l=3 peak to assess whether it is an actual l=3 or a mixed mode peak.
+                        # Do so for each peak found in the l=3 range from the asymptotic relation.
                     
-                    # Obtain the largest FWHM of the set of modes. This will be used as discriminant in case more than one candidate l=3 is present.
-                    fwhm_octupole_fit = np.zeros(len(detected_octupole_index))
-                    run_subdir = run + '_octupole_fwhm'
+                        # Obtain the largest FWHM of the set of modes. This will be used as discriminant in case more than one candidate l=3 is present.
+                        fwhm_octupole_fit = np.zeros(len(detected_octupole_index))
+                        run_subdir = run + '_octupole_fwhm'
 
-                    if self.cp.print_on_screen:
-                        print('\n Fitting Linewidth of candidate octupole modes of the chunk.')
+                        if self.cp.print_on_screen:
+                            print('\n Fitting Linewidth of candidate octupole modes of the chunk.')
                         
-                    for j in range(0, len(detected_octupole_index)):
-                        octupole_index = detected_octupole_index[j]
-                        peak_number = str(int(octupole_index))
-                        run_names = [run_subdir+str(x)+'_'+peak_number for x in range(self.cp.n_fwhm_fit)]
+                        for j in range(0, len(detected_octupole_index)):
+                            octupole_index = detected_octupole_index[j]
+                            peak_number = str(int(octupole_index))
+                            run_names = [run_subdir+str(x)+'_'+peak_number for x in range(self.cp.n_fwhm_fit)]
            
-                        if not os.path.isfile(self.star_dir/self.cp.pb_subdir/run_names[j]/'peakbagging_computationParameters.txt') or force:
-                            right_bound = max([range_maximum[1,octupole_index],divisions_maximum[1,octupole_index]])
-                            left_bound = min([range_maximum[0,octupole_index],divisions_maximum[0,octupole_index]])
-                            tmp0 = np.where((freq >= left_bound) & (freq <= right_bound))[0]
-                            freq0 = freq[tmp0]
-                            spsd0 = spsd[tmp0]
-                            bg_peak = np.mean(bg_level_local[tmp0])
-                            response_peak = np.mean((np.sin(np.pi/2. * freq0/nyq) / (np.pi/2. * freq0/nyq))**2)
-                            amplitude_octupole = np.sqrt((abs(spsd_maximum[octupole_index] - bg_peak)/response_peak)*np.pi*fwhm_radial_fit*self.cp.fwhm_magnification_factor_octupole)
-                            freq_prior_octupole = [range_maximum[0,octupole_index],range_maximum[1,octupole_index]]
-                            amplitude_prior_octupole = [0.0,amplitude_octupole]
-                            data_freq_boundaries = [left_bound,right_bound]
-                            data_range_filenames = np.zeros(self.cp.n_fwhm_fit,dtype='U200')
-                            prior_filenames = np.zeros(self.cp.n_fwhm_fit,dtype='U200')
+                            if not os.path.isfile(self.star_dir/self.cp.pb_subdir/run_names[j]/'peakbagging_computationParameters.txt') or force:
+                                right_bound = max([range_maximum[1,octupole_index],divisions_maximum[1,octupole_index]])
+                                left_bound = min([range_maximum[0,octupole_index],divisions_maximum[0,octupole_index]])
+                                tmp0 = np.where((freq >= left_bound) & (freq <= right_bound))[0]
+                                freq0 = freq[tmp0]
+                                spsd0 = spsd[tmp0]
+                                bg_peak = np.mean(bg_level_local[tmp0])
+                                response_peak = np.mean((np.sin(np.pi/2. * freq0/nyq) / (np.pi/2. * freq0/nyq))**2)
+                                amplitude_octupole = np.sqrt((abs(spsd_maximum[octupole_index] - bg_peak)/response_peak)*np.pi*fwhm_radial_fit*self.cp.fwhm_magnification_factor_octupole)
+                                freq_prior_octupole = [range_maximum[0,octupole_index],range_maximum[1,octupole_index]]
+                                amplitude_prior_octupole = [0.0,amplitude_octupole]
+                                data_freq_boundaries = [left_bound,right_bound]
+                                data_range_filenames = np.zeros(self.cp.n_fwhm_fit,dtype='U200')
+                                prior_filenames = np.zeros(self.cp.n_fwhm_fit,dtype='U200')
 
-                            # Allow for a very narrow FWHM
-                            left_fwhm = self.cp.fwhm_lower_bound
-                            fwhm_prior = [left_fwhm,fwhm_radial_fit*self.cp.fwhm_magnification_factor_octupole]
-                            boundaries = [freq_prior_octupole,amplitude_prior_octupole,fwhm_prior]
+                                # Allow for a very narrow FWHM
+                                left_fwhm = self.cp.fwhm_lower_bound
+                                fwhm_prior = [left_fwhm,fwhm_radial_fit*self.cp.fwhm_magnification_factor_octupole]
+                                boundaries = [freq_prior_octupole,amplitude_prior_octupole,fwhm_prior]
                             
-                            for k in range(0, self.cp.n_fwhm_fit):
-                                data_range_filenames[k] = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + run_names[k] + '.txt')
-                                prior_filenames[k] = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + run_names[k] + '.txt')
-                                diamonds.write_data_range(data_range_filenames[k],data_freq_boundaries)
-                                diamonds.write_uniform_prior(prior_filenames[k],boundaries)
-                    
-
-                            peakbagging_parameters = {'subdir':          self.cp.pb_subdir,
-                                                      'run':             run_names,
-                                                      'background':      background_name,
-                                                      'fwhm':            -1.0,
-                                                      'filename_run':    run_subdir}
-
-                            flag_computation_completed_array = diamonds.run_peakbagging(self.catalog_id,self.star_id,peakbagging_parameters,2,0,0, self.cp.dp_pb, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename)
-
-                            if not self.cp.save_test_files:
                                 for k in range(0, self.cp.n_fwhm_fit):
-                                    os.remove(data_range_filenames[k])
-                                    os.remove(prior_filenames[k])
-                        
+                                    data_range_filenames[k] = self.star_dir/self.cp.pb_subdir/('frequencyRange_' + run_names[k] + '.txt')
+                                    prior_filenames[k] = self.star_dir/self.cp.pb_subdir/(self.cp.prior_filename + '_' + run_names[k] + '.txt')
+                                    diamonds.write_data_range(data_range_filenames[k],data_freq_boundaries)
+                                    diamonds.write_uniform_prior(prior_filenames[k],boundaries)
                     
-                        fwhm_octupole_fit_array = np.zeros(self.cp.n_fwhm_fit)
 
-                        for k in range(0, self.cp.n_fwhm_fit):
-                            fwhm_parameter = '002'
-                            # Read the sampled FWHM of the octupole mode.
-                            par_fwhm0 = np.loadtxt(self.star_dir/self.cp.pb_subdir/run_names[k]/('peakbagging_parameter' + fwhm_parameter + '.txt'))
-                            # Load the posterior samples to compute Bayesian mean estimate for FWHM_0
-                            post = np.loadtxt(self.star_dir/self.cp.pb_subdir/run_names[k]/'peakbagging_posteriorDistribution.txt')
-                            # Compute parameter estimate, using a weighted average
-                            post /= max(post)
-                            fwhm_octupole_fit_array[k] = np.sum(par_fwhm0*post)/np.sum(post)
+                                peakbagging_parameters = {'subdir':          self.cp.pb_subdir,
+                                                          'run':             run_names,
+                                                          'background':      background_name,
+                                                          'fwhm':            -1.0,
+                                                          'filename_run':    run_subdir}
+
+                                flag_computation_completed_array = diamonds.run_peakbagging(self.catalog_id,self.star_id,peakbagging_parameters,2,0,0, self.cp.dp_pb, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename)
+
+                                if not self.cp.save_test_files:
+                                    for k in range(0, self.cp.n_fwhm_fit):
+                                        os.remove(data_range_filenames[k])
+                                        os.remove(prior_filenames[k])
+                          
+                            fwhm_octupole_fit_array = np.zeros(self.cp.n_fwhm_fit)
+
+                            for k in range(0, self.cp.n_fwhm_fit):
+                                fwhm_parameter = '002'
+                                # Read the sampled FWHM of the octupole mode.
+                                par_fwhm0 = np.loadtxt(self.star_dir/self.cp.pb_subdir/run_names[k]/('peakbagging_parameter' + fwhm_parameter + '.txt'))
+                                # Load the posterior samples to compute Bayesian mean estimate for FWHM_0
+                                post = np.loadtxt(self.star_dir/self.cp.pb_subdir/run_names[k]/'peakbagging_posteriorDistribution.txt')
+                                # Compute parameter estimate, using a weighted average
+                                post /= max(post)
+                                fwhm_octupole_fit_array[k] = np.sum(par_fwhm0*post)/np.sum(post)
                 
 
-                        # Save the largest FWHM of the set as well as the corresponding absolute frequency index
-                        fwhm_octupole_fit[j] = np.median(fwhm_octupole_fit_array)
-                        if fwhm_octupole_fit[j] >= largest_octupole_fwhm:
-                            largest_octupole_fwhm = fwhm_octupole_fit[j]
-                            best_octupole_index = octupole_index
+                            # Save the largest FWHM of the set as well as the corresponding absolute frequency index
+                            fwhm_octupole_fit[j] = np.median(fwhm_octupole_fit_array)
+                            if fwhm_octupole_fit[j] >= largest_octupole_fwhm:
+                                largest_octupole_fwhm = fwhm_octupole_fit[j]
+                                best_octupole_index = octupole_index
 
-                    if self.cp.print_on_screen:
-                        print(' Maximum FWHM (candidate l=3) = {:.3f} muHz \n'.format(largest_octupole_fwhm))
+                        if self.cp.print_on_screen:
+                            print(' Maximum FWHM (candidate l=3) = {:.3f} uHz \n'.format(largest_octupole_fwhm))
 
-                    # Now proceed by performing the octupole mode test on the peak that has the largest FWHM if it has been detected.
-                    peak_number = str(int(best_octupole_index))
-                    test_name = run + '_' + peak_number
+                        # Now proceed by performing the octupole mode test on the peak that has the largest FWHM if it has been detected.
+                        peak_number = str(int(best_octupole_index))
+                        test_name = run + '_' + peak_number
         
-                    # If not, now verify whether the peak is split by rotation. If the rotation test is activated, given that all peaks considered here are
-                    # significant, by default the rotation test is performed. In the case of a RG, check also for the duplicity.
-                    flag_octupole_fwhm_test = 0
+                        # If not, now verify whether the peak is split by rotation. If the rotation test is activated, given that all peaks considered here are
+                        # significant, by default the rotation test is performed. In the case of a RG, check also for the duplicity.
+                        flag_octupole_fwhm_test = 0
 
-                    if self.cp.rotation_test_activated: 
-                        rotation_probability_filename = self.star_dir/self.cp.pb_subdir/('rotationProbability_' + test_name + '.txt')
+                        if self.cp.rotation_test_activated: 
+                            rotation_probability_filename = self.star_dir/self.cp.pb_subdir/('rotationProbability_' + test_name + '.txt')
                 
-                        if os.path.isfile(rotation_probability_filename)==1:
-                            if best_dnu < self.cp.dnu_rg:
-                                # This is the case of RG stars
-                                 p_FE,p_GE,p_GF,freq_left,freq_right,fwhm_left,fwhm_right = np.loadtxt(rotation_probability_filename, usecols=(0,1,2,4,5,6,7),unpack=True)
+                            if os.path.isfile(rotation_probability_filename)==1:
+                                if best_dnu < self.cp.dnu_rg:
+                                    # This is the case of RG stars
+                                    p_FE,p_GE,p_GF,freq_left,freq_right,fwhm_left,fwhm_right = np.loadtxt(rotation_probability_filename, usecols=(0,1,2,4,5,6,7),unpack=True)
                     
-                                 max_p_FE = round(max(p_FE),3)
-                                 max_p_GE = round(max(p_GE),3)
-                                 max_p_GF = round(max(p_GF),3)
+                                    max_p_FE = round(max(p_FE),3)
+                                    max_p_GE = round(max(p_GE),3)
+                                    max_p_GF = round(max(p_GF),3)
                     
-                                 if (max_p_FE >= self.cp.rotation_probability_threshold) or (max_p_GE >= self.cp.duplicity_probability_threshold):
-                                     # Here either rotation or duplicity (or both) were detected.
-                                     # Then check whether the duplicity is detected over rotation.
+                                    if (max_p_FE >= self.cp.rotation_probability_threshold) or (max_p_GE >= self.cp.duplicity_probability_threshold):
+                                        # Here either rotation or duplicity (or both) were detected.
+                                        # Then check whether the duplicity is detected over rotation.
                             
-                                     if (max_p_GF > 0.5):
-                                         # Here the peak is considered as a duplet. In this case verify whether any of the two peaks of the duplet has a
-                                         # FWHM comparable to that of the adjacent l=0 mode. If this is true, then consider such peak as a
-                                         # l=3, and split it up from the other peak, which is therefore flagged as a l=1 mixed mode only at the end of the CHUNK modality.
+                                        if (max_p_GF > 0.5):
+                                            # Here the peak is considered as a duplet. In this case verify whether any of the two peaks of the duplet has a
+                                            # FWHM comparable to that of the adjacent l=0 mode. If this is true, then consider such peak as a
+                                            # l=3, and split it up from the other peak, which is therefore flagged as a l=1 mixed mode only at the end of the CHUNK modality.
                                 
-                                         fwhm_duplet = [np.mean(fwhm_left),np.mean(fwhm_right)]
+                                            fwhm_duplet = [np.mean(fwhm_left),np.mean(fwhm_right)]
 
-                                         if (fwhm_duplet[0] >= fwhm_radial_fit*self.cp.fwhm_octupole_radial_fraction) or (fwhm_duplet[1] >= fwhm_radial_fit*self.cp.fwhm_octupole_radial_fraction):
-                                             # At least one of the peaks in the duplet has a FWHM comparable to that of the radial mode.
-                                             # Then consider the mode a potential octupole.
-                                             # Check whether the frequency resolution is enough to be able to distinguish between a l=1 mixed mode and a l=3.
-                                             # If the peak will pass the test, it will be split up later.
-                                             flag_octupole_fwhm_test = 1
-                                 else:
-                                     # No rotation and no duplicity were detected. Then the peak is considered as a single Lorentzian profile.
-                                     # Finally check its FWHM against that of the adjacent l=0 mode.
-                                     # If the fitted linewidth is comparable to that of the adjacent radial mode, then consider the mode a potential octupole.
-                                     # Check whether the frequency resolution is enough to be able to distinguish between a l=1 mixed mode and a l=3.
-                                     flag_octupole_fwhm_test = 1
+                                            if (fwhm_duplet[0] >= fwhm_radial_fit*self.cp.fwhm_octupole_radial_fraction) or (fwhm_duplet[1] >= fwhm_radial_fit*self.cp.fwhm_octupole_radial_fraction):
+                                                # At least one of the peaks in the duplet has a FWHM comparable to that of the radial mode.
+                                                # Then consider the mode a potential octupole.
+                                                # Check whether the frequency resolution is enough to be able to distinguish between a l=1 mixed mode and a l=3.
+                                                # If the peak will pass the test, it will be split up later.
+                                                flag_octupole_fwhm_test = 1
+                                    else:
+                                        # No rotation and no duplicity were detected. Then the peak is considered as a single Lorentzian profile.
+                                        # Finally check its FWHM against that of the adjacent l=0 mode.
+                                        # If the fitted linewidth is comparable to that of the adjacent radial mode, then consider the mode a potential octupole.
+                                        # Check whether the frequency resolution is enough to be able to distinguish between a l=1 mixed mode and a l=3.
+                                        flag_octupole_fwhm_test = 1
+                        
+                                else:
+                                    # This is the case of SG and MS stars
+                                    p_FE = np.loadtxt(rotation_probability_filename, usecols=(0,))
+                                    max_p_FE = round(max(p_FE),3)
+                        
+                                    if max_p_FE < self.cp.rotation_probability_threshold:
+                                        # Rotation is not detected. Then the peak is considered as a single Lorentzian profile.
+                                        # Finally check its FWHM against that of the adjacent l=0 mode.
+                                        # If the fitted linewidth is comparable to that of the adjacent radial mode, then consider the mode as a potential octupole.
+                                        # Check whether the frequency resolution is enough to be able to distinguish between a l=1 mixed mode and a l=3.
+    
+                                        flag_octupole_fwhm_test = 1
                         
                             else:
-                                # This is the case of SG and MS stars
-                                p_FE = np.loadtxt(rotation_probability_filename, usecols=(0,))
-                                max_p_FE = round(max(p_FE),3)
-                        
-                                if max_p_FE < self.cp.rotation_probability_threshold:
-                                    # Rotation is not detected. Then the peak is considered as a single Lorentzian profile.
-                                    # Finally check its FWHM against that of the adjacent l=0 mode.
-                                    # If the fitted linewidth is comparable to that of the adjacent radial mode, then consider the mode as a potential octupole.
-                                    # Check whether the frequency resolution is enough to be able to distinguish between a l=1 mixed mode and a l=3.
-
-                                    flag_octupole_fwhm_test = 1
-                        
+                                # Here the rotation test was not performed because the frequency resolution is not sufficiently high. 
+                                # Then look for an l=3 based solely on the fitted linewidth from the detection tests.
+                                flag_octupole_fwhm_test = 1
+                
                         else:
-                            # Here the rotation test was not performed because the frequency resolution is not sufficiently high. 
+                            # Here the rotation test was not performed because deactivated by the user. 
                             # Then look for an l=3 based solely on the fitted linewidth from the detection tests.
                             flag_octupole_fwhm_test = 1
-                
-                    else:
-                        # Here the rotation test was not performed because deactivated by the user. 
-                        # Then look for an l=3 based solely on the fitted linewidth from the detection tests.
-                        flag_octupole_fwhm_test = 1
             
-                    # If required, assess the FWHM and ASEF of the l=3 candidate against those of the l=0 mode.
-                    if flag_octupole_fwhm_test: 
-                        # Impose that l=3, if present, has a low ASEF value (< 3/4 ASEF maximum)
-                        asef_threshold = (self.cp.dp_isla['max_nested_it'] + self.cp.dp_isla['n_live']) * self.cp.asef_octupole_fraction
+                        # If required, assess the FWHM and ASEF of the l=3 candidate against those of the l=0 mode.
+                        if flag_octupole_fwhm_test: 
+                            # Impose that l=3, if present, has a low ASEF value (< 3/4 ASEF maximum)
+                            asef_threshold = (self.cp.dp_isla['max_nested_it'] + self.cp.dp_isla['n_live']) * self.cp.asef_octupole_fraction
                 
-                        if asef_maximum[best_octupole_index] < asef_threshold:
-                            if largest_octupole_fwhm >= fwhm_radial_fit*self.cp.fwhm_octupole_radial_fraction: 
-                                angular_degree[best_octupole_index] = 3
-                                order_number[best_octupole_index] = enn_radial - 2
+                            if asef_maximum[best_octupole_index] < asef_threshold:
+                                if largest_octupole_fwhm >= fwhm_radial_fit*self.cp.fwhm_octupole_radial_fraction: 
+                                    angular_degree[best_octupole_index] = 3
+                                    order_number[best_octupole_index] = enn_radial - 2
                     
-            # If the star is a SG, check that the detected l=1 modes are not closer to one another than Dnu/X.
-            # First update the detected dipole indices, in case some manipulation has occurred from the inspection of l=3 modes.
-            detected_dipole_indices = np.where((angular_degree==1) & ((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0)))[0]
+                # If the star is a SG, check that the detected l=1 modes are not closer to one another than Dnu/X.
+                # First update the detected dipole indices, in case some manipulation has occurred from the inspection of l=3 modes.
+                detected_dipole_indices = np.where((angular_degree==1) & ((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0)))[0]
 
-            if best_dnu > self.cp.dnu_rg and (len(detected_dipole_indices) > 1):
-                for k in range(0, len(detected_dipole_indices)-1):
-                    # Check the separation between two consecutive l=1 candidate mixed modes
+                if best_dnu > self.cp.dnu_rg and (len(detected_dipole_indices) > 1):
+                    for k in range(0, len(detected_dipole_indices)-1):
+                        # Check the separation between two consecutive l=1 candidate mixed modes
                     
-                    freq_left_dipole = freq1[detected_dipole_indices[k]]
-                    freq_right_dipole = freq1[detected_dipole_indices[k+1]]
+                        freq_left_dipole = freq1[detected_dipole_indices[k]]
+                        freq_right_dipole = freq1[detected_dipole_indices[k+1]]
 
-                    if abs(freq_left_dipole - freq_right_dipole) < best_dnu**2/self.cp.dnu_mixed_modes_separation_scaling/self.cp.dnu_rg:
-                        # Since the two peaks are too close, these peaks are likely to originate from a single multiplet. 
-                        # Hence take as detected only the one with the largest sampling counts
+                        if abs(freq_left_dipole - freq_right_dipole) < best_dnu**2/self.cp.dnu_mixed_modes_separation_scaling/self.cp.dnu_rg:
+                            # Since the two peaks are too close, these peaks are likely to originate from a single multiplet. 
+                            # Hence take as detected only the one with the largest sampling counts
                         
-                        worst_peak_index = np.argmin([sampling_counts[detected_dipole_indices[k]],sampling_counts[detected_dipole_indices[k+1]]])
-                        worst_peak_index = detected_dipole_indices[k + worst_peak_index]
-                        detection_probability[worst_peak_index] = 0.0
+                            worst_peak_index = np.argmin([sampling_counts[detected_dipole_indices[k]],sampling_counts[detected_dipole_indices[k+1]]])
+                            worst_peak_index = detected_dipole_indices[k + worst_peak_index]
+                            detection_probability[worst_peak_index] = 0.0
             
-            # If the star is a MS, a high-luminosity RGB star, or an early AGB star, make sure that there is only one dipole mode for this chunk.
-            if (((best_dnu >= self.cp.dnu_rg) & (best_dnu < self.cp.dnu_sg) & (teff >= self.cp.teff_sg)) or (best_dnu >= self.cp.dnu_sg) or (best_dnu <= self.cp.dnu_agb)):
-                detected_dipole_indices = np.where((angular_degree==1) & ((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0)))[0] 
-                # If more than one dipole mode is found, then pick up the one with the best combination of SPSD maximum, ASEF maximum, sampling counts and 
-                # frequency position with respect to the global frequency of the dipole mode.
+                # If the star is a MS, a high-luminosity RGB star, or an early AGB star, make sure that there is only one dipole mode for this chunk.
+                if (((best_dnu >= self.cp.dnu_rg) & (best_dnu < self.cp.dnu_sg) & (teff >= self.cp.teff_sg)) or (best_dnu >= self.cp.dnu_sg) or (best_dnu <= self.cp.dnu_agb)):
+                    detected_dipole_indices = np.where((angular_degree==1) & ((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0)))[0] 
+                    # If more than one dipole mode is found, then pick up the one with the best combination of SPSD maximum, ASEF maximum, sampling counts and 
+                    # frequency position with respect to the global frequency of the dipole mode.
                 
-                if len(detected_dipole_indices) > 1:
-                    freq_diff = abs(freq1[detected_dipole_indices] - freq_dipole)
-                    freq_weights_dipole = 1/freq_diff
-                    freq_weights_dipole /= np.sum(freq_weights_dipole)
-                    asef_weights_dipole = asef_weights[detected_dipole_indices]
-                    asef_integral_weights_dipole = asef_integral_weights[detected_dipole_indices]
-                    spsd_weights_dipole = spsd_weights[detected_dipole_indices]
-                    sampling_weights_dipole = sampling_weights[detected_dipole_indices]
-                    total_weights_dipole = self.cp.weight_freq_fraction*freq_weights_dipole + self.cp.weight_asef_fraction*asef_weights_dipole + self.cp.weight_spsd_fraction*spsd_weights_dipole + self.cp.weight_sampling_fraction*sampling_weights_dipole + self.cp.weight_asef_integral_fraction*asef_integral_weights_dipole
-                    total_weights_dipole /= np.sum(total_weights_dipole)
-                    index = np.argmax(total_weights_dipole)
-                    dipole_index = detected_dipole_indices[index]
-                    freq_dipole_chunk = freq1[dipole_index]
-                    bad_dipole_indices = np.where(detected_dipole_indices != dipole_index)[0]
+                    if len(detected_dipole_indices) > 1:
+                        freq_diff = abs(freq1[detected_dipole_indices] - freq_dipole)
+                        freq_weights_dipole = 1/freq_diff
+                        freq_weights_dipole /= np.sum(freq_weights_dipole)
+                        asef_weights_dipole = asef_weights[detected_dipole_indices]
+                        asef_integral_weights_dipole = asef_integral_weights[detected_dipole_indices]
+                        spsd_weights_dipole = spsd_weights[detected_dipole_indices]
+                        sampling_weights_dipole = sampling_weights[detected_dipole_indices]
+                        total_weights_dipole = self.cp.weight_freq_fraction*freq_weights_dipole + self.cp.weight_asef_fraction*asef_weights_dipole + self.cp.weight_spsd_fraction*spsd_weights_dipole + self.cp.weight_sampling_fraction*sampling_weights_dipole + self.cp.weight_asef_integral_fraction*asef_integral_weights_dipole
+                        total_weights_dipole /= np.sum(total_weights_dipole)
+                        index = np.argmax(total_weights_dipole)
+                        dipole_index = detected_dipole_indices[index]
+                        freq_dipole_chunk = freq1[dipole_index]
+                        bad_dipole_indices = np.where(detected_dipole_indices != dipole_index)[0]
 
-                    # Flag the bad modes as undetected to remove them from the list of good frequencies.
+                        # Flag the bad modes as undetected to remove them from the list of good frequencies.
                     
-                    detection_probability[detected_dipole_indices[bad_dipole_indices]] = 0.0
+                        detection_probability[detected_dipole_indices[bad_dipole_indices]] = 0.0
 
-                    
+        else:
+            detection_probability[np.where(angular_degree == 1)[0]] = 0.0
+
         # Produce the final list of detected frequency peaks, and attached mode identification, to be stored as output and
         # overplotted on the PSD of the star.
 
@@ -2590,7 +2665,7 @@ class Chunk(FamedStar):
         detected_indices = np.where((detection_probability >= self.cp.detection_probability_threshold) | (detection_probability==-99.0))[0]
         local_dp = 0.
 
-        if len(detected_indices) >0 :
+        if len(detected_indices) > 0:
             freq1_final = freq1[detected_indices]
             freq_sig1_final = freq_sig1[detected_indices]
             asef_maximum_final = asef_maximum[detected_indices]
@@ -2663,8 +2738,7 @@ class Chunk(FamedStar):
                             range_midpoint = (freq_duplet[1] + freq_duplet[0]) / 2.0
                             range_maximum_new = [[range_maximum_final[0,local_index],range_midpoint],[range_midpoint,range_maximum_final[1,local_index]]]
                             divisions_maximum_new = [[divisions_maximum_final[0,local_index],range_midpoint],[range_midpoint,divisions_maximum_final[1,local_index]]]
-
-                            
+ 
                             left_left_bound = range_maximum_new[0][0]
                             left_right_bound = range_maximum_new[1][0]
                             right_left_bound = range_maximum_new[0][1]
@@ -3059,10 +3133,10 @@ class Chunk(FamedStar):
         if self.cp.save_complete_lists:
             # Save total list of frequencies, without selection of significant peaks.
             with open(str(peakbagging_filename_chunk) + run + '_' + self.modality + '.all.txt','w') as f:
-                f.write('# Col 1: n, Col 2: l, Col 3: Frequency (microHz), Col 4: 1-sigma Frequency (microHz), \n')
-                f.write('# Col 5: Left frequency range (microHz), Col 6: Right frequency range (microHz), \n')
-                f.write('# Col 7: Left frequency division (microHz), Col 8: Right frequency division (microHz), \n')
-                f.write('# Col 9: ASEF maximum (nested iterations), Col 10: Sampling counts (counts), Col 11: SPSD maximum (ppm^2/microHz), \n')
+                f.write('# Col 1: n, Col 2: l, Col 3: Frequency (uHz), Col 4: 1-sigma Frequency (uHz), \n')
+                f.write('# Col 5: Left frequency range (uHz), Col 6: Right frequency range (uHz), \n')
+                f.write('# Col 7: Left frequency division (uHz), Col 8: Right frequency division (uHz), \n')
+                f.write('# Col 9: ASEF maximum (nested iterations), Col 10: Sampling counts (counts), Col 11: SPSD maximum (ppm^2/uHz), \n')
                 f.write('# Col 12: P (detection), Col 13: P (rotation), Col 14: P (duplicity), Col 15: Peak blending flag, Col 16: Sinc^2 profile flag.\n')
 
                 for i in range(0,n_freq):
@@ -3072,14 +3146,14 @@ class Chunk(FamedStar):
         if n_freq_final != 0:
             # Save local asymptotic parameters and the final list of frequencies with peak significance and rotation tests applied.
             with open((str(peakbagging_filename_chunk)) + run + '_' + self.modality + '.txt','w') as f:
-                f.write('# Local epsilon, Local d02 (microHz), local DeltaP, FWHM radial mode (microHz), FWHM octupole mode (microHz), FWHM multi-modal fit (microHz)\n')
+                f.write('# Local epsilon, Local d02 (uHz), local DeltaP (s), FWHM radial mode (uHz), FWHM octupole mode (uHz), FWHM multi-modal fit (uHz)\n')
                 f.write('{:.3f}  {:10.3f}  {:10.3f}  {:10.4f}  {:10.4f}  {:10.4f} \n'.format(local_epsi,local_d02,local_dp,fwhm_radial_fit,largest_octupole_fwhm,fit_linewidth))
                 
                 # Save the individual oscillation frequencies from the global fit, their uncertainties, mode identification    
-                f.write('# Col 1: n, Col 2: l, Col 3: m, Col 4: Frequency (microHz), Col 5: 1-sigma Frequency (microHz), \n')
-                f.write('# Col 6: Left frequency range (microHz), Col 7: Right frequency range (microHz), \n')
-                f.write('# Col 8: Left frequency division (microHz), Col 9: Right frequency division (microHz), \n')
-                f.write('# Col 10: ASEF maximum (nested iterations), Col 11: Sampling counts (counts), Col 12: SPSD maximum (ppm^2/microHz), Col 13: cosi \n')
+                f.write('# Col 1: n, Col 2: l, Col 3: m, Col 4: Frequency (uHz), Col 5: 1-sigma Frequency (uHz), \n')
+                f.write('# Col 6: Left frequency range (uHz), Col 7: Right frequency range (uHz), \n')
+                f.write('# Col 8: Left frequency division (uHz), Col 9: Right frequency division (uHz), \n')
+                f.write('# Col 10: ASEF maximum (nested iterations), Col 11: Sampling counts (counts), Col 12: SPSD maximum (ppm^2/uHz), Col 13: cosi \n')
                 f.write('# Col 14: P (detection), Col 15: P (rotation), Col 16: P (duplicity), Col 17: Peak blending profile flag, Col 18: Sinc^2 profile flag. \n')
 
                 for i in range(0, n_freq_final):
@@ -3124,6 +3198,7 @@ class Chunk(FamedStar):
         """
         Produce all plots related to the CHUNK modality and save as desired.
         """
+        chunk_number = int(chunk_number)
         plt.style.use(self.cp.famed_path/self.cp.mplstyle)
         
         if chunk_number is not None:

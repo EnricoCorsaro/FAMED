@@ -46,7 +46,7 @@ spawn,'./asymptotic ' + catalog_id + ' ' + star_id + ' ' + $
 
 if (size(error))[0] ne 0 then begin
     if info.print_on_screen eq 1 then begin
-        print,' Asymptotic fit could not be completed. '
+        print,' Asymptotic fit stopped before reaching termination factor. '
     endif
 endif
 

@@ -134,17 +134,20 @@ Similar keyword as ``fwhm_global_scaling`` but for the specific case of stars ev
 * ``fwhm_chunk_scaling_ms``
 Similar keyword as ``fwhm_global_scaling`` but for the CHUNK modality and the case of MS stars, having either :math:`\Delta\nu_\mathrm{RG} < \Delta\nu \leq \Delta\nu_\mathrm{SG}` and :math:`T_\mathrm{eff} \geq T_\mathrm{eff,SG}` or :math:`\Delta\nu \geq \Delta\nu_\mathrm{SG}`. The default value is set to 10 for improving the resolution on the multi-modal sampling due to the very large oscillation mode linewidths found in these stars.
 
-* ``fwhm_chunk_scaling_sg``
-Similar keyword as ``fwhm_global_scaling`` but for the CHUNK modality and the case of subgiant stars, having :math:`\Delta\nu_\mathrm{RG} < \Delta\nu < \Delta\nu_\mathrm{SG}` and :math:`T_\mathrm{eff} < T_\mathrm{eff,SG}`. The default value is set to 1.2, implying an almost negligible scaling.
+* ``fwhm_chunk_scaling_early_sg``
+Similar keyword as ``fwhm_chunk_scaling_ms`` but for the CHUNK modality and the case of early subgiant stars, having :math:`\Delta\nu_\mathrm{RG} < \Delta\nu < \Delta\nu_\mathrm{SG}` and :math:`T_\mathrm{eff}` towards the upper limit :math:`T_\mathrm{eff,SG}`. This value is set to 1.0, implying an almost negligible scaling to better accomodate the large mode linewidths founds in hotter subgiants, but it increases linearly with :math:`T_\mathrm{eff} as the temperature decreases, up to the liming value imposed by ``fwhm_chunk_scaling_late_sg`` (see below).
+
+* ``fwhm_chunk_scaling_late_sg``
+Similar keyword as ``fwhm_chunk_scaling_early_sg`` but for the case of late (hence cool) subgiant stars, close to the transition to the low RGB, having :math:`\Delta\nu_\mathrm{RG} < \Delta\nu < \Delta\nu_\mathrm{SG}` and :math:`T_\mathrm{eff}` towards the lower limit of 4500 K. This value is set to 3.0, allowing to obtain a finer resolution on the spectrum due to the significantly narrower mode linewidths found for these stars as compared to those of the early subgiants. Again this scaling varies linearly with :math:`T_\mathrm{eff}` and it decreases as the temperature increases, up to the limiting value imposed by ``fwhm_chunk_scaling_early_sg``.
 
 * ``fwhm_chunk_scaling_rg``
-Similar keyword as ``fwhm_global_scaling`` but for the CHUNK modality and the case of low-luminosity RGB stars, having :math:`\Delta\nu_\mathrm{CL2} < \Delta\nu \leq \Delta\nu_\mathrm{RG}`. The default value is set to 5 to accomodate the presence of very narrow oscillation peaks arising from dipolar mixed modes.
+Similar keyword as ``fwhm_chunk_scaling_ms`` but for the case of low-luminosity RGB stars, having :math:`\Delta\nu_\mathrm{CL2} < \Delta\nu \leq \Delta\nu_\mathrm{RG}`. The default value is set to 5 to accomodate the presence of very narrow oscillation peaks arising from dipolar mixed modes.
 
 * ``fwhm_chunk_scaling_cl``
-Similar keyword as ``fwhm_global_scaling`` but for the CHUNK modality and the case of primary and secondary clump stars, having :math:`\Delta\nu_\mathrm{AGB} < \Delta\nu \leq \Delta\nu_\mathrm{CL2}`. The default value is set to 8 to accomodate the presence of very narrow oscillation peaks arising from dipolar mixed modes and the large mode linewidths caused by the hotter temperatures of clump stars relative to RGB stars.
+Similar keyword as ``fwhm_chunk_scaling_ms`` but for the case of primary and secondary clump stars, having :math:`\Delta\nu_\mathrm{AGB} < \Delta\nu \leq \Delta\nu_\mathrm{CL2}`. The default value is set to 8 to accomodate the presence of very narrow oscillation peaks arising from dipolar mixed modes and the large mode linewidths caused by the hotter temperatures of clump stars relative to RGB stars.
 
 * ``fwhm_chunk_scaling_tip``
-Similar keyword as ``fwhm_global_scaling`` but for the CHUNK modality and the case of stars evolving toward the tip of the RGB, or into early AGB, having :math:`\Delta\nu \leq \Delta\nu_\mathrm{AGB}`. The default value is set to 12 to accomodate the very narrow oscillation mode linewidths found in these cool stars.
+Similar keyword as ``fwhm_chunk_scaling_ms`` but for the case of stars evolving toward the tip of the RGB, or into early AGB, having :math:`\Delta\nu \leq \Delta\nu_\mathrm{AGB}`. The default value is set to 12 to accomodate the very narrow oscillation mode linewidths found in these cool stars.
 
 * ``dnu_overlap_fraction_ms``
 The fraction of :math:`\Delta\nu` by which each chunk identified by GLOBAL is extended on the left side of the range for MS stars, having either :math:`\Delta\nu_\mathrm{RG} < \Delta\nu \leq \Delta\nu_\mathrm{SG}` and :math:`T_\mathrm{eff} \geq T_\mathrm{eff,SG}` or :math:`\Delta\nu \geq \Delta\nu_\mathrm{SG}`. The default value is set to 0.15.
@@ -269,10 +272,10 @@ Allows plotting the weights for candidate radial mode peaks as a function of the
 Allows plotting the weights for candidate dipole mode peaks as a function of the frequency extracted inside the chunk in the CHUNK module. Can be useful for debugging purposes. The default value is 0, meaning that no plotting is produced.
 
 * ``threshold_search_radial_asef_integral``
-In the search for the proper chunk radial mode frequency in the CHUNK module, this parameter sets a lower limit threshold on the weight of the integral of the ASEF for the peak under inspection. This parameter is used to check whether the selected peak is not the adjacent quadrupole mode. If the weight of the given peak exceeds the fraction of weight imposed by this threshold, then the peak can be considered for further analysis as a candidate radial mode peak. The default value is 0.70.
+In the search for the proper chunk radial mode frequency in the CHUNK module, this parameter sets a lower limit threshold on the weight of the integral of the ASEF for the peak under inspection. This parameter is used to check whether the selected peak is not the adjacent quadrupole mode. If the weight of the new peak under inspection exceeds the fraction of weight imposed by this threshold (with respect to the weight of the peak initially selected as a radial mode), then the peak can be considered for further analysis as a candidate radial mode peak. The default value is 0.90.
 
 * ``threshold_search_radial_asef_maximum``
-n the search for the proper chunk radial mode frequency in the CHUNK module, this parameter sets a lower limit threshold on the weight of the maximum of the ASEF for the peak under inspection. This parameter is used to check whether the selected peak is not the adjacent quadrupole mode. If the weight of the given peak exceeds the fraction of weight imposed by this threshold, then the peak can be considered for further analysis as a candidate radial peak. The default value is 0.45.
+n the search for the proper chunk radial mode frequency in the CHUNK module, this parameter sets a lower limit threshold on the weight of the maximum of the ASEF for the peak under inspection. This parameter is used to check whether the selected peak is not the adjacent quadrupole mode. If the weight of the new peak under inspection exceeds the fraction of weight imposed by this threshold (with respect to the weight of the peak initially selected as a radial mode), then the peak can be considered for further analysis as a candidate radial peak. The default value is 0.90.
 
 * ``previous_radial_range_fraction``
 The fraction of frequency range of the chunk that is used to locate the first (potential) frequency candidates of the same chunk. These frequencies are used to check whether a potential radial mode from the previous chunk is still present, so that it can be excluded from further analysis. This is used only for chunks having a mean frequency above :math:`\nu_\mathrm{max}`. The default value is 8.
@@ -495,6 +498,9 @@ The number of times the fit to estimate the FWHM of a peak within the CHUNK modu
 
 * ``n_peak_test``
 The number of times a peak fit for the peak significance test is repeated. Each repetition is not run in parallel with the others. However, all the peak fits within a single repetition are run in parallel, with a maximum number of parallel processes set according to the parameter ``n_threads``. The default value is 2. 
+
+* ``dipole_search_activated``
+A flag specifying whether dipole and octupole modes should be considered in the CHUNK analysis. The default value is set to 1, meaning that the pipeline will automatically perform a search and detection test (including rotation and duplicity tests if activated too) for candidate :math:`\ell = 1` modes, as well as the search for the :math:`\ell = 3` mode of the chunk. If only :math:`\ell = 0,2` modes are required within the analysis, e.g. for modelling purporses, then dipole and octupole modes can be discarded. Setting this flag to 0 will significantly speed up the overall computation.
 
 * ``save_test_files``
 A flag specifying whether the output files to run the PeakBagging code for the peak testing are to be stored. The default value is 0, meaning that these files are not kept in memory. This option is only recommended for debugging purposes, or for particular testings, since the large number of peak fits produced during the peak testing phase typically yields a large amount of output files and therefore of occupied memory space.

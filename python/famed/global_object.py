@@ -200,11 +200,11 @@ class Global(FamedStar):
 
         if self.cp.print_on_screen:
             print(' ---------------------------------------------------')
-            print(' Parameter range (microHz): [',str(np.min(par0)),', ', str(np.max(par0)),']')
+            print(' Parameter range (uHz): [',str(np.min(par0)),', ', str(np.max(par0)),']')
             print(' ---------------------------------------------------\n')
             print(' -------------------------------------------------')
-            print(' Minimum PSD frequency: ',str(np.min(freq)),' muHz')
-            print(' Maximum PSD frequency: ',str(np.max(freq)),' muHz')
+            print(' Minimum PSD frequency: ',str(np.min(freq)),' uHz')
+            print(' Maximum PSD frequency: ',str(np.max(freq)),' uHz')
             print(' -------------------------------------------------\n')
 
         # Load the nuMax information
@@ -339,7 +339,7 @@ class Global(FamedStar):
 
         if self.cp.save_complete_lists:
             with open(self.star_dir/self.cp.summary_subdir/(self.catalog_id + self.star_id + self.cp.peakbagging_filename_label + 'global.all.txt'),'w') as f:
-                f.write('# Frequency (microHz), 1-sigma frequency (microHz), ASEF maximum (iterations), sampling counts\n')
+                f.write('# Frequency (uHz), 1-sigma frequency (uHz), ASEF maximum (iterations), sampling counts\n')
             for i in range(0,n_freq):
                 f.write('%.5f\t%.5f\t%i\t%i\n'%(freq1[i],freq_sig1[i],asef_maximum[i],sampling_counts[i]))
 
@@ -486,7 +486,7 @@ class Global(FamedStar):
                     freq1_right = freq1[central_indicies[2::3]]
 
                     if self.cp.print_on_screen:
-                        print('\nUsing double step to check frequency ridge')
+                        print('\n Using double step to check frequency ridge')
 
                 freq1_left_modulo = freq1_left%fit_dnu
                 freq1_right_modulo = freq1_right%fit_dnu
@@ -546,7 +546,7 @@ class Global(FamedStar):
 
                     if flag_double_step:
                         freq1_median = np.r_[freq1_left_median,freq1_central_median,freq1_right_median]
-                        freq1_modulo_median = np.r_[freq1_left_modulo_median,feq1_central_modulo_median,freq1_right_modulo_median]
+                        freq1_modulo_median = np.r_[freq1_left_modulo_median,freq1_central_modulo_median,freq1_right_modulo_median]
                         ridge_index = np.argmin(np.r_[max_dev_left,max_dev_central,max_dev_right])
                         min_max_dev = min(max_dev_left,max_dev_central,max_dev_right)
                     else:
@@ -733,17 +733,25 @@ class Global(FamedStar):
                     self.bad_epsi = True
                     
                     if self.cp.print_on_screen and k==0:
-                        print(' Forcing an input central radial mode frequency: {} muHz\n'.format(radial_freq_reference))
+                        print(' Forcing an input central radial mode frequency: {} uHz\n'.format(radial_freq_reference))
                 
                 radial_freq_reference_array[k] = radial_freq_reference
                 modulo_reference = radial_freq_reference%fit_dnu
                 echelle_epsi = modulo_reference/fit_dnu
 
-                if (fit_dnu <= self.cp.dnu_threshold) & (echelle_epsi < epsilon_upper_limit - 1.0):
-                     echelle_epsi += 1
+                if fit_dnu <= self.cp.dnu_threshold:
+                    if echelle_epsi < (epsilon_upper_limit - 1.0):
+                        echelle_epsi += 1
+                        
+                        if self.cp.print_on_screen and k==0:
+                            print(' Increasing epsilon by 1 for RG.')
+                else:
+                    if echelle_epsi < 0.6:
+                        # Limit from White et al. 2011
+                        echelle_epsi += 1
 
-                     if self.cp.print_on_screen and k==0:
-                        print(' Increasing epsilon by 1.')
+                        if self.cp.print_on_screen and k==0:
+                            print(' Increasing epsilon by 1 for MS and SG.')
 
                 echelle_epsi_array[k] = echelle_epsi
 
@@ -915,7 +923,7 @@ class Global(FamedStar):
         if self.cp.print_on_screen:
             print('\n Epsilon values from the sliding fit: {}'.format(echelle_epsi_array))
             print(' Final epsilon: {}'.format(median_echelle_epsi))
-            print(' The reference radial mode is at: {} muHz\n'.format(radial_freq_reference))
+            print(' The reference radial mode is at: {} uHz\n'.format(radial_freq_reference))
 
         fit_epsi = median_echelle_epsi 
         fit_alpha = 0.        
@@ -1185,7 +1193,7 @@ class Global(FamedStar):
         # Save the value of dnu from ACF and the value of epsilon from diagram
 
         with open(peakbagging_filename_global, 'w') as f:
-            f.write('# nuMax (microHz), DeltaNu_ACF (microHz), DeltaNu_fit (microHz), epsilon, epsilon (interpolated), alpha, Teff (K), N_chunks, Flag depressed dipole (0 = NO, 1 = YES), Evolutionary Stage (0 = MS, 1 = SG, 2 = RGB, 3 = RC1, 4 = RC2, 5 = AGB)\n')
+            f.write('# nuMax (uHz), DeltaNu_ACF (uHz), DeltaNu_fit (uHz), epsilon, epsilon (interpolated), alpha, Teff (K), N_chunks, Flag depressed dipole (0 = NO, 1 = YES), Evolutionary Stage (0 = MS, 1 = SG, 2 = RGB, 3 = RC1, 4 = RC2, 5 = AGB)\n')
             f.write('{:.4f}  {:.4f}  {:.4f}  {:.4f}  {:.4f}   {:.4f}  {:.1f}  {:d}  {:d}  {:d}\n'.format(numax,acf_dnu,best_dnu,best_epsi,interp_epsi,best_alpha,teff,n_chunks,flag_depressed_dipole,evolutionary_stage_index))
 
             # Save the frequency positions of each chunk identified in GLOBAL.
@@ -1202,7 +1210,7 @@ class Global(FamedStar):
             # their uncertainties, mode identification and associated FWHM from
             # Ball+18.
 
-            f.write('# n, l, frequency (microHz), 1-sigma frequency (microHz), ASEF maximum (iterations), FWHM from predictions (microHz)\n')
+            f.write('# n, l, frequency (uHz), 1-sigma frequency (uHz), ASEF maximum (iterations), FWHM from predictions (uHz)\n')
             for i in range(0,n_freq):
                 f.write('{:<3d} {:>2d} {:>12.5f} {:>12.5f} {:>7d} {:>12.5f}\n'.format(order_number[i],angular_degree[i],freq1_final[i],freq_sig1_final[i],int(asef_maximum_final[i]),linewidth[i]))
 

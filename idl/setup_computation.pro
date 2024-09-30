@@ -95,7 +95,8 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        fwhm_global_scaling:            (float(par_value(where(par_name eq 'fwhm_global_scaling'))))[0],            $
        fwhm_global_scaling_tip:        (float(par_value(where(par_name eq 'fwhm_global_scaling_tip'))))[0],        $
        fwhm_chunk_scaling_ms:          (float(par_value(where(par_name eq 'fwhm_chunk_scaling_ms'))))[0],          $
-       fwhm_chunk_scaling_sg:          (float(par_value(where(par_name eq 'fwhm_chunk_scaling_sg'))))[0],          $
+       fwhm_chunk_scaling_early_sg:    (float(par_value(where(par_name eq 'fwhm_chunk_scaling_early_sg'))))[0],    $
+       fwhm_chunk_scaling_late_sg:     (float(par_value(where(par_name eq 'fwhm_chunk_scaling_late_sg'))))[0],     $
        fwhm_chunk_scaling_rg:          (float(par_value(where(par_name eq 'fwhm_chunk_scaling_rg'))))[0],          $
        fwhm_chunk_scaling_cl:          (float(par_value(where(par_name eq 'fwhm_chunk_scaling_cl'))))[0],          $
        fwhm_chunk_scaling_tip:         (float(par_value(where(par_name eq 'fwhm_chunk_scaling_tip'))))[0],         $
@@ -217,6 +218,7 @@ cp = { teff_sun:                   (float(par_value(where(par_name eq 'teff_sun'
        ; Peak testing
        n_fwhm_fit:                             (fix(par_value(where(par_name eq 'n_fwhm_fit'))))[0],                                 $
        n_peak_test:                            (fix(par_value(where(par_name eq 'n_peak_test'))))[0],                                $
+       dipole_search_activated:                (fix(par_value(where(par_name eq 'dipole_search_activated'))))[0],                    $
        detection_probability_threshold:        (float(par_value(where(par_name eq 'detection_probability_threshold'))))[0],          $
        rotation_probability_threshold:         (float(par_value(where(par_name eq 'rotation_probability_threshold'))))[0],           $
        duplicity_probability_threshold:        (float(par_value(where(par_name eq 'duplicity_probability_threshold'))))[0],          $
