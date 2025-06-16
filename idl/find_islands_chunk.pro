@@ -1003,7 +1003,7 @@ if n_radial_chunk ne 0 then begin
             upper_bound_radial = lower_bound_radial + abs(lower_bound_radial - lower_bound_quadrupole) 
         endif
 
-        if (upper_bound_radial - lower_bound_radial) <= d02/2.0 then begin
+        if (upper_bound_radial - lower_bound_radial) le d02/2.0 then begin
             print,' Enlarging the upper bound for l=0 because otherwise too close to the lower bound.'
             upper_bound_radial = lower_bound_radial + abs(lower_bound_radial - lower_bound_quadrupole) 
         endif
