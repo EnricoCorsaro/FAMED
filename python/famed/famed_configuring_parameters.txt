@@ -5,6 +5,7 @@ root_path YOUR_LOCAL_ROOT_PATH_HERE/
 famed_path YOUR_LOCAL_ROOT_PATH_HERE/FAMED/python/famed/
 isla_subdir isla
 pb_subdir pb
+complete_subdir cmplt
 as_subdir as
 figs_subdir figs
 summary_subdir summary

@@ -47,6 +47,8 @@ class Global(FamedStar):
 
         if not os.path.isdir(self.star_dir/self.cp.isla_subdir):
             os.makedirs(self.star_dir/self.cp.isla_subdir,exist_ok=True)
+        if not os.path.isdir(self.star_dir/self.cp.complete_subdir):
+            os.makedirs(self.star_dir/self.cp.complete_subdir,exist_ok=True)
         if not os.path.isdir(self.star_dir/self.cp.pb_subdir):
             os.makedirs(self.star_dir/self.cp.pb_subdir,exist_ok=True)
         if not os.path.isdir(self.star_dir/self.cp.as_subdir):
