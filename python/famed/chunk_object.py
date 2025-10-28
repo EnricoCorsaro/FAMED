@@ -382,7 +382,7 @@ class Chunk(FamedStar):
                 freq_sig_previous_global = freq_sig_global[tmp_previous_chunk]
                 ell_previous_global = ell_global[tmp_previous_chunk]
             else:
-                ell_previous_global = -1
+                ell_previous_global = np.array([])
 
             freq_global = freq_global[tmp_chunk]
             freq_sig_global = freq_sig_global[tmp_chunk]
@@ -701,16 +701,20 @@ class Chunk(FamedStar):
         else:
             if next_run_number <= n_chunks-1:
                 if os.path.isfile(str(peakbagging_filename_chunk) + str(next_run_number) + '_' + self.modality + '.txt'):
-                    enn_next_chunk, ell_next_chunk, freq_next_chunk, freq_sig_next_chunk = np.loadtxt(str(peakbagging_filename_chunk) + str(next_run_number) + '_' + self.modality + '.txt', usecols=(0,1,3,4),skiprows=3,unpack=True)
+                    enn_next_chunk, ell_next_chunk, freq_next_chunk, freq_sig_next_chunk = np.loadtxt(str(peakbagging_filename_chunk) + str(next_run_number) + '_' + self.modality + '.txt', usecols=(0,1,3,4),skiprows=7,unpack=True)
                     if isinstance(enn_next_chunk,float):
-                        enn_next_chunk = [int(enn_next_chunk)]
-                        ell_next_chunk = [ell_next_chunk]
-                        freq_next_chunk = [freq_next_chunk]
-                        freq_sig_next_chunk = [freq_sig_next_chunk]
+                        enn_next_chunk = np.array([enn_next_chunk],dtype=int)
+                        ell_next_chunk = np.array([ell_next_chunk],dtype=int)
+                        freq_next_chunk = np.array([freq_next_chunk],dtype=float)
+                        freq_sig_next_chunk = np.array([freq_sig_next_chunk],dtype=float)
                     else:                        
                         enn_next_chunk = np.array(enn_next_chunk,dtype=int)
+
                     tmp_next_radial = np.where(ell_next_chunk==0)[0]
-           
+                    print(tmp_next_radial)
+                    print(freq_next_chunk)
+                    print(freq_next_chunk[tmp_next_radial])
+
                     # Check whether the selected chunk contains a l=0 mode, otherwise move to the one next to it.
 
                     if len(tmp_next_radial) > 0:
@@ -2437,7 +2441,7 @@ class Chunk(FamedStar):
         
             if n_dipole_chunk != 0:
                 # -------------------------------------------------------------------
-                # Peak significance test for candidate octupole l=3) mode
+                # Peak significance test for candidate octupole (l=3) mode
                 # -------------------------------------------------------------------
                 # One or more significant dipole modes are found in the chunk 
         
@@ -3185,7 +3189,6 @@ class Chunk(FamedStar):
         self.asef_hist[run_number] = asef_hist
         self.asef_bins[run_number] = n_bins
         
-                    
         # Save stuff into pickle for later steps...
         if self.cp.save_progress_pickle:
             pickle.dump(self,open(self.star_dir/(self.catalog_id+self.star_id+'_chunk.pickle'),'wb'))
@@ -3198,10 +3201,10 @@ class Chunk(FamedStar):
         """
         Produce all plots related to the CHUNK modality and save as desired.
         """
-        chunk_number = int(chunk_number)
         plt.style.use(self.cp.famed_path/self.cp.mplstyle)
         
         if chunk_number is not None:
+            chunk_number = int(chunk_number)
             print(' Making plot for chunk:',chunk_number)
             famed_plots.chunk_plot(self,chunk_number)
             

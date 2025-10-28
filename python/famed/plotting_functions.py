@@ -10,10 +10,12 @@ __all__ = ['global_plot',
            'nested_iterations_plot',
            'psd_plot',
            'psd_inset_plot',
+           'psd_fit_plot',
            'epsilon_plot',
            'acf_plot',
            'asef_histogram',
-           'text_panel']
+           'text_panel',
+           'lorentzian_profile']
 
 plt.ion()
 
@@ -54,6 +56,9 @@ def chunk_plot(famed_obj,chunk=None):
     famed_obj : FamedStar object
         A FamedStar class object that has been processed through the GLOBAL 
         module of FAMED.
+    chunk : int
+        The chunk identifier for which the plot is desired. If chunk is none,
+        then all the chunks are plotted in one single figure.
     """
 
     if chunk is not None:
@@ -75,11 +80,26 @@ def chunk_plot(famed_obj,chunk=None):
         ax_psd_total = fig.add_axes([0.05,0.1,0.94,0.88])
         psd_total_plot(famed_obj,ax_psd_total)
 
-def complete_plot(famed_obj):
-    print('This feature is not yet implemented')
-    
 def echelle_plot(famed_obj):
     print('This feature is not yet implemented')
+
+def complete_plot(famed_obj,chunk):
+    """
+    Produce the COMPLETE output plot for FAMED.
+
+    Parameters
+    ----------
+    famed_obj : FamedStar object
+        A FamedStar class object that has been processed through the GLOBAL 
+        module of FAMED.
+    chunk : float (or int)
+        The chunk identifier for which the plot is desired.
+    """
+
+    fig = plt.figure(figsize=(18,6))
+    plt.clf()
+    ax_psd = fig.add_axes([0.05,0.1,0.94,0.88])
+    psd_fit_plot(famed_obj,chunk,ax_psd)
 
 def nested_iterations_plot(famed_obj,ax=None,chunk=None):
     """
@@ -235,11 +255,10 @@ def psd_total_plot(famed_obj,ax=None):
     degrees_total = np.array([])
     sigs_total = np.array([])
 
-    print("n_chunks: ", famed_obj.n_chunks)
     for j in range(0,famed_obj.n_chunks-1):
         freq, psd, spsd, bg_level = famed_obj.freq[j], famed_obj.psd[j], famed_obj.spsd[j], famed_obj.bg_level[j]
         modes,orders,degrees,sigs = famed_obj.freqs[j], famed_obj.orders[j], famed_obj.degrees[j], famed_obj.freqs_sig[j]
-        
+     
         freq_total = np.append(freq_total,freq)
         psd_total = np.append(psd_total,psd)
         spsd_total = np.append(spsd_total,spsd)
@@ -323,6 +342,86 @@ def psd_total_plot(famed_obj,ax=None):
             
             mode_number += 1
 
+
+def psd_fit_plot(famed_obj,chunk,ax=None):
+    """
+    Plot the PSD of a specified chunk with the high-dimensional fit 
+    obtained from the COMPLETE modality overlaid on top of the PSD.
+    The mode identification, with radial order and angular degree as obtained 
+    from the CHUNK modality is also indicated.
+
+    Parameters
+    ----------
+    famed_obj : FamedStar object
+        A FamedStar class object that has been processed through the GLOBAL 
+        module of FAMED.
+    chunk : float (or int)
+        The identifier of the chunk for which the plot is requested. The identifier
+        must match one of those available from the execution of the CHUNK modality.
+    ax : matplotlib.pyplot.axes object, default: None
+        Axes to plot this figure to. If None, the current axes are cleared and
+        the plot is created on the full figure.
+    """
+
+    peakbagging_data_dir = famed_obj.cp.diamonds_path/'PeakBagging'/'data'
+    freq, psd = np.loadtxt(peakbagging_data_dir/(famed_obj.catalog_id + famed_obj.star_id + '.txt'), unpack=True)
+    bg_level = np.loadtxt(famed_obj.star_dir/'backgroundLevel.txt', usecols=(1,)) 
+    nyq = np.loadtxt(famed_obj.star_dir/'NyquistFrequency.txt')
+    zeta = 2.0*np.sqrt(2.0)/np.pi
+    r = (np.sinc(0.5 * freq/nyq))**2
+
+    chunk = int(chunk)
+    index = np.where(np.array(famed_obj.chunk_number_complete) == chunk)[0]
+    index = int(index)
+
+    mode_freq, mode_amp, mode_fwhm, enn, ell, emm = famed_obj.mode_freq[index], famed_obj.mode_amp[index], famed_obj.mode_fwhm[index], famed_obj.enn[index], famed_obj.ell[index], famed_obj.emm[index]
+    freq_left_margin, freq_right_margin = famed_obj.freq_left_margin[index], famed_obj.freq_right_margin[index]
+    mode_freq_sig_low, mode_freq_sig_up = famed_obj.mode_freq_sig_low[index], famed_obj.mode_freq_sig_up[index]
+
+    ell = np.array(ell,dtype=int)
+    enn = np.array(enn,dtype=int)
+ 
+    mode_sig = np.sqrt(np.square(mode_freq_sig_low) + np.square(mode_freq_sig_up))/np.sqrt(2)
+
+    f_temp_index = np.where((freq <= freq_right_margin) & (freq >= freq_left_margin))[0]
+    freq = freq[f_temp_index]
+    psd = psd[f_temp_index]
+    bg_level = bg_level[f_temp_index]
+    pkb_profile = np.zeros(len(freq))
+
+    for i in range(0,len(mode_freq)):
+        profile = lorentzian_profile(freq,mode_freq[i],mode_amp[i],mode_fwhm[i])
+        pkb_profile += profile
+
+    pkb_profile += bg_level
+
+    if ax is None:
+        plt.clf()
+        ax = plt.axes()
+    ax.set_xlabel(r'Frequency ($\mu$Hz)')
+    ax.set_ylabel(r'PSD (ppm$^2/\mu$Hz)')
+    ax.semilogy(freq,psd,'-',c=famed_obj.cp.psd_psd)
+    ax.semilogy(freq,pkb_profile,'-',c=famed_obj.cp.acf_pos1,lw=2)
+    ax.semilogy(freq,bg_level,'--',c=famed_obj.cp.psd_bg,lw=2)
+    ax.set_xlim(min(freq),max(freq))
+    ax.set_ylim(min(bg_level)*.85,max(pkb_profile)*100)
+    
+    #### Fade-away shading of regions for l=0,1,2,3  at back
+    colors = ['b','r','g','grey']
+    intervals = np.linspace(.1,1,50)#**3
+    if mode_freq is not None:
+        for mode,order,degree,sig in zip(mode_freq,enn,ell,mode_sig):
+            for i in range(0,len(intervals)):
+                plt.axvspan(mode-intervals[i]*3*sig,mode+intervals[i]*3*sig,facecolor=colors[degree],edgecolor=colors[degree],alpha=.01,zorder=1)
+        
+    # nu_max arrow
+    ann = ax.annotate('',xy=(famed_obj.numax,.90),xycoords=transforms.blended_transform_factory(ax.transData,ax.transAxes),xytext=(famed_obj.numax,1),textcoords=transforms.blended_transform_factory(ax.transData,ax.transAxes),arrowprops=dict(color=famed_obj.cp.numax_arrow, lw=3, arrowstyle='-|>'))
+    ann.arrow_patch.set_clip_box(ax.bbox)
+ 
+    # Mode lines, arrows, and id (n,l) 
+    for mode,order,degree,sig in zip(mode_freq,enn,ell,mode_sig):
+        ax.axvline(mode,ls=':',color=famed_obj.cp.psd_line,zorder=1)
+        ax.text(mode,.73,'(%i,%i)'%(order,degree),rotation='vertical',ha='right',fontsize='x-small',color=famed_obj.cp.psd_modeid,transform=transforms.blended_transform_factory(ax.transData,ax.transAxes),clip_on=True)    
 
 def epsilon_plot(famed_obj,ax=None):
     """
@@ -506,7 +605,7 @@ def text_panel(famed_obj,ax=None,chunk=None):
 
     if chunk is None:
         # Text 1
-        ax.text(0.0,.05,r'$\mathbf{%s %s}$''\n Folder:%s\n Run:%s\n Modality:%s'%(famed_obj.catalog_id.replace('_', '\_'),famed_obj.star_id.replace('_', '\_'),famed_obj.cp.isla_subdir,famed_obj.cp.global_subdir,famed_obj.modality),fontsize='small',color=famed_obj.cp.text1)
+        ax.text(0.0,.05,r'$\mathbf{%s %s}$''\n Folder:%s\n Run:%s\n Modality:%s'%(famed_obj.catalog_id,famed_obj.star_id,famed_obj.cp.isla_subdir,famed_obj.cp.global_subdir,famed_obj.modality),fontsize='small',color=famed_obj.cp.text1)
 
         # Text 2 global
         if famed_obj.bad_epsi:
@@ -528,7 +627,7 @@ def text_panel(famed_obj,ax=None,chunk=None):
     
     else:
         # Text 1
-        ax.text(0.0,.05,r'$\mathbf{%s %s}$''\n Folder:%s\n Run:%s\n Modality:%s'%(famed_obj.catalog_id.replace('_', '\_'),famed_obj.star_id.replace('_', '\_'),famed_obj.cp.isla_subdir,famed_obj.chunk_number[chunk],famed_obj.modality),fontsize='small',color=famed_obj.cp.text1)
+        ax.text(0.0,.05,r'$\mathbf{%s %s}$''\n Folder:%s\n Run:%s\n Modality:%s'%(famed_obj.catalog_id,famed_obj.star_id,famed_obj.cp.isla_subdir,famed_obj.chunk_number[chunk],famed_obj.modality),fontsize='small',color=famed_obj.cp.text1)
 
         # Text 2 chunk
         ax.text(0.14,.05,r' $\nu_{\mathrm{max}}$ = %.3f $\mu$Hz''\n'r' $\Delta\nu_{\mathrm{fit}}$ = %.3f $\mu$Hz''\n'r' $\epsilon$ = %.2f\, $\delta\nu_{02}$ = %.2f $\mu$Hz''\n'r' SNR = %.1f\, $\Delta P_1 = %.1f s$'%(famed_obj.numax,famed_obj.best_dnu,famed_obj.local_epsi[chunk],famed_obj.local_d02[chunk],famed_obj.snr[chunk],famed_obj.local_dp[chunk]),fontsize='small',color=famed_obj.cp.text2)
@@ -541,3 +640,25 @@ def text_panel(famed_obj,ax=None,chunk=None):
             
         # Text 4
         ax.text(0.62,.05,r' ASEF$_{\mathrm{threshold}}$ = %.2f \%%''\n'r' ASEF$_{\mathrm{bins}}$ = %i''\n'r' N$_{\mathrm{freq}}$ = %i \,\,\,  N$_{\mathrm{orders}}$ = %i'%(100*famed_obj.threshold_asef,famed_obj.asef_bins[chunk],famed_obj.n_freqs[chunk],famed_obj.n_chunks),fontsize='small',color=famed_obj.cp.text4)
+
+
+def lorentzian_profile(frequency_array,centroid,amplitude,linewidth):
+    """
+    Evaluates the super-Lorentzian profile for the modeling of an oscillation mode with some given lifetime.
+    The function implemented is presented in Corsaro & De Ridder (2014), Eq. (29). 
+
+    Parameters
+    ----------
+    frequency_array : float array
+        The covariates for which the profile has to be evaluated (in uHz)
+    centroid : float
+        The central frequency representing the asteroseismic mode frequency (in uHz)
+    amplitude : float
+        Amplitude of the oscillation mode (in ppm)
+    linewdith : float
+        Linewidth of the oscillation mode (in uHz)
+    """
+
+    profile = amplitude*amplitude/(np.pi * linewidth)/(1.0 + (4.0*np.square(frequency_array-centroid)/(linewidth*linewidth)))
+     
+    return profile

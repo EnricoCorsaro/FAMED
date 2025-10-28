@@ -76,13 +76,13 @@ def get_background(catalog_id, star_id, background_results_dir, background_run_n
         # Read background model fitted parameters
         print(' Reading background fit result from subfolder', str(background_run_number).zfill(2))
 
-        bg_par = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_parameterSummary.txt',usecols=(0,))
+        bg_par = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_parameterSummary.txt',usecols=(0,),comments='#')
 
         # Read background model name
         if os.path.isfile(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_computationParameters.txt'):
-            config = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_computationParameters.txt',dtype='str')
+            config = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_computationParameters.txt',dtype='str',comments='#')
         else:
-            config = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_configuringParameters.txt',dtype='str')
+            config = np.loadtxt(background_results_dir/(catalog_id + star_id)/str(background_run_number).zfill(2)/'background_configuringParameters.txt',dtype='str',comments='#')
         bg_name = config[-2]
 
         # Apply the following in case the background name is not listed among the

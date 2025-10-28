@@ -2,6 +2,7 @@ from .configuring_parameters import ConfiguringParameters
 from .star_object import *
 from .global_object import *
 from .chunk_object import *
+from .complete_object import *
 from .utils import *
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -72,9 +73,12 @@ def CHUNK(catalog_id, star_id, chunk_id=-1, background_run_number=None, force=Tr
             chunks = chunks[np.argsort(snr)]
             snr = snr[np.argsort(snr)]
             print(' Sorted chunks:')
+            
             for i in range(0,len(snr))[::-1]:
                 print(chunks[i],snr[i])
+            
             pdf = PdfPages(famed_obj.star_dir/famed_obj.cp.figs_subdir/(famed_obj.catalog_id+famed_obj.star_id+'_'+famed_obj.cp.isla_subdir+'_all_CHUNK.pdf'))
+            
             for chunk in chunks[::-1]:
                 print('\n\n NOW ANALYZING CHUNK: ',chunk,'\n\n')
 
@@ -94,10 +98,24 @@ def CHUNK(catalog_id, star_id, chunk_id=-1, background_run_number=None, force=Tr
 def ECHELLE():
     print('This function is not yet implemented')
 
-def COMPLETE():
-    print('This function is not yet implemented')
+def COMPLETE(catalog_id, star_id, chunk_id=-1, background_run_number=None, fit=True):
 
+    famed_obj = Complete(catalog_id,star_id,background_run_number=background_run_number)
+    
+    chunk_id = int(chunk_id)
+    n_chunks, chunk_number_complete = famed_obj.make_complete(chunk_id,fit=fit)
 
+    if (chunk_id < 0):
+        for i in range(0,n_chunks):
+            actual_chunk_index = chunk_number_complete[i]
+            actual_chunk_index = int(actual_chunk_index)
+            result = famed_obj.prepare_results(actual_chunk_index)
+            famed_obj.make_complete_plots(actual_chunk_index)
+    else:
+        result = famed_obj.prepare_results(chunk_id)
+        famed_obj.make_complete_plots(chunk_id)
+
+    return famed_obj
 
 
 

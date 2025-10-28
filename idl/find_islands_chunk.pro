@@ -121,7 +121,7 @@ if tmp_chunk(0) ne -1 then begin
         freq_sig_previous_global = freq_sig_global(tmp_previous_chunk)
         ell_previous_global = ell_global(tmp_previous_chunk)
     endif else begin
-        ell_previous_global = -1
+        ell_previous_global = [-1]
     endelse
 
     freq_global = freq_global(tmp_chunk)
