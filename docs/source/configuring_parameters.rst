@@ -20,23 +20,26 @@ YOUR_LOCAL_ROOT_PATH_HERE/FAMED/idl
 
 The path where you have stored the FAMED pipeline. If you are not using the shell script installation, you will need to replace the name YOUR_LOCAL_ROOT_PATH_HERE with the actual path containing the FAMED package. This path has to refer to the specific folder that contains either the IDL or Python code (in the example shown, we are using the idl folder). This path is used by FAMED to actually run the pipeline. This path is by default within the ``root_path`` parameter but the user may decide to use a different location.
 
+* ``global_subdir``
+This is the name of the sub-folder that contains the results for the GLOBAL modality multi-modal sampling, as well as a filename suffix for priors and results related to the GLOBAL modality. Default value is set to ``global``.
+
 * ``isla_subdir``
-The name of the folder that contains all the output products created by the PeakBagging code when running in the multi-modal modalities (see Corsaro et al. 2020). These outputs include configuring parameters to run DIAMONDS, prior hyper-parameter files and fit products of parameter sampling.
+The name of the folder that contains all the output products created by the PeakBagging code when running in the multi-modal modalities (GLOBAL and CHUNK) (see Corsaro et al. 2020). These outputs include configuring parameters to run DIAMONDS, prior hyper-parameter files and fit products of parameter sampling. Default value is set to ``isla``.
 
 * ``pb_subdir``
-The name of the folder that contains all the output products created by the PeakBagging code when running in the uni-modal modalities, which therefore comprise all the peak testing suite (see Corsaro et al. 2020). These outputs include configuring parameters to run DIAMONDS, prior hyper-parameter files and fit products of parameter sampling, parameter estimates, and Bayesian evidences for model comparison.
+The name of the folder that contains all the output products created by the PeakBagging code when running in the uni-modal low-dimensional modalities, which therefore comprise all the peak testing suite (see Corsaro et al. 2020). These outputs include configuring parameters to run DIAMONDS, prior hyper-parameter files and fit products of parameter sampling, parameter estimates, and Bayesian evidences for model comparison. Default value is set to ``pb``.
+
+* ``complete_subdir``
+The name of the folder that contains all the output products created by the PeakBagging code when running in the uni-modal high-dimensional modality COMPLETE, which consist in the standard peakbagging fit as presented in Corsaro et al. 2015. These outputs include configuring parameters to run DIAMONDS, prior hyper-parameter files and fit products of parameter sampling, parameter estimates, and Bayesian evidences for model comparison. Default value is set to ``cmplt``.
 
 * ``as_subdir``
-The name of the folder that contains all the output products created by the Asymptotic code (see Corsaro et al. 2020). These outputs include configuring parameters to run DIAMONDS, prior hyper-parameter files and fit products of parameter sampling.
+The name of the folder that contains all the output products created by the Asymptotic code (see Corsaro et al. 2020). These outputs include configuring parameters to run DIAMONDS, prior hyper-parameter files and fit products of parameter sampling. Default value is set to ``as``.
 
 * ``figs_subdir``
-The name of the folder that countains all the output figures of the computation, in either PNG or EPS format. There is an overall figure for the GLOBAL modality, and as many figures as the number of chunks identified for the CHUNK modality. Each overall figure comprises a plot of the nested sampling, the ASEF, the PSD with mode identification overlaid, and in the case of the GLOBAL modality also the *ACF*:math:`^2` for :math:`\Delta\nu`, and the :math:`\epsilon` - *T*:subscript:`eff` or :math:`\epsilon` - :math:`\Delta\nu` diagram (see Corsaro et al. 2020).
+The name of the folder that countains all the output figures of the computation, in either PNG or EPS format. There is an overall figure for the GLOBAL modality, and as many figures as the number of chunks identified for the CHUNK and COMPLETE modalities. Each overall figure comprises a plot of the nested sampling, the ASEF, the PSD with mode identification overlaid, and in the case of the GLOBAL modality also the *ACF*:math:`^2` for :math:`\Delta\nu`, and the :math:`\epsilon` - *T*:subscript:`eff` or :math:`\epsilon` - :math:`\Delta\nu` diagram (see Corsaro et al. 2020). Default value is set to ``figs``.
 
 * ``summary_subdir``
 The name of the folder that contains all the output ASCII files of the computation. These files store all the useful information that is obtained by FAMED, in particular the oscillation frequencies and their mode identification :math:`(n,\ell,m)`, the peak significance probabilities (for detection, rotation, and duplicity), flags for peak blending and peak *sinc*:math:`^2` profiles, other information in relation to the analysis of the ASEF, such as sampling counts, ASEF maxima, smoothed PSD maxima, as well as asymptotic parameters of :math:`\Delta\nu`, :math:`\epsilon`, :math:`\delta\nu_{02}`, and where available also :math:`\Delta P`.
-
-* ``global_subdir``
-This is the name of the sub-folder that contains the results for the GLOBAL modality multi-modal sampling, as well as a filename suffix for priors and results related to the GLOBAL modality.
 
 * ``save_complete_lists``
 Allows the user storing as output the complete lists of frequencies identified from the ASEF. These additional lists are generated for both GLOBAL and CHUNK modalities. These lists can be useful in case of post-production inspection, or as a reference to quantify the skimming process applied by the pipeline on the initial frequency set. The output files are in ASCII format and are stored in the summary_subdir folder. The default value is 0, meaning that this option is deactivated. Set it to 1 to activate.
