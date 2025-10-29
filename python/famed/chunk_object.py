@@ -711,9 +711,6 @@ class Chunk(FamedStar):
                         enn_next_chunk = np.array(enn_next_chunk,dtype=int)
 
                     tmp_next_radial = np.where(ell_next_chunk==0)[0]
-                    print(tmp_next_radial)
-                    print(freq_next_chunk)
-                    print(freq_next_chunk[tmp_next_radial])
 
                     # Check whether the selected chunk contains a l=0 mode, otherwise move to the one next to it.
 
@@ -880,11 +877,11 @@ class Chunk(FamedStar):
             freq_sig_radial_chunk = freq_sig1[radial_index]
             low_cut_frequency = freq_radial_chunk - best_dnu*(1.0 + best_alpha*(enn_radial - 0.5 - numax/best_dnu)) + freq_sig_radial/2.0 
   
-            print('LOW freq 879: ', low_cut_frequency)
+            # print('LOW freq 879: ', low_cut_frequency)
             # Make sure that the previous l=0 mode is not included, in case the chunk belongs to the right-end tail of the oscillation envelope.
             # First verify that if a radial mode has been found from previous chunks (to the left side), the low cut frequency is not including it.
            
-            print('FLAG PREV. l=0',flag_previous_radial_mode_found)
+            # print('FLAG PREV. l=0',flag_previous_radial_mode_found)
 
             if flag_previous_radial_mode_found == 1:
                 if low_cut_frequency < freq_previous_radial + freq_sig_radial:
@@ -894,21 +891,21 @@ class Chunk(FamedStar):
                 if low_cut_frequency < freq_previous_radial + best_dnu*(1.0 + best_alpha*(enn_radial-1 - 0.5 - numax/best_dnu)) + freq_sig_radial:
                     low_cut_frequency = freq_previous_radial + best_dnu*(1.0 + best_alpha*(enn_radial-1 - 0.5 - numax/best_dnu)) + freq_sig_radial
                        
-            print('LOW freq 893: ', low_cut_frequency)
+            # print('LOW freq 893: ', low_cut_frequency)
             
             # Apply a check on the upper bound for the low cut frequency
             
             if low_cut_frequency > freq_radial_chunk - best_dnu*self.cp.dnu_lower_cut_fraction:
                 low_cut_frequency = freq_radial_chunk - best_dnu*self.cp.dnu_lower_cut_fraction
 
-            print('LOW freq 900: ', low_cut_frequency)
+            # print('LOW freq 900: ', low_cut_frequency)
             
             # Finally, control the radial mode solution from GLOBAL for the previous chunk. This is to avoid that the same radial mode is identified twice in two different chunks.
     
             if low_cut_frequency <= freq_previous_radial_global + freq_sig_radial_chunk:
                 low_cut_frequency = freq_previous_radial_global + freq_sig_radial_chunk
 
-            print('LOW freq 907: ', low_cut_frequency)
+            # print('LOW freq 907: ', low_cut_frequency)
 
             angular_degree[radial_index] = 0
             order_number[radial_index] = enn_radial

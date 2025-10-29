@@ -83,7 +83,7 @@ class Complete(FamedStar):
         len_head = len(str(peakbagging_filename_chunk))
 
         if self.cp.print_on_screen:
-            print(' Number of chunks available for high-dimensional fitting: ', n_chunks, '\n')
+            print(' Number of chunks available for high-dimensional fitting:', n_chunks, '\n')
 
         self.chunk_number_complete = [None]*n_chunks
         self.enn = [None]*n_chunks
@@ -146,12 +146,23 @@ class Complete(FamedStar):
                     for jj in range(0,len(nu)):
                         # Write the prior hyper-parameters file containing all the peaks to be fit within this chunk
                         f.write('{:.5f}  \t{:.5f}\n'.format(nu_left[jj],nu_right[jj]))
-                        f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*0.1,amp[jj]*1.4))
-                        
-                        if (profile_flag[jj] == 1):
-                            f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*0.4))
+
+                        # Adopt different prior bounds for the l=1 modes depending on whether the star is evolved or not 
+                        if (best_dnu < self.cp.dnu_rg) or ((best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg)):
+                            if (ell[jj] == 1):
+                                if (profile_flag[jj] == 1):
+                                    f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*self.cp.lower_prior_amp_fraction,amp[jj]*self.cp.upper_prior_amp_fraction_sinc))
+                                    f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*self.cp.upper_prior_fwhm_radial_fraction_sinc))
+                                else:
+                                    f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*self.cp.lower_prior_amp_fraction,amp[jj]*self.cp.upper_prior_amp_fraction_rg))
+                                    f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*self.cp.upper_prior_fwhm_radial_fraction_rg))
+                            else:
+                                f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*self.cp.lower_prior_amp_fraction,amp[jj]*self.cp.upper_prior_amp_fraction_ms))
+                                f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*self.cp.upper_prior_fwhm_radial_fraction_ms))
+
                         else:
-                            f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*1.2))
+                            f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*self.cp.lower_prior_amp_fraction,amp[jj]*self.cp.upper_prior_amp_fraction_ms))
+                            f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*self.cp.upper_prior_fwhm_radial_fraction_ms))
 
                         f.write('\n')
 
@@ -178,7 +189,7 @@ class Complete(FamedStar):
                 fwhm_values = fwhm_values[0]
 
             if self.cp.print_on_screen:
-                print(" Performing the high-dimensional fit with DIAMONDS for #: ", n_chunks, " chunks.\n")
+                print(" Performing the high-dimensional fit with DIAMONDS for #:",n_chunks, "chunk(s).\n")
                 print(" This operation may take up to several minutes...")
 
             peakbagging_parameters = { 'subdir':     self.cp.complete_subdir,
