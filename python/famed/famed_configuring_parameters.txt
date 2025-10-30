@@ -3,13 +3,13 @@
 # -----------------------------------------------------------------------------------------
 root_path YOUR_LOCAL_ROOT_PATH_HERE/
 famed_path YOUR_LOCAL_ROOT_PATH_HERE/FAMED/python/famed/
+global_subdir global
 isla_subdir isla
 pb_subdir pb
 complete_subdir cmplt
 as_subdir as
 figs_subdir figs
 summary_subdir summary
-global_subdir global
 save_complete_lists 0
 save_png 1
 save_eps 0
@@ -202,6 +202,17 @@ fwhm_magnification_factor_octupole 1.5
 asef_octupole_fraction 0.75
 fwhm_octupole_radial_fraction 0.2
 dnu_mixed_modes_separation_scaling 16.
+#
+# -----------------------------------------------------------------------------------------
+# Detailed fitting
+# -----------------------------------------------------------------------------------------
+upper_prior_amp_fraction_ms 1.4
+upper_prior_amp_fraction_rg 0.6
+upper_prior_amp_fraction_sinc 0.3
+lower_prior_amp_fraction 0.1
+upper_prior_fwhm_radial_fraction_ms 1.2
+upper_prior_fwhm_radial_fraction_rg 0.4
+upper_prior_fwhm_radial_fraction_sinc 0.25
 #
 # -----------------------------------------------------------------------------------------
 # Asteroseismic relations 
