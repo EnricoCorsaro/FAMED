@@ -46,7 +46,7 @@ class Complete(FamedStar):
         self.__dict__ = temp.__dict__.copy()
 
 
-    def make_complete(self,run,fit=True):
+    def make_complete(self,run,prior=True,fit=True):
         """
         Compute a high-dimensional fit with DIAMONDS for each chunk specified.
 
@@ -60,6 +60,9 @@ class Complete(FamedStar):
         run : int or str
             An integer specifying the number of the chunk for which the sampling must be evaluated. 
             If a number < 0 is provided, all the chunks are taken into account at the same time.
+        prior: bool
+            A flag to specify whether prior hyper-parameter files should be printed within the module or not. Normally
+            this flag is set to False when one wants to re-run the fits after prior hyper-parameters have been manually adjusted 
         fit : bool
             A flag to specify whether only prior configuring files must be generated, or also the actual high-dimensional 
             fits with DIAMONDS should be executed. Default is set to execute also the fits.
@@ -138,37 +141,38 @@ class Complete(FamedStar):
                 
                 freq_right_margin = freq_right[int(run_subdir)]
 
-                if ((self.cp.print_on_screen) and (run >=0)):
-                    print(" Generating prior hyper-parameters for the high-dimensional fit with DIAMONDS for chunk #:", run_subdir)
+                if prior:
+                    if ((self.cp.print_on_screen) and (run >=0)):
+                        print(" Generating prior hyper-parameters for the high-dimensional fit with DIAMONDS for chunk #:", run_subdir)
 
-                with open(self.star_dir/self.cp.complete_subdir/(self.cp.prior_filename + '_' + run_subdir + '.txt'),'w') as f:
+                    with open(self.star_dir/self.cp.complete_subdir/(self.cp.prior_filename + '_' + run_subdir + '.txt'),'w') as f:
             
-                    for jj in range(0,len(nu)):
-                        # Write the prior hyper-parameters file containing all the peaks to be fit within this chunk
-                        f.write('{:.5f}  \t{:.5f}\n'.format(nu_left[jj],nu_right[jj]))
+                        for jj in range(0,len(nu)):
+                            # Write the prior hyper-parameters file containing all the peaks to be fit within this chunk
+                            f.write('{:.5f}  \t{:.5f}\n'.format(nu_left[jj],nu_right[jj]))
 
-                        # Adopt different prior bounds for the l=1 modes depending on whether the star is evolved or not 
-                        if (best_dnu < self.cp.dnu_rg) or ((best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg)):
-                            if (ell[jj] == 1):
-                                if (profile_flag[jj] == 1):
-                                    f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*self.cp.lower_prior_amp_fraction,amp[jj]*self.cp.upper_prior_amp_fraction_sinc))
-                                    f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*self.cp.upper_prior_fwhm_radial_fraction_sinc))
+                            # Adopt different prior bounds for the l=1 modes depending on whether the star is evolved or not 
+                            if (best_dnu < self.cp.dnu_rg) or ((best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg)):
+                                if (ell[jj] == 1):
+                                    if (profile_flag[jj] == 1):
+                                        f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*self.cp.lower_prior_amp_fraction,amp[jj]*self.cp.upper_prior_amp_fraction_sinc))
+                                        f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*self.cp.upper_prior_fwhm_radial_fraction_sinc))
+                                    else:
+                                        f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*self.cp.lower_prior_amp_fraction,amp[jj]*self.cp.upper_prior_amp_fraction_rg))
+                                        f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*self.cp.upper_prior_fwhm_radial_fraction_rg))
                                 else:
-                                    f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*self.cp.lower_prior_amp_fraction,amp[jj]*self.cp.upper_prior_amp_fraction_rg))
-                                    f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*self.cp.upper_prior_fwhm_radial_fraction_rg))
+                                    f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*self.cp.lower_prior_amp_fraction,amp[jj]*self.cp.upper_prior_amp_fraction_ms))
+                                    f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*self.cp.upper_prior_fwhm_radial_fraction_ms))
+
                             else:
                                 f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*self.cp.lower_prior_amp_fraction,amp[jj]*self.cp.upper_prior_amp_fraction_ms))
                                 f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*self.cp.upper_prior_fwhm_radial_fraction_ms))
 
-                        else:
-                            f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*self.cp.lower_prior_amp_fraction,amp[jj]*self.cp.upper_prior_amp_fraction_ms))
-                            f.write('{:.5f}  \t{:.5f}\n'.format(self.cp.fwhm_lower_bound,fwhm_0*self.cp.upper_prior_fwhm_radial_fraction_ms))
+                            f.write('\n')
 
-                        f.write('\n')
-
-                with open(self.star_dir/self.cp.complete_subdir/('frequencyRange_' + run_subdir + '.txt'),'w') as f:
-                    f.write('{:.5f}\n'.format(freq_left_margin))
-                    f.write('{:.5f}\n'.format(freq_right_margin))
+                    with open(self.star_dir/self.cp.complete_subdir/('frequencyRange_' + run_subdir + '.txt'),'w') as f:
+                        f.write('{:.5f}\n'.format(freq_left_margin))
+                        f.write('{:.5f}\n'.format(freq_right_margin))
 
                 self.freq_left_margin[i] = freq_left_margin
                 self.freq_right_margin[i] = freq_right_margin

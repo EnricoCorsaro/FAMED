@@ -98,12 +98,12 @@ def CHUNK(catalog_id, star_id, chunk_id=-1, background_run_number=None, force=Tr
 def ECHELLE():
     print('This function is not yet implemented')
 
-def COMPLETE(catalog_id, star_id, chunk_id=-1, background_run_number=None, fit=True):
+def COMPLETE(catalog_id, star_id, chunk_id=-1, background_run_number=None, prior=True,fit=True):
 
     famed_obj = Complete(catalog_id,star_id,background_run_number=background_run_number)
     
     chunk_id = int(chunk_id)
-    n_chunks, chunk_number_complete = famed_obj.make_complete(chunk_id,fit=fit)
+    n_chunks, chunk_number_complete = famed_obj.make_complete(chunk_id,prior=prior,fit=fit)
 
     if (chunk_id < 0):
         for i in range(0,n_chunks):
