@@ -252,7 +252,7 @@ def set_peakbagging(catalog_id, star_id, bgp, diamonds_path, background_data_dir
         else:
             subprocess.call(('cp {} {}'.format(external_background_results_dir/(catalog_id + star_id + '_NyquistFrequency.txt'),peakbagging_results_dir/(catalog_id + star_id)/'NyquistFrequency.txt')),shell=True)
 
-def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asymptotic, flag_bglevel, dp, diamonds_path, n_threads=12, prior_filename='prior_hyperParameters', merge=False):
+def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asymptotic, flag_bglevel, dp, diamonds_path, n_threads=12, prior_filename='prior_hyperParameters', merge=False, clean=False):
     """
     Execute the DIAMONDS PeakBagging code. 
 
@@ -285,7 +285,9 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
     prior_filename : str, default: 'prior_hyperParameters'
         Root of the prior hyperparameters filename.
     merge : bool, default: False
-        Merge 
+        Merge
+    clean : bool, default: False
+        Activate if the output results folder has to be emptied before running the fit 
 
     Returns
     -------
@@ -303,7 +305,7 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
     
     # Uni-modal peak bagging or peak testing for FWHM fit
     if ((fwhm_minimum < 0) and (flag_peaktest == 0)) or (flag_peaktest == 2):
-        nsmc_keys = ['n_live','n_live_end','max_draw_attempts','n_initial_it','n_it_same_clust','enlarg_fraction','shrinking_rate','termination_factor','max_nested_it']
+        nsmc_keys = ['n_live_test','n_live_end_test','max_draw_attempts','n_initial_it','n_it_same_clust','enlarg_fraction','shrinking_rate','termination_factor','max_nested_it']
         nsmc_parameters = [dp.get(key) for key in nsmc_keys ]
         xmeans_parameters = [dp['min_ncluster'], dp['max_ncluster']]
 
@@ -340,11 +342,27 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
         n_runs = 1
         directory = star_dir/parameters['subdir']/str(parameters['run'])
         os.makedirs(directory, exist_ok=True)
+    
+        # Clean the subdirectory content if requested and there is at least one file already present
+        if clean:
+            if os.path.isfile(directory/'peakbagging_computationParameters.txt'):
+                for filename in os.listdir(directory):
+                    file_path = os.path.join(directory, filename)
+                    if os.path.isfile(file_path):
+                        os.remove(file_path)
     else:
         n_runs = len(parameters['run'])    
         for i in range(0, n_runs):
             directory = star_dir/parameters['subdir']/str(parameters['run'][i])
             os.makedirs(directory, exist_ok=True)
+
+            # Clean the current subdirectory content if requested and there is at least one file already present
+            if clean:
+                if os.path.isfile(directory/'peakbagging_computationParameters.txt'):
+                    for filename in os.listdir(directory):
+                        file_path = os.path.join(directory, filename)
+                        if os.path.isfile(file_path):
+                            os.remove(file_path)
 
     cwd = os.getcwd()
     os.chdir(diamonds_path/'PeakBagging'/'build')

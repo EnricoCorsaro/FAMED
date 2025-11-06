@@ -112,7 +112,7 @@ class Complete(FamedStar):
        
         for i in range(0,n_chunks):
             fwhm_0 = np.loadtxt(filename_summary[i], usecols=(3,), skiprows=1, max_rows=1)
-            enn,ell,emm,nu,nu_left,nu_right,nu_left_division,nu_right_division,spsd_max,p_det,profile_flag = np.loadtxt(filename_summary[i],usecols=(0,1,2,3,5,6,7,8,11,13,17), skiprows=7, unpack=True,ndmin=2)
+            enn,ell,emm,nu,nu_sig,nu_left,nu_right,nu_left_division,nu_right_division,spsd_max,p_det,profile_flag = np.loadtxt(filename_summary[i],usecols=(0,1,2,3,4,5,6,7,8,11,13,17), skiprows=7, unpack=True,ndmin=2)
             tmp_detected = np.where((p_det >= self.cp.detection_probability_threshold) | (p_det == -99.0))[0]
         
             if len(tmp_detected) > 0:
@@ -125,8 +125,10 @@ class Complete(FamedStar):
                 ell = ell[tmp_detected]
                 emm = emm[tmp_detected]
                 nu = nu[tmp_detected]
-                nu_left = nu_left[tmp_detected]
-                nu_right = nu_right[tmp_detected]
+                nu_left = nu - nu_sig[tmp_detected]
+                nu_right = nu + nu_sig[tmp_detected]
+                #nu_left = nu_left[tmp_detected]
+                #nu_right = nu_right[tmp_detected]
                 nu_left_division = nu_left_division[tmp_detected]
                 nu_right_division = nu_right_division[tmp_detected]
                 spsd_max = spsd_max[tmp_detected]
@@ -202,7 +204,7 @@ class Complete(FamedStar):
                                         'fwhm':       fwhm_values
                                         }
 
-            flag_computation_completed = diamonds.run_peakbagging(self.catalog_id,self.star_id,peakbagging_parameters,0,0,0,self.cp.dp_pb,self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename,merge=True)
+            flag_computation_completed = diamonds.run_peakbagging(self.catalog_id,self.star_id,peakbagging_parameters,0,0,0,self.cp.dp_pb,self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename,merge=True,clean=True)
 
         return self.n_chunks, self.chunk_number_complete
 
