@@ -620,12 +620,13 @@ class Chunk(FamedStar):
                 if os.path.isfile(str(peakbagging_filename_chunk) + str(previous_run_number) + '_' + self.modality + '.txt'):
                     enn_previous_chunk, ell_previous_chunk, freq_previous_chunk, freq_sig_previous_chunk = np.loadtxt(str(peakbagging_filename_chunk) + str(previous_run_number) + '_' + self.modality + '.txt', usecols=(0,1,3,4),skiprows=7,unpack=True)
                     if isinstance(enn_previous_chunk,float):
-                        enn_previous_chunk = [int(enn_previous_chunk)]
-                        ell_previous_chunk = [ell_previous_chunk]
-                        freq_previous_chunk = [freq_previous_chunk]
-                        freq_sig_previous_chunk = [freq_sig_previous_chunk]
+                        enn_previous_chunk = np.array([enn_previous_chunk],dtype=int)
+                        ell_previous_chunk = np.array([ell_previous_chunk],dtype=int)
+                        freq_previous_chunk = np.array([freq_previous_chunk],dtype=float)
+                        freq_sig_previous_chunk = np.array([freq_sig_previous_chunk],dtype=float)
                     else:                        
                         enn_previous_chunk = np.array(enn_previous_chunk,dtype=int)
+                    
                     tmp_previous_radial = np.where(ell_previous_chunk==0)[0]
            
                     # Check whether the selected chunk contains a l=0 mode, otherwise move to the one before it.
@@ -663,10 +664,10 @@ class Chunk(FamedStar):
                             if os.path.isfile(str(peakbagging_filename_chunk) + str(previous_run_number2) + '_' + self.modality + '.txt'):
                                 enn_previous_chunk, ell_previous_chunk, freq_previous_chunk, freq_sig_previous_chunk = np.loadtxt(str(peakbagging_filename_chunk) + str(previous_run_number2) + '_' + self.modality + '.txt', usecols=(0,1,3,4),skiprows=7,unpack=True)
                                 if isinstance(enn_previous_chunk,float):
-                                    enn_previous_chunk = [int(enn_previous_chunk)]
-                                    ell_previous_chunk = [ell_previous_chunk]
-                                    freq_previous_chunk = [freq_previous_chunk]
-                                    freq_sig_previous_chunk = [freq_sig_previous_chunk]
+                                    enn_previous_chunk = np.array([enn_previous_chunk],dtype=int)
+                                    ell_previous_chunk = np.array([ell_previous_chunk],dtype=int)
+                                    freq_previous_chunk = np.array([freq_previous_chunk],dtype=float)
+                                    freq_sig_previous_chunk = np.array([freq_sig_previous_chunk],dtype=float)
                                 else:
                                     enn_previous_chunk = np.array(enn_previous_chunk,dtype=int)
                                 tmp_previous_radial = np.where(ell_previous_chunk==0)[0]
@@ -747,10 +748,10 @@ class Chunk(FamedStar):
                             if os.path.isfile(str(peakbagging_filename_chunk) + str(next_run_number2) + '_' + self.modality + '.txt'):
                                 enn_next_chunk, ell_next_chunk, freq_next_chunk, freq_sig_next_chunk = np.loadtxt(str(peakbagging_filename_chunk) + str(next_run_number2) + '_' + self.modality + '.txt', usecols=(0,1,3,4),skiprows=7,unpack=True)
                                 if isinstance(enn_next_chunk,float):
-                                    enn_next_chunk = [int(enn_next_chunk)]
-                                    ell_next_chunk = [ell_next_chunk]
-                                    freq_next_chunk = [freq_next_chunk]
-                                    freq_sig_next_chunk = [freq_sig_next_chunk]
+                                    enn_next_chunk = np.array([enn_next_chunk],dtype=int)
+                                    ell_next_chunk = np.array([ell_next_chunk],dtype=int)
+                                    freq_next_chunk = np.array([freq_next_chunk],dtype=float)
+                                    freq_sig_next_chunk = np.array([freq_sig_next_chunk],dtype=float)
                                 else:                        
                                     enn_next_chunk = np.array(enn_next_chunk,dtype=int)
                                 tmp_next_radial = np.where(ell_next_chunk==0)[0]
