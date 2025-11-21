@@ -96,7 +96,7 @@ The solar :math:`\nu_{max}`, set to 3150 :math:`\mu\mbox{Hz}`
 Multi-modal sampling production
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * ``n_sigma_envelope``
-The number (float) of standard deviations from the background fit of the Gaussian envelope, to set the total frequency range of power spectrum of the star on each side of :math:`\nu_{max}`. The default value is 4.5 to accomodate MS stars with a very broad oscillation spectrum and 15-20 different radial orders observed.
+The number (float) of standard deviations from the background fit of the Gaussian envelope, to set the total frequency range of power spectrum of the star on each side of :math:`\nu_{max}`. The default value is 4.5 to accomodate MS stars with a very broad oscillation spectrum and 15-20 different radial orders observed. In case the computation produces an error in the get_modeid function, consider reducing this value (to e.g. 2) to avoid picking up spurious peaks that are outside the actual oscillation region.
 
 * ``n_sigma_envelope_cl``
 Similar keyword as ``n_sigma_envelope`` but being used for stars having :math:`\Delta\nu_\mathrm{AGB} < \Delta\nu \leq \Delta\nu_\mathrm{CL2}`. The default value is 2.5, significantly smaller than that of less evolved stars.

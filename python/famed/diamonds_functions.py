@@ -453,7 +453,7 @@ def run_peakbagging(catalog_id, star_id, parameters, flag_peaktest, flag_asympto
     return flag_computation_completed
 
 
-def run_asymptotic(catalog_id, star_id, parameters, numax, ell, dp, diamonds_path, prior_filename='prior_hyperParameters'):
+def run_asymptotic(catalog_id, star_id, parameters, numax, ell, dp, diamonds_path, prior_filename='prior_hyperParameters',clean=False):
     """
     Execute the DIAMONDS Asymptotic code. 
 
@@ -481,6 +481,8 @@ def run_asymptotic(catalog_id, star_id, parameters, numax, ell, dp, diamonds_pat
         PeakBagging and Asymptotic packages.
     prior_filename : str, default: 'prior_hyperParameters'
         Root of the prior hyperparameters filename.
+    clean : bool, default: False
+        Activate if the output results folder has to be emptied before running the fit 
  
     Returns
     -------
@@ -506,6 +508,15 @@ def run_asymptotic(catalog_id, star_id, parameters, numax, ell, dp, diamonds_pat
         subprocess.call(['mkdir',star_dir/parameters['subdir']/parameters['run']])
     if not os.path.isdir(star_dir/parameters['subdir']/'data'):
         subprocess.call(['mkdir',star_dir/parameters['subdir']/'data'])
+
+    # Clean the subdirectory content if requested and there is at least one file already present
+    if clean:
+        directory = star_dir/parameters['subdir']/parameters['run']
+        if os.path.isfile(directory/'asymptotic_computationParameters.txt'):
+            for filename in os.listdir(directory):
+                file_path = os.path.join(directory, filename)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
 
     # Add in logger here to say path is changing and what it is changed to etc.
     cwd = os.getcwd()

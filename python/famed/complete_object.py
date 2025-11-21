@@ -136,7 +136,7 @@ class Complete(FamedStar):
 
                 amp = np.sqrt(spsd_max*fwhm_0*np.pi)*np.sqrt(2.0)
        
-                if (best_dnu < self.cp.dnu_rg) or ((best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg)):
+                if (best_dnu < self.cp.dnu_rg) or ((best_dnu < self.cp.dnu_sg) & (self.teff < self.cp.teff_sg)):
                     freq_left_margin = freq_left[int(run_subdir)] - best_dnu*self.cp.dnu_overlap_fraction_rg
                 else:
                     freq_left_margin = freq_left[int(run_subdir)] - best_dnu*self.cp.dnu_overlap_fraction_ms
@@ -154,7 +154,7 @@ class Complete(FamedStar):
                             f.write('{:.5f}  \t{:.5f}\n'.format(nu_left[jj],nu_right[jj]))
 
                             # Adopt different prior bounds for the l=1 modes depending on whether the star is evolved or not 
-                            if (best_dnu < self.cp.dnu_rg) or ((best_dnu < self.cp.dnu_sg) & (teff < self.cp.teff_sg)):
+                            if (best_dnu < self.cp.dnu_rg) or ((best_dnu < self.cp.dnu_sg) & (self.teff < self.cp.teff_sg)):
                                 if (ell[jj] == 1):
                                     if (profile_flag[jj] == 1):
                                         f.write('{:.5f}  \t{:.5f}\n'.format(amp[jj]*self.cp.lower_prior_amp_fraction,amp[jj]*self.cp.upper_prior_amp_fraction_sinc))

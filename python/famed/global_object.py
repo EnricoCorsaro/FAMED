@@ -682,7 +682,7 @@ class Global(FamedStar):
                                           'filename_run':    run_subdir,
                                           'duplet':          False}
 
-                flag_computation_completed = diamonds.run_peakbagging(self.catalog_id, self.star_id, peakbagging_parameters, 0, 1, 0, self.cp.dp_slid, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename)
+                flag_computation_completed = diamonds.run_peakbagging(self.catalog_id, self.star_id, peakbagging_parameters, 0, 1, 0, self.cp.dp_slid, self.cp.diamonds_path, self.cp.n_threads, self.cp.prior_filename,clean=True)
             
                 if self.cp.save_test_files != 1:
                     for k in range(0, self.cp.n_sliding_test):
@@ -1084,7 +1084,10 @@ class Global(FamedStar):
                 run_parameters = {'subdir':     self.cp.as_subdir,
                                   'run':        run_subdir}
               
-                flag_computation_completed = diamonds.run_asymptotic(self.catalog_id, self.star_id, run_parameters, numax, 0, self.cp.dp_pb, self.cp.diamonds_path)
+                if force:
+                    flag_computation_completed = diamonds.run_asymptotic(self.catalog_id, self.star_id, run_parameters, numax, 0, self.cp.dp_pb, self.cp.diamonds_path,clean=True)
+                else:
+                    flag_computation_completed = diamonds.run_asymptotic(self.catalog_id, self.star_id, run_parameters, numax, 0, self.cp.dp_pb, self.cp.diamonds_path)
 
                 parameter_filenames = np.sort(glob.glob(str(self.star_dir/self.cp.as_subdir/run_subdir/'asymptotic_parameter0*.txt')))
                 n_par = len(parameter_filenames) 
