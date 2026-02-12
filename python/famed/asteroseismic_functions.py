@@ -347,7 +347,6 @@ def get_modeid(freq, dnu, epsi_input, d01, numax, alpha):
     min_vals = np.min(diff,axis=0,where=diff>=-.25,initial=np.inf)
     min_index = np.where(diff==min_vals)
     good_order = radial_order_array[min_index]
-    
     epsi_local_radial = (freq - dnu*good_order - dnu*(alpha/2.*(good_order - numax/dnu)**2))/dnu
     epsi_local_dipole = (freq - dnu*(good_order+0.5) - dnu*(alpha/2.*(good_order - numax/dnu)**2) + d01)/dnu
     diff_radial = np.abs(epsi_local_radial - epsi_input)
