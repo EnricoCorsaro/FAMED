@@ -116,12 +116,17 @@ class FamedStar(object):
         j = np.argmax(interpolated_acf)
         best_acf = interpolated_acf[j]
         acf_dnu = interpolated_dnu[j]
+        difference = np.abs((acf_dnu - scaling_dnu)/scaling_dnu)
 
-        # Perform a Gaussian fit to the ACF^2 from the smoothed PSD
-        x = interpolated_dnu
-        y = interpolated_acf**2
-        coeff,cov = curve_fit(gaussian_func,x,y,p0=[max(y),acf_dnu,acf_dnu/10,min(y),0,0])
-        acf_dnu = coeff[1]
+        if (difference < self.cp.dnu_acf_range_side*(2.0/3.0)):
+            # Perform a Gaussian fit to the ACF^2 from the smoothed PSD
+            x = interpolated_dnu
+            y = interpolated_acf**2
+            coeff,cov = curve_fit(gaussian_func,x,y,p0=[max(y),acf_dnu,acf_dnu/10,min(y),0,0])
+            acf_dnu = coeff[1]
+        else:
+            acf_dnu = scaling_dnu
+
         return acf_dnu, interpolated_dnu, interpolated_acf
 
 
